@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Manhole plan — chamber layout</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="stylesheet" href="/assets/css/site.css?v=1.0">
+</head>
+<body>
+
+<header>
+  <div class="title"><b>Manhole plan</b><span>plan view · millimetres</span></div>
+  <div class="tools">
+    <button id="btnAdd">+ Chamber</button>
+    <button id="btnConnect">Connect faces</button>
+    <button id="btnFit" class="ghost">Fit view</button>
+  </div>
+</header>
+
+<main>
+  <div id="stage">
+    <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="hud" id="hint">
+      drag empty space — pan<br>
+      scroll — zoom<br>
+      drag chamber — move<br>
+      arrows — nudge · del — remove
+    </div>
+    <div class="hud" id="scalebar"><div class="bar"></div><span></span></div>
+    <div class="hud" id="callout"></div>
+    <div class="hud" id="status">
+      <span>X <b id="rx">—</b></span>
+      <span>Y <b id="ry">—</b></span>
+      <span>zoom <b id="rz">—</b></span>
+      <span id="rmode"></span>
+    </div>
+  </div>
+
+  <aside>
+    <div class="sec" id="propsSec">
+      <h2>Chamber</h2>
+      <div id="props"></div>
+    </div>
+
+    <div class="sec">
+      <h2>Connections <span id="connCount" style="color:var(--ink-faint)"></span></h2>
+      <div id="connList"></div>
+    </div>
+
+    <div class="sec">
+      <h2>Drawing</h2>
+      <div class="row">
+        <label for="snap">Snap increment</label>
+        <input type="number" id="snap" min="0" step="5" value="50"><span class="unit">mm</span>
+      </div>
+      <div class="row"><label class="chk"><input type="checkbox" id="grid" checked> Show grid</label></div>
+      <div class="row"><label class="chk"><input type="checkbox" id="dims" checked> Show dimensions</label></div>
+    </div>
+
+    <div class="sec">
+      <h2>File</h2>
+      <div class="btnrow">
+        <button id="btnExport">Export JSON</button>
+        <label class="filebtn" for="fileIn" style="flex:1;text-align:center">Import JSON</label>
+        <input type="file" id="fileIn" accept="application/json,.json">
+      </div>
+      <div class="btnrow"><button id="btnClear" class="warn ghost">Clear drawing</button></div>
+    </div>
+  </aside>
+</main>
+
+<script src="/assets/js/app.js?v=1.0"></script>
+</body>
+</html>

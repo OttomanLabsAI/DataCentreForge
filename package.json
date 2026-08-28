@@ -1,0 +1,14 @@
+{
+  "name": "datacentreforge",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Manhole plan — an in-browser drawing board for manhole chambers and the runs between them, served as a Cloudflare Workers static site",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "wrangler deploy --dry-run"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  }
+}
