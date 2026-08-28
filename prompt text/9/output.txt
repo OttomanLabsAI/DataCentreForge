@@ -1,0 +1,11 @@
+The tent shape is the shortest path winning outright — but you want deviation concentrated into short steps with long straights between. That means off-axis running needs to cost more per metre than straight running:
+
+Ran 2 commands, read a file
+
+Done — straights are now the priority, structurally.
+
+The scoring charges run length by direction: metres spent on the run's own axes (the directions it leaves and enters the manholes) count at face value; metres spent off-axis — diagonals, verticals, and the arcs themselves — cost 1.6×. So a long shallow diagonal or a tent over an obstacle pays a premium on its whole length, while a route that steps aside briefly and then runs parallel only pays on the short step. The constant is OFF_AXIS_COST at the top of the routing block if you want it stronger.
+
+What it produces now, on your exact layout: the green run is 773 straight → 45° step up → 6,471 straight across the top of the obstacle → 45° step down → 773 straight in. The under-route stopped doing the big rounded sweep and hugs tight: straight, 45 down, straight along the obstacle's keep-out, 45 up, straight. And a plain offset between two pits with nothing in the way resolves as one 45° jog then a long straight, rather than a lazy diagonal the whole way.
+
+A side effect worth knowing: the router now prefers a 45° step over a gentle 22.5° drift for lateral moves, because the shallower angle spends more length off-axis — which matches how you'd actually detail a ductbank. It'll still reach for 22.5s when a 45 physically doesn't fit between the minimum straights.

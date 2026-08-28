@@ -186,6 +186,11 @@ const SAMPLES = 10, SEQ_CAP = 300, BUDGET = 30000;
    length, and a bend that trips a warning far more — so the router only
    reaches for a big or over-limit bend when it saves serious run length. */
 const BEND_COST = 1500, ANGLE_COST = 4000, RADIUS_COST = 3000;
+/* Straights are king: run length spent OFF the run's own axes (the directions
+   it leaves and enters the manholes on) is charged this multiplier, so the
+   router steps aside briefly and runs straight, instead of sailing off on a
+   long diagonal or tenting over an obstacle. */
+const OFF_AXIS_COST = 1.6;
 let ROUTE_QUICK = false;   // while dragging: smaller search, no fine pass
 
 function solve2(u, v, r){
@@ -403,9 +408,19 @@ function search(P, d0, V, delta, signed, spec, blockers, strict){
   let sawSolution = false, sawBlocked = false, best = null;
   let budget = ROUTE_QUICK ? 6000 : BUDGET;
   const straightLine = Math.hypot(V[0], V[1]);
-  const scoreOf = f => f.length + BEND_COST*f.turns.length
-    + ANGLE_COST*f.warnings.filter(w => w.kind === 'angle').length
-    + RADIUS_COST*f.warnings.filter(w => w.kind === 'radius').length;
+  const ax1 = norm(d0), ax2 = norm(rotv(d0, delta));
+  const COS = Math.cos(2*D2R);
+  const scoreOf = f => {
+    let eff = (f.length - f.segs.reduce((a,b) => a+b, 0)) * OFF_AXIS_COST;  // arcs are transitions
+    for (let i = 0; i < f.segs.length; i++){
+      const u = norm([f.pts[i+1][0]-f.pts[i][0], f.pts[i+1][1]-f.pts[i][1]]);
+      const aligned = Math.abs(u[0]*ax1[0]+u[1]*ax1[1]) > COS || Math.abs(u[0]*ax2[0]+u[1]*ax2[1]) > COS;
+      eff += f.segs[i] * (aligned ? 1 : OFF_AXIS_COST);
+    }
+    return eff + BEND_COST*f.turns.length
+      + ANGLE_COST*f.warnings.filter(w => w.kind === 'angle').length
+      + RADIUS_COST*f.warnings.filter(w => w.kind === 'radius').length;
+  };
   const evalCands = (seq, fine) => {
     for (const sol of candidates(P, d0, V, seq, segMins(seq, spec, strict), fine)){
       if (--budget < 0) return;
@@ -442,8 +457,9 @@ function solveRoute(P, d0, Q, d2, spec, blockers){
   const angles = [...new Set(spec.angles)].filter(a => a > 0 && a < 180).sort((a,b) => a-b);
   const signed = []; for (const a of angles) signed.push(a, -a);
 
-  const strict = search(P, d0, V, delta, signed, spec, blockers, true);
-  if (strict.ok) return strict;
+  /* One search with relaxed minimums: geometry honouring the full bend radius
+     carries no cut and wins on score; tight spots take a scored radius cut
+     instead of being unreachable behind a strict-pass shortcut. */
   const relaxed = search(P, d0, V, delta, signed, spec, blockers, false);
   if (relaxed.ok) return relaxed;
   return {ok:false, msg: relaxed.sawBlocked ? 'blocked — no way past the keep-outs'
@@ -462,7 +478,7 @@ function entryFor(cn, end){
   const ep = cn[end], c = byUid(ep.mh);
   if (!c) return null;
   const g = faceGeom(c, ep.face);
-  const runs = faceRuns(ep.mh, ep.face);
+  const runs = faceRuns(ep.mh, ep.face).filter(r => (r.level|0) === (cn.level|0));
   if (runs.length < 2) return {...g, point:g.mid, offset:0, slots:runs.length};
   /* Order along the face in a fixed world direction (north-ish, else east),
      not the face's own winding — otherwise two facing faces sort in mirrored
@@ -479,91 +495,222 @@ function entryFor(cn, end){
   return {...g, point:[g.mid[0]+t[0]*off, g.mid[1]+t[1]*off], offset:off, slots:runs.length};
 }
 
-/** Separation between two runs: both radii plus the larger buffer — except
-    where they share a manhole, whose lateral spacing then governs the pair.
-    Runs on different Z levels pass over each other freely. */
-function pairMargin(X, Y){
-  const sx = specOf(X), sy = specOf(Y);
-  let m = sx.radius + sy.radius + Math.max(sx.buffer, sy.buffer);
-  for (const u of [X.a.mh, X.b.mh]){
-    if (u !== Y.a.mh && u !== Y.b.mh) continue;
-    const c = byUid(u);
-    if (c) m = Math.min(m, Math.max(sx.radius + sy.radius, c.latSpace - 1));
-  }
-  return m;
+/* ==========================================================================
+   BANKS
+   Runs joining the same pair of faces travel together as one bank: a single
+   centreline is routed for the group and every conduit in it is drawn as a
+   parallel offset — one road, many lanes, never two different routes.
+   ========================================================================== */
+
+const bankCache = new Map();
+
+const endKey = (cn, e) => cn[e].mh + '·' + cn[e].face;
+function bankKeyOf(cn){
+  const a = endKey(cn,'a'), b = endKey(cn,'b');
+  return a < b ? a + '>' + b : b + '>' + a;
 }
 
-/** Separation to anything else is the conduit's own radius plus the LARGER
-    of the two buffer zones. */
-function blockersFor(cn){
-  const sp = specOf(cn), out = [];
+/** Collect banks with their aggregate constraints and member offsets. */
+function buildBanks(){
+  const map = new Map();
+  for (const cn of state.connections){
+    const k = bankKeyOf(cn);
+    if (!map.has(k)) map.set(k, []);
+    map.get(k).push(cn);
+  }
+  const banks = [];
+  for (const [key, members] of map){
+    const m0 = members[0];
+    const first = endKey(m0,'a') <= endKey(m0,'b') ? 'a' : 'b';
+    const start = m0[first], finish = m0[first === 'a' ? 'b' : 'a'];
+    const A = byUid(start.mh), B = byUid(finish.mh);
+    if (!A || !B) continue;
+    const gS = faceGeom(A, start.face), gE = faceGeom(B, finish.face);
+    /* canonical face tangents, matching entryFor() */
+    const canon = g => {
+      let t = norm([g.p2[0]-g.p1[0], g.p2[1]-g.p1[1]]);
+      if (t[1] < -1e-9 || (Math.abs(t[1]) <= 1e-9 && t[0] < 0)) t = [-t[0], -t[1]];
+      return t;
+    };
+    const tS = canon(gS), tE = canon(gE);
+    const sS = Math.sign(tS[0]*(-gS.n[1]) + tS[1]*gS.n[0]) || 1;          // left of travel out of A
+    const sE = Math.sign(tE[0]*gE.n[1] + tE[1]*(-gE.n[0])) || 1;          // left of travel into B
+    const ends = members.map(cn => {
+      const se = endKey(cn,'a') === endKey(m0,first) ? 'a' : 'b';
+      const eS = entryFor(cn, se), eE = entryFor(cn, se === 'a' ? 'b' : 'a');
+      return {cn, se, oS:eS.offset, oE:eE.offset};
+    });
+    const meanS = ends.reduce((a,e) => a+e.oS, 0)/ends.length;
+    const meanE = ends.reduce((a,e) => a+e.oE, 0)/ends.length;
+    for (const e of ends){ e.w0 = (e.oS-meanS)*sS; e.w1 = (e.oE-meanE)*sE; }
+    const maxOff = Math.max(0, ...ends.map(e => Math.max(Math.abs(e.w0), Math.abs(e.w1))));
+    const specs = members.map(specOf);
+    let angles = ANGLE_OPTIONS.filter(a => specs.every(sp => sp.angles.includes(a)));
+    const g = {
+      key, members, ends, A, B, start, finish,
+      PS:[gS.mid[0]+tS[0]*meanS, gS.mid[1]+tS[1]*meanS],
+      PE:[gE.mid[0]+tE[0]*meanE, gE.mid[1]+tE[1]*meanE],
+      d0:[gS.n[0], gS.n[1]], d2:[-gE.n[0], -gE.n[1]],
+      maxOff,
+      maxRad: Math.max(...specs.map(sp => sp.radius)),
+      maxBuf: Math.max(...specs.map(sp => sp.buffer)),
+      levels: new Set(members.map(cn => cn.level|0)),
+      anyPlaced: members.some(cn => cn.placed),
+      spec: {
+        radius: Math.max(...specs.map(sp => sp.radius)),
+        bendR: Math.max(...specs.map(sp => sp.bendR)) + maxOff,
+        stub: Math.max(...specs.map(sp => sp.stub)),
+        minLeg: Math.max(...specs.map(sp => sp.minLeg)),
+        buffer: Math.max(...specs.map(sp => sp.buffer)),
+        warnAngle: Math.min(...specs.map(sp => sp.warnAngle || 999)),
+        angles
+      }
+    };
+    banks.push(g);
+  }
+  return banks;
+}
+
+/** Conduit-to-conduit spacing between two banks: buffers rule, unless they
+    share a manhole — then that manhole's lateral spacing governs. */
+function bankSpacing(G, H){
+  let sPair = G.maxRad + H.maxRad + Math.max(G.maxBuf, H.maxBuf);
+  for (const u of [G.start.mh, G.finish.mh]){
+    if (u !== H.start.mh && u !== H.finish.mh) continue;
+    const c = byUid(u);
+    if (c) sPair = Math.min(sPair, Math.max(G.maxRad + H.maxRad, c.latSpace - 1));
+  }
+  return sPair;
+}
+const levelsMeet = (G, H) => [...G.levels].some(l => H.levels.has(l));
+
+function bankBlockers(G, banks){
+  const out = [];
+  const pad = G.maxOff + G.maxRad;
   for (const o of state.obstacles)
     out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
-              margin: sp.radius + Math.max(sp.buffer, o.buffer)});
+              margin: pad + Math.max(G.maxBuf, o.buffer)});
   if (state.avoidChambers)
     for (const c of state.chambers){
-      if (c.uid === cn.a.mh || c.uid === cn.b.mh) continue;
+      if (c.uid === G.start.mh || c.uid === G.finish.mh) continue;
       out.push({type:'box', cx:c.x, cy:c.y, rot:c.rot, hw:c.intX/2+c.wall, hh:c.intY/2+c.wall,
-                margin: sp.radius + Math.max(sp.buffer, c.buffer)});
+                margin: pad + Math.max(G.maxBuf, c.buffer)});
     }
   if (state.avoidPipes)
-    for (const other of state.connections){
-      if (other === cn || !other.placed || !other.route || !other.route.ok) continue;
-      if ((other.level|0) !== (cn.level|0)) continue;
-      const so = specOf(other);
-      const margin = pairMargin(cn, other);
-      /* runs that share a chamber legitimately converge there — free that zone */
-      const shares = u => u === cn.a.mh || u === cn.b.mh;
-      const free = Math.max(sp.stub, so.stub) + margin;
-      const line = clipEnds(other.route.poly, shares(other.a.mh) ? free : 0, shares(other.b.mh) ? free : 0);
+    for (const H of banks){
+      if (H === G || !H.anyPlaced || !H.route || !H.route.ok) continue;
+      if (!levelsMeet(G, H)) continue;
+      const margin = G.maxOff + H.maxOff + bankSpacing(G, H);
+      const shares = u => u === G.start.mh || u === G.finish.mh;
+      const free = Math.max(G.spec.stub, H.spec.stub) + margin;
+      const line = clipEnds(H.route.poly, shares(H.start.mh) ? free : 0, shares(H.finish.mh) ? free : 0);
       if (!line) continue;
-      out.push({type:'line', pts:line, margin, bb:polyBounds(line), run:other.uid});
+      out.push({type:'line', pts:line, margin, bb:polyBounds(line)});
     }
   return out;
 }
-function routeOf(cn){
-  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
-  if (!A || !B) return {ok:false, msg:'missing chamber'};
-  const sp = specOf(cn);
-  if (!sp) return {ok:false, msg:'no conduit spec'};
-  const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
-  return solveRoute(ea.point, ea.n, eb.point, [-eb.n[0], -eb.n[1]], sp, blockersFor(cn));
-}
-/** Routes are only re-solved when something they depend on actually moved. */
-function routeSignature(cn){
-  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+
+function bankSignature(G, banks){
   const box = o => [o.x, o.y, o.w, o.d, o.rot, o.buffer];
-  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace, c.zSpace];
-  const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
-  const others = state.avoidPipes ? state.connections
-    .filter(o => o !== cn && o.placed && o.route && o.route.ok)
-    .map(o => [o.uid, o.level|0, specOf(o).radius, specOf(o).buffer, specOf(o).stub,
-               o.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]) : 0;
-  return JSON.stringify([cn.a.face, cn.b.face, cn.level|0,
-    ea && ea.point.map(Math.round), eb && eb.point.map(Math.round),
-    A && mh(A), B && mh(B), specOf(cn),
-    state.avoidChambers, state.avoidPipes, ROUTE_QUICK, state.obstacles.map(box),
-    state.chambers.map(mh), others]);
+  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace];
+  const others = state.avoidPipes ? banks
+    .filter(H => H !== G && H.anyPlaced && H.route && H.route.ok && levelsMeet(G, H))
+    .map(H => [H.key, H.maxOff, H.maxRad, H.maxBuf, H.spec.stub,
+               H.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]) : 0;
+  return JSON.stringify([G.key, G.PS.map(Math.round), G.PE.map(Math.round),
+    G.ends.map(e => [Math.round(e.w0), Math.round(e.w1)]), [...G.levels], G.spec,
+    state.avoidChambers, state.avoidPipes, ROUTE_QUICK,
+    state.obstacles.map(box), state.chambers.map(mh), others]);
 }
+
+/** A member's route is the bank centreline shifted sideways, its offset
+    easing from the entry slot at one manhole to the slot at the other. */
+function offsetMember(rt, w0, w1){
+  const pts = rt.pts, n = pts.length;
+  const cum = [0];
+  for (let i = 1; i < n; i++) cum.push(cum[i-1] + Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]));
+  const total = Math.max(1e-9, cum[n-1]);
+  const wAt = i => w0 + (w1-w0)*cum[i]/total;
+  const dir = i => norm([pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1]]);
+  const left = u => [-u[1], u[0]];
+  const np = [];
+  for (let i = 0; i < n; i++){
+    const w = wAt(i);
+    if (i === 0 || i === n-1){
+      const L = left(dir(i === 0 ? 0 : n-2));
+      np.push([pts[i][0]+L[0]*w, pts[i][1]+L[1]*w]);
+    } else {
+      const lu = left(dir(i-1)), lv = left(dir(i));
+      const m = norm([lu[0]+lv[0], lu[1]+lv[1]]);
+      const cosHalf = Math.max(0.25, m[0]*lu[0]+m[1]*lu[1]);
+      np.push([pts[i][0]+m[0]*w/cosHalf, pts[i][1]+m[1]*w/cosHalf]);
+    }
+  }
+  const segs = [];
+  for (let i = 0; i < n-1; i++) segs.push(Math.hypot(np[i+1][0]-np[i][0], np[i+1][1]-np[i][1]));
+  const fillets = rt.fillets.map((f, i) => {
+    const R = Math.max(1, f.R - wAt(i+1)*Math.sign(rt.turns[i] || 1));
+    let T = R*Math.tan(Math.abs(rt.turns[i])*D2R/2);
+    const cap = Math.min(segs[i]*(i > 0 ? 0.5 : 1), segs[i+1]*(i < rt.turns.length-1 ? 0.5 : 1));
+    if (T > cap){ T = cap; }
+    return {...f, R: T/Math.max(1e-9, Math.tan(Math.abs(rt.turns[i])*D2R/2)), T};
+  });
+  let length = segs.reduce((a,b) => a+b, 0);
+  fillets.forEach((f, i) => { length += f.R*Math.abs(rt.turns[i])*D2R - 2*f.T; });
+  const clear = segs.map((L,i) => L - (i > 0 ? fillets[i-1].T : 0) - (i < segs.length-1 ? fillets[i].T : 0));
+  const out = {ok:true, pts:np, turns:[...rt.turns], segs, fillets, clear, length, warnings:[]};
+  out.poly = tessellate(out);
+  return out;
+}
+
+function reversedRoute(r){
+  return {...r,
+    pts:[...r.pts].reverse(), segs:[...r.segs].reverse(),
+    turns:[...r.turns].reverse().map(t => -t),
+    fillets:[...r.fillets].reverse(), clear:[...r.clear].reverse(),
+    poly:[...r.poly].reverse()};
+}
+
+function deriveMembers(G){
+  for (const e of G.ends){
+    const cn = e.cn, sp = specOf(cn);
+    if (!G.route || !G.route.ok){ cn.route = {ok:false, msg:G.route ? G.route.msg : 'no route'}; continue; }
+    let r = offsetMember(G.route, e.w0, e.w1);
+    if (e.se !== 'a') r = reversedRoute(r);
+    r.warnings = G.route.warnings.filter(w => w.kind === 'radius').map(w => ({...w}));
+    r.turns.forEach((t, i) => {
+      if (sp.warnAngle && Math.abs(t) > sp.warnAngle + 1e-6)
+        r.warnings.push({kind:'angle', bend:i+1,
+          text:`bend ${i+1} — ${fmt1(Math.abs(t))}° is over the ${fmt1(sp.warnAngle)}° limit`});
+    });
+    cn.route = r;
+  }
+}
+
 function recomputeRoutes(){
-  /* Runs are blockers for each other, so one re-route can oblige another:
-     settle in a few passes, then cross-check whatever is left standing. */
+  let banks = null;
   for (let pass = 0; pass < 3; pass++){
+    banks = buildBanks();
     let changed = false;
-    for (const cn of state.connections){
-      const sig = routeSignature(cn);
-      if (cn._sig === sig && cn.route) continue;
-      cn._sig = sig; cn.route = routeOf(cn);
+    for (const G of banks){
+      const cached = bankCache.get(G.key);
+      if (cached) G.route = cached.route;
+      const sig = bankSignature(G, banks);
+      if (cached && cached.sig === sig && cached.route) continue;
+      G.route = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks));
+      bankCache.set(G.key, {sig, route:G.route});
       changed = true;
     }
+    for (const G of banks) deriveMembers(G);
     if (!changed) break;
   }
-  const okRoutes = state.connections.filter(c => c.route && c.route.ok);
-  for (const c of okRoutes) c.route.warnings = c.route.warnings.filter(w => w.kind !== 'clash' && w.kind !== 'face');
-  /* faces carrying several runs must be wide enough for the lateral spacing */
+  for (const k of [...bankCache.keys()])
+    if (!banks.some(G => G.key === k)) bankCache.delete(k);
+
+  /* faces carrying several same-level runs must be wide enough */
   const groups = new Map();
   for (const c of state.connections) for (const end of ['a','b']){
-    const k = c[end].mh + '|' + c[end].face;
+    const k = c[end].mh + '|' + c[end].face + '|' + (c.level|0);
     if (!groups.has(k)) groups.set(k, []);
     groups.get(k).push(c);
   }
@@ -580,22 +727,24 @@ function recomputeRoutes(){
         r.route.warnings.push({kind:'face',
           text:`face ${c.ref}·${face} — ${runs.length} runs need ${fmt(span)} across a ${fmt(width)} face`});
   }
-  const placed = state.connections.filter(c => c.placed && c.route && c.route.ok);
-  if (!state.avoidPipes) return;
-  for (let i = 0; i < placed.length; i++) for (let j = i+1; j < placed.length; j++){
-    const X = placed[i], Y = placed[j], sx = specOf(X), sy = specOf(Y);
-    if ((X.level|0) !== (Y.level|0)) continue;
-    const margin = pairMargin(X, Y);
-    const free = Math.max(sx.stub, sy.stub) + margin;
-    const shared = u => (u === Y.a.mh || u === Y.b.mh);
-    const px = clipEnds(X.route.poly, shared(X.a.mh) ? free : 0, shared(X.b.mh) ? free : 0);
-    const sharedX = u => (u === X.a.mh || u === X.b.mh);
-    const py = clipEnds(Y.route.poly, sharedX(Y.a.mh) ? free : 0, sharedX(Y.b.mh) ? free : 0);
-    if (!px || !py) continue;
-    if (lineLineDist(px, py, margin) < margin - 1){
-      X.route.warnings.push({kind:'clash', text:`buffer to ${connLabel(Y)} not met`});
-      Y.route.warnings.push({kind:'clash', text:`buffer to ${connLabel(X)} not met`});
-    }
+
+  /* residual bank-to-bank separation check */
+  if (!state.avoidPipes || !banks) return;
+  const live = banks.filter(G => G.anyPlaced && G.route && G.route.ok);
+  for (let i = 0; i < live.length; i++) for (let j = i+1; j < live.length; j++){
+    const G = live[i], H = live[j];
+    if (!levelsMeet(G, H)) continue;
+    const margin = G.maxOff + H.maxOff + bankSpacing(G, H);
+    const free = Math.max(G.spec.stub, H.spec.stub) + margin;
+    const sh = (X, Y) => u => u === Y.start.mh || u === Y.finish.mh ? free : 0;
+    const pg = clipEnds(G.route.poly, sh(G,H)(G.start.mh), sh(G,H)(G.finish.mh));
+    const ph = clipEnds(H.route.poly, sh(H,G)(H.start.mh), sh(H,G)(H.finish.mh));
+    if (!pg || !ph) continue;
+    if (lineLineDist(pg, ph, margin) < margin - 1)
+      for (const bank of [G, H]) for (const cn of bank.members)
+        if (cn.route && cn.route.ok)
+          cn.route.warnings.push({kind:'clash',
+            text:`buffer to ${connLabel(bank === G ? H.members[0] : G.members[0])} not met`});
   }
 }
 
