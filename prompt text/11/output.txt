@@ -1,0 +1,11 @@
+The rename to "Buffer zone" is already in this build's labels — let me check whether any separation maths still sums buffers rather than taking the larger:
+
+Ran 6 commands, edited a file, read a file · 1 note
+
+Good news — this one's already in there. The larger-buffer rule went in back when the tool switched from pipes to conduits, so if you were looking at the version from before today's publish, that's the old behaviour you were seeing. The rule in the current build is exactly what you described: separation = the larger of the two buffer zones, never the sum. Two objects at 200/200 need 200 apart; 200/300 needs 300. Buffer zones are allowed to overlap — what's not allowed is an object sitting inside someone else's zone.
+
+Verified it numerically just now: a 200-buffer run past a 250-buffer obstacle holds off 356mm — legal under the max rule (floor 300), impossible under a sum rule (which would force 500). And two banks with 300/200 buffers get a required spacing of exactly 425 (both radii + 300), not the 625 a sum would give. The solver treats these as floors, so on big dodges it'll sit a bit proud rather than hug the line exactly.
+
+Naming's already swept too — chamber, obstacle and conduit spec panels all say Buffer zone, and the spec panel spells out "pairs keep the larger buffer". Old JSON exports that still use clearance import fine; it just maps onto buffer.
+
+One real fix this turn: the spec panel had a doubled "Buffer … each side" line from an earlier patch — deduped and republished above. If you're still seeing something that looks like buffers adding up somewhere in the drawing, tell me where and I'll dig in — the ghosted halos around runs are each run's own zone, so they'll visually overlap when a small-buffer run sits next to a big-buffer one. That's correct under this rule, not a clash.

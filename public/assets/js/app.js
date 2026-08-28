@@ -1210,7 +1210,6 @@ function renderSpecEdit(){
         `<button class="chip ${sp.angles.includes(a)?'on':''}" data-ang="${a}">${a}°</button>`).join('')}</div>
      <div class="derived"><b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
        <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
-     <b>Buffer</b> ${fmt(sp.buffer)} each side — pairs keep the larger buffer<br>
        <b>Buffer</b> ${fmt(sp.buffer)} each side — pairs keep the larger buffer<br>
        <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}</div>`;
 
