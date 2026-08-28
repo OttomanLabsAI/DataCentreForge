@@ -1,7 +1,7 @@
 /* ==========================================================================
    MANHOLE PLAN
-   Square chambers with wall thickness, rectangular obstacles, and pipe runs
-   routed internal face to internal face under a named pipe spec: bore, bend
+   Square chambers with wall thickness, rectangular obstacles, and conduit runs
+   routed internal face to internal face under a named conduit spec: bore, bend
    radius, minimum straight and the bend angles the spec permits.
    Units: millimetres. World axes: +X east, +Y north.
    ========================================================================== */
@@ -46,7 +46,7 @@ const selIs  = k => state.sel && state.sel.kind === k;
 /* ---------- model --------------------------------------------------------- */
 
 function makeChamber(o = {}){
-  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300}, o);
+  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300, latSpace:450, zSpace:300}, o);
 }
 function makeObstacle(o = {}){
   return Object.assign({uid:uid(), name:nextName(), x:0, y:0, w:2400, d:2400, rot:0, buffer:250}, o);
@@ -174,17 +174,17 @@ function distToSeg(p, a, b){
 }
 
 /* ==========================================================================
-   PIPE ROUTING
+   CONDUIT ROUTING
    Leaves the internal face along its outward normal, arrives at the far
    internal face along the inward normal, changes direction only by an angle
    the spec permits, keeps every straight at or above the minimum, and stays
-   clear of every keep-out: pipe radius plus the larger of the two buffer zones.
+   clear of every keep-out: conduit radius plus the larger of the two buffer zones.
    ========================================================================== */
 
 const SAMPLES = 10, SEQ_CAP = 300, BUDGET = 30000;
-/* Route cost, in millimetres of pipe: every bend is worth this much extra
+/* Route cost, in millimetres of conduit: every bend is worth this much extra
    length, and a bend that trips a warning far more — so the router only
-   reaches for a big or over-limit bend when it saves serious pipe. */
+   reaches for a big or over-limit bend when it saves serious run length. */
 const BEND_COST = 1500, ANGLE_COST = 4000, RADIUS_COST = 3000;
 let ROUTE_QUICK = false;   // while dragging: smaller search, no fine pass
 
@@ -451,8 +451,50 @@ function solveRoute(P, d0, Q, d2, spec, blockers){
     : angles.length ? 'no route to that face with these angles' : 'allow a bend angle'};
 }
 
-/** Separation to anything is the pipe's own radius plus the LARGER of the
-    two buffer zones; between runs it is both radii plus the larger buffer. */
+function faceRuns(mhUid, face){
+  return state.connections.filter(c =>
+    (c.a.mh === mhUid && c.a.face === face) || (c.b.mh === mhUid && c.b.face === face));
+}
+/** Where a run actually meets the chamber: runs sharing a face are spread
+    along it at the manhole's lateral spacing, ordered so the run heading
+    left takes the left slot and entries never cross at the wall. */
+function entryFor(cn, end){
+  const ep = cn[end], c = byUid(ep.mh);
+  if (!c) return null;
+  const g = faceGeom(c, ep.face);
+  const runs = faceRuns(ep.mh, ep.face);
+  if (runs.length < 2) return {...g, point:g.mid, offset:0, slots:runs.length};
+  /* Order along the face in a fixed world direction (north-ish, else east),
+     not the face's own winding — otherwise two facing faces sort in mirrored
+     order and a bank of runs crosses itself mid-span. */
+  let t = norm([g.p2[0]-g.p1[0], g.p2[1]-g.p1[1]]);
+  if (t[1] < -1e-9 || (Math.abs(t[1]) <= 1e-9 && t[0] < 0)) t = [-t[0], -t[1]];
+  const keyed = runs.map(r => {
+    const far = (r.a.mh === ep.mh && r.a.face === ep.face) ? r.b : r.a;
+    const oc = byUid(far.mh);
+    return {r, proj: oc ? (oc.x-g.mid[0])*t[0] + (oc.y-g.mid[1])*t[1] : 0};
+  }).sort((x,y) => x.proj - y.proj || (x.r.uid < y.r.uid ? -1 : 1));
+  const i = keyed.findIndex(k => k.r === cn);
+  const off = (i - (runs.length-1)/2) * c.latSpace;
+  return {...g, point:[g.mid[0]+t[0]*off, g.mid[1]+t[1]*off], offset:off, slots:runs.length};
+}
+
+/** Separation between two runs: both radii plus the larger buffer — except
+    where they share a manhole, whose lateral spacing then governs the pair.
+    Runs on different Z levels pass over each other freely. */
+function pairMargin(X, Y){
+  const sx = specOf(X), sy = specOf(Y);
+  let m = sx.radius + sy.radius + Math.max(sx.buffer, sy.buffer);
+  for (const u of [X.a.mh, X.b.mh]){
+    if (u !== Y.a.mh && u !== Y.b.mh) continue;
+    const c = byUid(u);
+    if (c) m = Math.min(m, Math.max(sx.radius + sy.radius, c.latSpace - 1));
+  }
+  return m;
+}
+
+/** Separation to anything else is the conduit's own radius plus the LARGER
+    of the two buffer zones. */
 function blockersFor(cn){
   const sp = specOf(cn), out = [];
   for (const o of state.obstacles)
@@ -467,8 +509,9 @@ function blockersFor(cn){
   if (state.avoidPipes)
     for (const other of state.connections){
       if (other === cn || !other.placed || !other.route || !other.route.ok) continue;
+      if ((other.level|0) !== (cn.level|0)) continue;
       const so = specOf(other);
-      const margin = sp.radius + so.radius + Math.max(sp.buffer, so.buffer);
+      const margin = pairMargin(cn, other);
       /* runs that share a chamber legitimately converge there — free that zone */
       const shares = u => u === cn.a.mh || u === cn.b.mh;
       const free = Math.max(sp.stub, so.stub) + margin;
@@ -482,20 +525,23 @@ function routeOf(cn){
   const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   if (!A || !B) return {ok:false, msg:'missing chamber'};
   const sp = specOf(cn);
-  if (!sp) return {ok:false, msg:'no pipe spec'};
-  const ga = faceGeom(A, cn.a.face), gb = faceGeom(B, cn.b.face);
-  return solveRoute(ga.mid, ga.n, gb.mid, [-gb.n[0], -gb.n[1]], sp, blockersFor(cn));
+  if (!sp) return {ok:false, msg:'no conduit spec'};
+  const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
+  return solveRoute(ea.point, ea.n, eb.point, [-eb.n[0], -eb.n[1]], sp, blockersFor(cn));
 }
 /** Routes are only re-solved when something they depend on actually moved. */
 function routeSignature(cn){
   const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   const box = o => [o.x, o.y, o.w, o.d, o.rot, o.buffer];
-  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer];
+  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace, c.zSpace];
+  const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
   const others = state.avoidPipes ? state.connections
     .filter(o => o !== cn && o.placed && o.route && o.route.ok)
-    .map(o => [o.uid, specOf(o).radius, specOf(o).buffer, specOf(o).stub,
+    .map(o => [o.uid, o.level|0, specOf(o).radius, specOf(o).buffer, specOf(o).stub,
                o.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]) : 0;
-  return JSON.stringify([cn.a.face, cn.b.face, A && mh(A), B && mh(B), specOf(cn),
+  return JSON.stringify([cn.a.face, cn.b.face, cn.level|0,
+    ea && ea.point.map(Math.round), eb && eb.point.map(Math.round),
+    A && mh(A), B && mh(B), specOf(cn),
     state.avoidChambers, state.avoidPipes, ROUTE_QUICK, state.obstacles.map(box),
     state.chambers.map(mh), others]);
 }
@@ -512,12 +558,34 @@ function recomputeRoutes(){
     }
     if (!changed) break;
   }
+  const okRoutes = state.connections.filter(c => c.route && c.route.ok);
+  for (const c of okRoutes) c.route.warnings = c.route.warnings.filter(w => w.kind !== 'clash' && w.kind !== 'face');
+  /* faces carrying several runs must be wide enough for the lateral spacing */
+  const groups = new Map();
+  for (const c of state.connections) for (const end of ['a','b']){
+    const k = c[end].mh + '|' + c[end].face;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(c);
+  }
+  for (const [k, runs] of groups){
+    if (runs.length < 2) continue;
+    const [mhU, face] = k.split('|');
+    const c = byUid(mhU);
+    if (!c) continue;
+    const width = faceGeom(c, face).width;
+    const maxDia = Math.max(...runs.map(r => 2*specOf(r).radius));
+    const span = (runs.length-1)*c.latSpace + maxDia;
+    if (span > width + 1)
+      for (const r of runs) if (r.route && r.route.ok)
+        r.route.warnings.push({kind:'face',
+          text:`face ${c.ref}·${face} — ${runs.length} runs need ${fmt(span)} across a ${fmt(width)} face`});
+  }
   const placed = state.connections.filter(c => c.placed && c.route && c.route.ok);
-  for (const c of placed) c.route.warnings = c.route.warnings.filter(w => w.kind !== 'clash');
   if (!state.avoidPipes) return;
   for (let i = 0; i < placed.length; i++) for (let j = i+1; j < placed.length; j++){
     const X = placed[i], Y = placed[j], sx = specOf(X), sy = specOf(Y);
-    const margin = sx.radius + sy.radius + Math.max(sx.buffer, sy.buffer);
+    if ((X.level|0) !== (Y.level|0)) continue;
+    const margin = pairMargin(X, Y);
     const free = Math.max(sx.stub, sy.stub) + margin;
     const shared = u => (u === Y.a.mh || u === Y.b.mh);
     const px = clipEnds(X.route.poly, shared(X.a.mh) ? free : 0, shared(X.b.mh) ? free : 0);
@@ -682,8 +750,8 @@ function drawConnection(cn){
   if (!A || !B) return '';
   const s = state.view.s, sp = specOf(cn), rt = cn.route;
   const on = selIs('conn') && state.sel.id === cn.uid;
-  const ga = faceGeom(A, cn.a.face), gb = faceGeom(B, cn.b.face);
-  const p = W2S(ga.mid), q = W2S(gb.mid);
+  const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
+  const p = W2S(ea.point), q = W2S(eb.point);
   const out = [];
 
   if (!cn.placed || !rt || !rt.ok){
@@ -720,7 +788,8 @@ function drawConnection(cn){
   });
   if (state.showDims && rt.length*s > 80){
     const m = W2S(rt.pts[Math.floor(rt.pts.length/2)]);
-    out.push(`<text x="${m[0]}" y="${m[1]-body/2-7}" fill="${edge}" font-family="${C.mono}" font-size="10.5" text-anchor="middle">${metres(rt.length)}</text>`);
+    const lvl = (cn.level|0) ? ' · L' + (cn.level|0) : '';
+    out.push(`<text x="${m[0]}" y="${m[1]-body/2-7}" fill="${edge}" font-family="${C.mono}" font-size="10.5" text-anchor="middle">${metres(rt.length)}${lvl}</text>`);
   }
   return out.join('');
 }
@@ -771,9 +840,9 @@ function hitConnection(w, tolPx = 8){
     let line;
     if (cn.placed && rt && rt.ok) line = rt.poly;
     else {
-      const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
-      if (!A || !B) continue;
-      line = [faceGeom(A, cn.a.face).mid, faceGeom(B, cn.b.face).mid];
+      const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
+      if (!ea || !eb) continue;
+      line = [ea.point, eb.point];
     }
     const tol = Math.max(tolPx/state.view.s, cn.placed ? specOf(cn).radius : 0);
     for (let i = 0; i < line.length-1; i++){
@@ -792,6 +861,7 @@ let drag = null;
 
 STAGE.addEventListener('pointerdown', e => {
   if (e.button === 2) return;
+  e.preventDefault();                       // stop native text selection while dragging
   STAGE.setPointerCapture(e.pointerId);
   const r = STAGE.getBoundingClientRect();
   const sp = [e.clientX-r.left, e.clientY-r.top], wp = S2W(sp);
@@ -862,10 +932,12 @@ function showCallout(f, sp){
   const el = document.getElementById('callout');
   if (!f){ el.style.display = 'none'; return; }
   const c = byUid(f.mh), g = faceGeom(c, f.face);
+  const k = faceRuns(f.mh, f.face).length;
   el.innerHTML = `<u>${esc(c.ref)} · ${f.face} face</u>\n`
     + `internal face   ${fmt(g.width)} wide\n`
     + `mid  X ${fmt(g.mid[0])}  Y ${fmt(g.mid[1])}\n`
-    + `outward bearing ${g.bearing.toFixed(1)}°`;
+    + `outward bearing ${g.bearing.toFixed(1)}°`
+    + (k ? `\nruns on face    ${k} at ${fmt(c.latSpace)} centres` : '');
   el.style.display = 'block';
   el.style.left = Math.min(sp[0]+16, STAGE.clientWidth-210) + 'px';
   el.style.top  = Math.min(sp[1]+16, STAGE.clientHeight-90) + 'px';
@@ -886,7 +958,7 @@ function pickFace(f){
   const dup = state.connections.find(c =>
     (same(c.a, state.pending) && same(c.b, f)) || (same(c.b, state.pending) && same(c.a, f)));
   if (dup){ state.pending = null; select('conn', dup.uid); return; }
-  const cn = {uid:uid(), a:state.pending, b:f, placed:false,
+  const cn = {uid:uid(), a:state.pending, b:f, placed:false, level:0,
               specId:(state.editSpec || state.specs[0].id), route:null};
   state.connections.push(cn);
   state.pending = null;
@@ -931,7 +1003,7 @@ function renderObstacles(){
   const box = document.getElementById('obsList');
   document.getElementById('obsCount').textContent = state.obstacles.length || '';
   if (!state.obstacles.length){
-    box.innerHTML = `<div class="empty">None. Add one with <b>+ Obstacle</b> — pipe runs are routed around it, keeping its buffer zone.</div>`;
+    box.innerHTML = `<div class="empty">None. Add one with <b>+ Obstacle</b> — conduit runs are routed around it, keeping its buffer zone.</div>`;
     return;
   }
   box.innerHTML = '<div class="list">' + state.obstacles.map(o =>
@@ -950,7 +1022,7 @@ function renderObstacles(){
 }
 
 /* ==========================================================================
-   PIPE SPECS  (left panel)
+   CONDUIT SPECS  (left panel)
    ========================================================================== */
 
 function specUse(id){ return state.connections.filter(c => c.specId === id).length; }
@@ -977,7 +1049,7 @@ function renderSpecEdit(){
     `<div class="row"><label for="sName">Name</label><input type="text" id="sName" value="${esc(sp.name)}"></div>
      <div class="swatches">${SPEC_COLOURS.map(c =>
         `<div class="sw ${c === sp.colour ? 'on':''}" data-col="${c}" style="background:${c}" title="${c}"></div>`).join('')}</div>` +
-    numRow('sRad','Pipe radius', sp.radius, 25, 'mm') +
+    numRow('sRad','Conduit radius', sp.radius, 25, 'mm') +
     numRow('sBend','Bend radius', sp.bendR, 50, 'mm') +
     `<div class="row" style="margin-bottom:2px"><label>Minimum straight</label></div>` +
     numRow('sStub','off chamber face', sp.stub, 50, 'mm') +
@@ -1059,9 +1131,9 @@ function renderSel(){
   const box = document.getElementById('sel'), ttl = document.getElementById('selTitle');
   if (selIs('chamber')) { ttl.textContent = 'Chamber';  return renderChamberProps(box, byUid(state.sel.id)); }
   if (selIs('obstacle')){ ttl.textContent = 'Obstacle'; return renderObstacleProps(box, obsBy(state.sel.id)); }
-  if (selIs('conn'))    { ttl.textContent = 'Pipe run'; return renderRunProps(box, connBy(state.sel.id)); }
+  if (selIs('conn'))    { ttl.textContent = 'Conduit run'; return renderRunProps(box, connBy(state.sel.id)); }
   ttl.textContent = 'Selection';
-  box.innerHTML = `<div class="empty">Nothing selected. Click a chamber, an obstacle or a pipe run.</div>`;
+  box.innerHTML = `<div class="empty">Nothing selected. Click a chamber, an obstacle or a conduit run.</div>`;
 }
 
 function renderChamberProps(box, c){
@@ -1076,6 +1148,9 @@ function renderChamberProps(box, c){
     numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
     numRow('pR','Rotation', c.rot, 15, '°') +
     numRow('pB','Buffer zone', c.buffer, 50, 'mm') +
+    `<div class="row" style="margin:10px 0 2px"><label>Conduit entries</label></div>` +
+    numRow('pLat','Lateral spacing', c.latSpace, 50, 'mm') +
+    numRow('pZ','Z spacing', c.zSpace, 50, 'mm') +
     `<div class="derived">
        <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
        <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
@@ -1098,6 +1173,7 @@ function renderChamberProps(box, c){
   };
   bind('pRef','ref',String); bind('pIX','intX'); bind('pIY','intY');
   bind('pW','wall'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
+  bind('pLat','latSpace'); bind('pZ','zSpace');
   document.getElementById('pSq').onchange = e => {
     state.square = e.target.checked;
     if (state.square){ c.intY = c.intX; renderSel(); renderConnections(); draw(); }
@@ -1120,7 +1196,7 @@ function renderObstacleProps(box, o){
     numRow('oR','Rotation', o.rot, 15, '°') +
     numRow('oC','Buffer zone', o.buffer, 50, 'mm') +
     `<div class="derived"><b>Keep-out</b> ${fmt(o.w+2*o.buffer)} × ${fmt(o.d+2*o.buffer)} mm<br>
-       <span>Pipes are held off by the larger of this buffer and their own, plus their radius.</span></div>
+       <span>Conduits are held off by the larger of this buffer and their own, plus their radius.</span></div>
      <div class="btnrow"><button id="oDup">Duplicate</button><button id="oDel" class="warn">Delete</button></div>`;
   const bind = (id, key, cast = Number) => {
     const el = document.getElementById(id);
@@ -1147,15 +1223,18 @@ function renderRunProps(box, cn){
   const rt = cn.route, sp = specOf(cn);
   const warns = rt && rt.ok ? rt.warnings : [];
   box.innerHTML =
-    `<div class="row"><label style="flex:none" for="qSpec">Pipe spec</label></div>
+    `<div class="row"><label style="flex:none" for="qSpec">Conduit spec</label></div>
      <select id="qSpec">${state.specs.map(s =>
        `<option value="${s.id}" ${s.id === cn.specId ? 'selected':''}>${esc(s.name)} — Ø${fmt(s.radius*2)} R${fmt(s.bendR)}</option>`).join('')}</select>
-     <div class="derived">
+     <div style="height:8px"></div>` +
+    numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
+    `<div class="derived">
        <b>Run</b> ${esc(connLabel(cn))}<br>
+       ${entryLine(cn)}
        <b>Angles</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}<br>` +
        (rt && rt.ok
          ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°').join(' · ') : 'none — straight run'}<br>
-            <b>Straight pipe</b> ${rt.clear.map(v => fmt(Math.max(0,v))).join(' · ')} mm<br>
+            <b>Straight duct</b> ${rt.clear.map(v => fmt(Math.max(0,v))).join(' · ')} mm<br>
             <b>Centreline</b> ${metres(rt.length)} face to face`
          : `<span style="color:${C.bad}">${esc(rt ? rt.msg : '')}</span>`) +
     `</div>` +
@@ -1167,6 +1246,12 @@ function renderRunProps(box, cn){
     (cn.placed ? '' : `<div class="note">Not placed yet — the dashed guide shows the face pair.</div>`) +
     `<div class="btnrow"><button id="qEditSpec" class="ghost mini">Edit “${esc(sp.name)}” on the left</button></div>`;
 
+  const lvlEl = document.getElementById('qLvl');
+  lvlEl.addEventListener('input', () => {
+    const v = Math.max(0, Math.round(Number(lvlEl.value)||0));
+    cn.level = v;
+    renderSel(); renderConnections(); draw();
+  });
   document.getElementById('qSpec').onchange = e => {
     cn.specId = e.target.value;
     state.editSpec = cn.specId;
@@ -1180,6 +1265,17 @@ function renderRunProps(box, cn){
     state.editSpec = cn.specId; renderSpecs(); renderSpecEdit();
     document.getElementById('left').scrollTop = 9999;
   };
+}
+
+function entryLine(cn){
+  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
+  if (!A || !B || !ea || !eb) return '';
+  const lvl = cn.level|0;
+  const side = o => o === 0 ? 'centre' : (o > 0 ? '+' : '−') + fmt(Math.abs(o));
+  let line = `<b>Entry</b> ${side(ea.offset)} at ${esc(A.ref)} · ${side(eb.offset)} at ${esc(B.ref)}`;
+  if (lvl) line += `<br><b>Level</b> ${lvl} — Z −${fmt(lvl*A.zSpace)} at ${esc(A.ref)} · −${fmt(lvl*B.zSpace)} at ${esc(B.ref)}`;
+  return line + '<br>';
 }
 
 function removeChamber(u){
@@ -1238,16 +1334,21 @@ document.getElementById('btnExport').onclick = () => {
     obstacles: state.obstacles.map(({uid, ...rest}) => rest),
     runs: state.connections.map(cn => {
       const rt = cn.route, sp = specOf(cn);
+      const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+      const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
       return {
-        from:{ref: byUid(cn.a.mh)?.ref, face: cn.a.face},
-        to:  {ref: byUid(cn.b.mh)?.ref, face: cn.b.face},
+        from:{ref: A?.ref, face: cn.a.face, lateralOffset: ea ? Math.round(ea.offset) : 0,
+              zOffset: A ? -(cn.level|0)*A.zSpace : 0},
+        to:  {ref: B?.ref, face: cn.b.face, lateralOffset: eb ? Math.round(eb.offset) : 0,
+              zOffset: B ? -(cn.level|0)*B.zSpace : 0},
         spec: sp ? sp.name : null,
+        level: cn.level|0,
         placed: cn.placed,
         route: rt && rt.ok ? {
           vertices: rt.pts.map(p => [Math.round(p[0]), Math.round(p[1])]),
           bends: rt.turns.map((t,i) => ({deflection:t, radius: Math.round(rt.fillets[i].R)})),
           straights: rt.segs.map(v => Math.round(v)),
-          straightPipe: rt.clear.map(v => Math.round(Math.max(0,v))),
+          straightDuct: rt.clear.map(v => Math.round(Math.max(0,v))),
           centrelineLength: Math.round(rt.length),
           warnings: rt.warnings.map(w => w.text)
         } : null,
@@ -1283,7 +1384,8 @@ document.getElementById('fileIn').onchange = e => {
         const A = byRef(cn.from?.ref), B = byRef(cn.to?.ref);
         if (!A || !B) return null;
         return {uid:uid(), a:{mh:A.uid, face:cn.from.face}, b:{mh:B.uid, face:cn.to.face},
-                placed: !!cn.placed, specId: byName(cn.spec).id, route:null};
+                placed: !!cn.placed, level: Math.max(0, cn.level|0),
+                specId: byName(cn.spec).id, route:null};
       }).filter(Boolean);
       state.sel = null; state.editSpec = state.specs[0].id;
       renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); renderObstacles(); fitView();
@@ -1294,7 +1396,7 @@ document.getElementById('fileIn').onchange = e => {
 };
 
 document.getElementById('btnClear').onclick = () => {
-  if (!state.chambers.length || confirm('Remove every chamber, obstacle and pipe run?')){
+  if (!state.chambers.length || confirm('Remove every chamber, obstacle and conduit run?')){
     state.chambers = []; state.obstacles = []; state.connections = [];
     state.sel = null; state.pending = null;
     renderSel(); renderConnections(); renderObstacles(); draw();
@@ -1332,9 +1434,11 @@ new ResizeObserver(() => draw()).observe(STAGE);
    ========================================================================== */
 
 state.specs = [
-  makeSpec({name:'DN300 storm',  colour:SPEC_COLOURS[0], radius:150,   bendR:600, stub:500, minLeg:750, buffer:300, warnAngle:45, angles:[22.5,45,90]}),
-  makeSpec({name:'DN225 foul',   colour:SPEC_COLOURS[1], radius:112.5, bendR:450, stub:400, minLeg:600, buffer:300, warnAngle:45, angles:[11.25,22.5,45,90]}),
-  makeSpec({name:'DN150 branch', colour:SPEC_COLOURS[2], radius:75,    bendR:300, stub:300, minLeg:450, buffer:200, warnAngle:90, angles:[45,90]})
+  makeSpec({name:'MV',        colour:'#e0655f', radius:100, bendR:1800, stub:600, minLeg:600, buffer:600, warnAngle:45, angles:[11.25,22.5,45]}),
+  makeSpec({name:'LV',        colour:'#f0a35e', radius:75,  bendR:1200, stub:500, minLeg:500, buffer:300, warnAngle:45, angles:[11.25,22.5,45,90]}),
+  makeSpec({name:'ELV',       colour:'#35c3e8', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, warnAngle:90, angles:[22.5,45,90]}),
+  makeSpec({name:'FIBRE',     colour:'#6bd68a', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, warnAngle:45, angles:[11.25,22.5,45,90]}),
+  makeSpec({name:'TELECOMMS', colour:'#d8a0e0', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, warnAngle:90, angles:[22.5,45,90]})
 ];
 state.editSpec = state.specs[0].id;
 
@@ -1346,9 +1450,11 @@ state.chambers = [
 state.obstacles = [ makeObstacle({name:'OBS01', x:6000, y:0, w:2400, d:3600, rot:0, buffer:250}) ];
 state.connections = [
   {uid:uid(), a:{mh:state.chambers[0].uid, face:'E'}, b:{mh:state.chambers[1].uid, face:'W'},
-   placed:true,  specId:state.specs[0].id, route:null},
+   placed:true,  level:0, specId:state.specs[1].id, route:null},
+  {uid:uid(), a:{mh:state.chambers[0].uid, face:'E'}, b:{mh:state.chambers[1].uid, face:'W'},
+   placed:true,  level:0, specId:state.specs[3].id, route:null},
   {uid:uid(), a:{mh:state.chambers[1].uid, face:'E'}, b:{mh:state.chambers[2].uid, face:'W'},
-   placed:false, specId:state.specs[1].id, route:null}
+   placed:false, level:0, specId:state.specs[0].id, route:null}
 ];
 
 renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); renderObstacles(); fitView();

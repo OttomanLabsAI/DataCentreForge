@@ -1,0 +1,20 @@
+Conduits it is — proper services, and manholes get entry spacing. This changes how runs anchor to faces, so let me build and test it properly:
+
+Ran 6 commands
+
+The face warning firing on the 4-run test is correct — four runs at 450 centres genuinely don't fit a 1200 face. Now checking the shipped demo state renders sensibly on load:
+
+Ran 4 commands, read a file
+
+Conduits throughout now, and the manhole owns the entry geometry.
+
+The five services replace the drainage specs: MV (red, Ø200, R1800, 600 buffer, no 90s), LV (amber, Ø150, R1200), ELV (cyan), FIBRE (green) and TELECOMMS (violet), each Ø100 R900. All values editable as before.
+
+Manhole settings — each chamber now has, under "Conduit entries":
+
+Lateral spacing (default 450) — runs sharing a face no longer pile onto the midpoint. They're spread along the face at these centres, ordered so the run heading left takes the left slot; two facing manholes assign mirrored slots, so a bank of parallel runs stays parallel instead of crossing itself mid-span (that one bit me in testing). Hover a face and the callout tells you how many runs it's carrying. If a face can't hold them — three Ø200s at 450 centres on a 1200 face — every affected run gets warned: "face MH01·E — 3 runs need 1,550 across a 1,200 face".
+Z spacing (default 300) — the vertical distance between conduit levels at that manhole. Each run has a Level (Z) field in its panel; level 1 at a manhole with 300 Z spacing exports as −300, and the drawing tags the run "L1".
+
+Two consequences that make this actually work as a ductbank tool. First, runs sharing a manhole are governed by its lateral spacing, not the buffer rule — otherwise MV's 600 buffer would demand 775 to its neighbour in a 450-centre bank and deadlock the whole bank. Unrelated runs crossing the site still get the full buffer separation. Second, runs on different levels ignore each other in plan — set a crossing duct to level 1 and it passes straight over the level-0 bank instead of routing around it, which is how you'd actually build it.
+
+The demo opens with LV and FIBRE as a two-run bank MH01→MH02 at ±225, splitting either side of the obstacle and holding exactly 450 between them, plus the pending MV run to the skewed MH03. Export now carries lateralOffset and zOffset per end, the level per run, and the manhole spacings.

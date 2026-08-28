@@ -1,0 +1,1 @@
+Fixed — two things: canvas drags now call preventDefault() so the browser never starts a text selection, and user-select: none is set on the header, panels and canvas as a backstop. Inputs and the derived readouts stay selectable, so you can still copy coordinates and lengths out of the panels.

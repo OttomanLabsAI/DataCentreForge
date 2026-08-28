@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Manhole plan — chambers, pipe runs and obstacles</title>
+<title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=1.4">
+<link rel="stylesheet" href="/assets/css/site.css?v=1.5">
 </head>
 <body>
 
@@ -22,7 +22,7 @@
 <main>
   <aside id="left">
     <div class="sec">
-      <h2>Pipe specs</h2>
+      <h2>Conduit specs</h2>
       <div id="specList"></div>
       <div class="btnrow">
         <button id="specNew" class="mini">New</button>
@@ -41,7 +41,7 @@
     <div class="hud" id="hint">
       drag empty space — pan · scroll — zoom<br>
       drag chamber or obstacle — move<br>
-      click a pipe — select · del — remove
+      click a conduit — select · del — remove
     </div>
     <div class="hud" id="scalebar"><div class="bar"></div><span></span></div>
     <div class="hud" id="callout"></div>
@@ -57,7 +57,7 @@
       <div id="sel"></div>
     </div>
     <div class="sec">
-      <h2>Pipe runs <em id="connCount"></em></h2>
+      <h2>Conduit runs <em id="connCount"></em></h2>
       <div id="connList"></div>
     </div>
     <div class="sec">
@@ -70,8 +70,8 @@
         <label for="snap">Snap increment</label>
         <input type="number" id="snap" min="0" step="5" value="50"><span class="unit">mm</span>
       </div>
-      <div class="row"><label class="chk"><input type="checkbox" id="avoidMH" checked> Pipes avoid other chambers</label></div>
-      <div class="row"><label class="chk"><input type="checkbox" id="avoidPipe" checked> Pipes avoid other runs</label></div>
+      <div class="row"><label class="chk"><input type="checkbox" id="avoidMH" checked> Conduits avoid other chambers</label></div>
+      <div class="row"><label class="chk"><input type="checkbox" id="avoidPipe" checked> Conduits avoid runs on the same level</label></div>
       <div class="row"><label class="chk"><input type="checkbox" id="grid" checked> Show grid</label></div>
       <div class="row"><label class="chk"><input type="checkbox" id="dims" checked> Show annotation</label></div>
     </div>
@@ -87,6 +87,6 @@
   </aside>
 </main>
 
-<script src="/assets/js/app.js?v=1.4"></script>
+<script src="/assets/js/app.js?v=1.5"></script>
 </body>
 </html>
