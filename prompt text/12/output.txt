@@ -1,0 +1,17 @@
+Right — that's the bottom of the dip: two bends back-to-back with the fillets eating the whole leg, so there's no straight duct between them. That leg length is exactly what minLeg is for, but since the single-pass search change it's only being scored, not enforced with full bend tangents. Let me look at the exact constraint code:
+
+Ran 8 commands
+
+Radius cuts are costed per candidate, so a no-cut sibling should have won — unless the sampler can never generate one. Let me read candidates() and the search loop:
+
+Ran 6 commands, read a file · 1 note
+
+Done — straights between bends is now a hard rule, not a preference. Every interior leg must carry the spec's minLeg of actual straight duct plus both bends' full-radius tangents, or the candidate is thrown out. So consecutive bends always run at full radius with real duct between them — the solver can no longer fake a leg by collapsing fittings into sharp corners, which is exactly what your screenshot was showing.
+
+Three things had to change to make it stick:
+
+The constraint itself — interior segment minimums now include the adjacent tangent lengths as a hard floor. Bank lanes keep it too: the aggregate spec budgets the lane offset onto stub and minLeg the same way it already did for bend radius, so the inside lane of a 45° corner doesn't lose its straight to the offset.
+
+The sampler had two blind spots stopping clean routes from ever being found: on 5-segment routes one leg (always the final one) was permanently pinned at its minimum, and samples stepped in ~2m increments — so the few hundred mm an end bend needs for its tangent was never generated. End legs now get exact tangent-sized samples. Net effect: your MH01–MH02 scene routes with zero warnings — the amber rings at MH02 are gone too, because the end legs now stretch to fit their fittings instead of cutting them.
+
+One honest consequence: a geometry that physically can't carry full-radius fittings plus the straights now says "no route to that face with these angles" instead of drawing something unbuildable. Tested it — an MV dogleg needing 6m of fall in 1.6m of run genuinely can't be built from 45° R1800 bends with 600 straights; the fix in real life is the same as in the tool: give the spec a steeper fitting (add 90°), shorten the bend radius, or come off a different face. Radius ambers can still appear, but only on the very first or last bend where a chamber approach is tight — everything between chambers is always clean now.

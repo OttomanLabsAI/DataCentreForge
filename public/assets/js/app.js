@@ -46,7 +46,7 @@ const selIs  = k => state.sel && state.sel.kind === k;
 /* ---------- model --------------------------------------------------------- */
 
 function makeChamber(o = {}){
-  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300, latSpace:450, zSpace:300}, o);
+  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300, latSpace:450, zSpace:300, edgeClear:150}, o);
 }
 function makeObstacle(o = {}){
   return Object.assign({uid:uid(), name:nextName(), x:0, y:0, w:2400, d:2400, rot:0, buffer:250}, o);
@@ -54,7 +54,7 @@ function makeObstacle(o = {}){
 function makeSpec(o = {}){
   return Object.assign({
     id:uid(), name:'New spec', colour:SPEC_COLOURS[state.specs.length % SPEC_COLOURS.length],
-    radius:150, bendR:600, stub:500, minLeg:500, buffer:300, warnAngle:45, angles:[22.5,45,90]
+    radius:150, bendR:600, stub:500, minLeg:500, buffer:300, spacing:300, warnAngle:45, angles:[22.5,45,90]
   }, o);
 }
 function nextRef(){
@@ -240,15 +240,20 @@ function clearOf(poly, blockers){
 }
 
 /** Minimum length of each straight as routed: ends are measured off the
-    chamber face, interiors between bends. Strict mode adds the bend tangents
-    on top, so the full radius fits without eating into the straight. */
+    chamber face, interiors between bends. Interior legs ALWAYS reserve the
+    full bend tangents on top of the minimum straight, so consecutive bends
+    run at full radius with real straight duct between them. End legs reserve
+    only the stub (their tangent shortfall is an amber radius cut instead),
+    unless strict mode asks for the tangents there too. */
 function segMins(turns, spec, strict){
   const n = turns.length + 1;
   const T = turns.map(t => spec.bendR * Math.tan(Math.abs(t)*D2R/2));
   const lo = [];
   for (let i = 0; i < n; i++){
-    const base = Math.max(1, (i === 0 || i === n-1) ? spec.stub : spec.minLeg);
-    lo.push(strict ? base + (i > 0 ? T[i-1] : 0) + (i < n-1 ? T[i] : 0) : base);
+    const end = (i === 0 || i === n-1);
+    const base = Math.max(1, end ? spec.stub : spec.minLeg);
+    const tans = (i > 0 ? T[i-1] : 0) + (i < n-1 ? T[i] : 0);
+    lo.push(end && !strict ? base : base + tans);
   }
   return lo;
 }
@@ -322,8 +327,13 @@ function solveWith(ds, V, ia, ib, fixed){
   const t = fixed.slice(); t[ia] = r[0]; t[ib] = r[1];
   return t;
 }
-/** Feasible sets of straight lengths for one turn sequence. */
-function candidates(P, d0, V, turns, lo, fine){
+/** Feasible sets of straight lengths for one turn sequence. ext[i] carries
+    the full-radius tangent an END leg would need on top of its minimum:
+    those exact values are always offered as samples (with a padded variant),
+    so an uncut end bend is reachable no matter how coarse the span sweep is.
+    Any third free segment is held at its minimum but still gets the tangent
+    options — previously it was pinned with no way to buy bend room. */
+function candidates(P, d0, V, turns, lo, fine, ext){
   const ds = dirsFrom(d0, turns), n = ds.length, res = [];
   const span = Math.max(3000, Math.hypot(V[0],V[1])*1.5);
   const NS = fine ? 30 : SAMPLES, GS = fine ? 9 : 4;
@@ -345,17 +355,19 @@ function candidates(P, d0, V, turns, lo, fine){
   for (const [ia,ib] of pairs){
     const free = []; for (let i = 0; i < n; i++) if (i !== ia && i !== ib) free.push(i);
     const fixed = lo.slice();
-    if (free.length === 1){
-      for (let k = 0; k <= NS; k++){
-        fixed[free[0]] = lo[free[0]] + span*k/NS;
-        push(solveWith(ds, V, ia, ib, fixed));
-      }
-    } else {
-      for (let k = 0; k <= GS; k++) for (let m = 0; m <= GS; m++){
-        fixed[free[0]] = lo[free[0]] + span*k/GS; fixed[free[1]] = lo[free[1]] + span*m/GS;
-        push(solveWith(ds, V, ia, ib, fixed));
-      }
-    }
+    const valsOf = (f, j) => {
+      const v = [];
+      const gridN = free.length === 1 ? NS : GS;
+      if (j < 2) for (let k = 0; k <= gridN; k++) v.push(lo[f] + span*k/gridN);
+      else v.push(lo[f]);
+      if (ext && ext[f] > 0){ v.push(lo[f] + ext[f]); v.push(lo[f] + ext[f]*1.5); }
+      return v;
+    };
+    const rec = j => {
+      if (j === free.length){ push(solveWith(ds, V, ia, ib, fixed)); return; }
+      for (const v of valsOf(free[j], j)){ fixed[free[j]] = v; rec(j+1); }
+    };
+    rec(0);
   }
   return res;
 }
@@ -422,7 +434,12 @@ function search(P, d0, V, delta, signed, spec, blockers, strict){
       + RADIUS_COST*f.warnings.filter(w => w.kind === 'radius').length;
   };
   const evalCands = (seq, fine) => {
-    for (const sol of candidates(P, d0, V, seq, segMins(seq, spec, strict), fine)){
+    const m = seq.length + 1, ext = Array(m).fill(0);
+    if (seq.length){
+      const T = t => spec.bendR * Math.tan(Math.abs(t)*D2R/2);
+      ext[0] = T(seq[0]); ext[m-1] = T(seq[seq.length-1]);
+    }
+    for (const sol of candidates(P, d0, V, seq, segMins(seq, spec, strict), fine, ext)){
       if (--budget < 0) return;
       sawSolution = true;
       const f = applyFillets(sol, spec);
@@ -474,25 +491,62 @@ function faceRuns(mhUid, face){
 /** Where a run actually meets the chamber: runs sharing a face are spread
     along it at the manhole's lateral spacing, ordered so the run heading
     left takes the left slot and entries never cross at the wall. */
+const runCols = r => Math.max(1, r.cols|0 || 1);
+const runRows = r => Math.max(1, r.rows|0 || 1);
+
+/** Everything about how a face carries its conduits: one shared grid whose
+    pitch is the LARGEST array spacing among the types present (floored by
+    the manhole's lateral spacing), arrays tiling it in canonical order,
+    stacked by level (level 0 highest). Used by plan entries, the face
+    section view, and the width check — so they always agree. */
+function faceLayout(mhUid, face){
+  const c = byUid(mhUid);
+  if (!c) return null;
+  const g = faceGeom(c, face);
+  const runs = faceRuns(mhUid, face);
+  /* canonical world-direction tangent, matching the banks */
+  let t = norm([g.p2[0]-g.p1[0], g.p2[1]-g.p1[1]]);
+  if (t[1] < -1e-9 || (Math.abs(t[1]) <= 1e-9 && t[0] < 0)) t = [-t[0], -t[1]];
+  if (!runs.length) return {c, g, t, S:c.latSpace, groups:[], usedW:0, rowsTotal:0, fits:true};
+  const S = Math.max(c.latSpace, ...runs.map(r => specOf(r) ? (specOf(r).spacing || 0) : 0));
+  const order = rs => rs.map(r => {
+    const far = (r.a.mh === mhUid && r.a.face === face) ? r.b : r.a;
+    const oc = byUid(far.mh);
+    return {r, proj: oc ? (oc.x-g.mid[0])*t[0] + (oc.y-g.mid[1])*t[1] : 0};
+  }).sort((x,y) => x.proj - y.proj || (x.r.uid < y.r.uid ? -1 : 1)).map(k => k.r);
+  const levels = [...new Set(runs.map(r => r.level|0))].sort((a,b) => a-b);
+  const groups = [];
+  let rowsTotal = 0, usedW = 0;
+  for (const lv of levels){
+    const rs = order(runs.filter(r => (r.level|0) === lv));
+    let col = 0; const items = [];
+    for (const r of rs){
+      items.push({cn:r, sp:specOf(r), cols:runCols(r), rows:runRows(r), colStart:col});
+      col += runCols(r);
+    }
+    const totalCols = col;
+    const rMax = Math.max(...items.map(i => i.sp ? i.sp.radius : 0));
+    const rowsMax = Math.max(...items.map(i => i.rows));
+    for (const i of items) i.centreOff = (i.colStart + (i.cols-1)/2 - (totalCols-1)/2) * S;
+    groups.push({level:lv, items, totalCols, rMax, rowsMax});
+    rowsTotal += rowsMax;
+    usedW = Math.max(usedW, (totalCols-1)*S + 2*rMax);
+  }
+  const fits = usedW + 2*(c.edgeClear || 0) <= g.width + 1;
+  return {c, g, t, S, groups, usedW, rowsTotal, fits};
+}
+
 function entryFor(cn, end){
   const ep = cn[end], c = byUid(ep.mh);
   if (!c) return null;
-  const g = faceGeom(c, ep.face);
-  const runs = faceRuns(ep.mh, ep.face).filter(r => (r.level|0) === (cn.level|0));
-  if (runs.length < 2) return {...g, point:g.mid, offset:0, slots:runs.length};
-  /* Order along the face in a fixed world direction (north-ish, else east),
-     not the face's own winding — otherwise two facing faces sort in mirrored
-     order and a bank of runs crosses itself mid-span. */
-  let t = norm([g.p2[0]-g.p1[0], g.p2[1]-g.p1[1]]);
-  if (t[1] < -1e-9 || (Math.abs(t[1]) <= 1e-9 && t[0] < 0)) t = [-t[0], -t[1]];
-  const keyed = runs.map(r => {
-    const far = (r.a.mh === ep.mh && r.a.face === ep.face) ? r.b : r.a;
-    const oc = byUid(far.mh);
-    return {r, proj: oc ? (oc.x-g.mid[0])*t[0] + (oc.y-g.mid[1])*t[1] : 0};
-  }).sort((x,y) => x.proj - y.proj || (x.r.uid < y.r.uid ? -1 : 1));
-  const i = keyed.findIndex(k => k.r === cn);
-  const off = (i - (runs.length-1)/2) * c.latSpace;
-  return {...g, point:[g.mid[0]+t[0]*off, g.mid[1]+t[1]*off], offset:off, slots:runs.length};
+  const L = faceLayout(ep.mh, ep.face);
+  const g = L.g, t = L.t;
+  const grp = L.groups.find(G => G.level === (cn.level|0));
+  const item = grp && grp.items.find(i => i.cn === cn);
+  if (!item) return {...g, point:g.mid, offset:0, slots:1, S:L.S, cols:runCols(cn)};
+  const off = item.centreOff;
+  return {...g, point:[g.mid[0]+t[0]*off, g.mid[1]+t[1]*off], offset:off,
+          slots:grp.items.length, S:L.S, cols:item.cols};
 }
 
 /* ==========================================================================
@@ -538,12 +592,13 @@ function buildBanks(){
     const ends = members.map(cn => {
       const se = endKey(cn,'a') === endKey(m0,first) ? 'a' : 'b';
       const eS = entryFor(cn, se), eE = entryFor(cn, se === 'a' ? 'b' : 'a');
-      return {cn, se, oS:eS.offset, oE:eE.offset};
+      const S = Math.max(eS.S || 0, eE.S || 0);
+      return {cn, se, oS:eS.offset, oE:eE.offset, S, halfW:(runCols(cn)-1)/2*S};
     });
     const meanS = ends.reduce((a,e) => a+e.oS, 0)/ends.length;
     const meanE = ends.reduce((a,e) => a+e.oE, 0)/ends.length;
     for (const e of ends){ e.w0 = (e.oS-meanS)*sS; e.w1 = (e.oE-meanE)*sE; }
-    const maxOff = Math.max(0, ...ends.map(e => Math.max(Math.abs(e.w0), Math.abs(e.w1))));
+    const maxOff = Math.max(0, ...ends.map(e => Math.max(Math.abs(e.w0), Math.abs(e.w1)) + e.halfW));
     const specs = members.map(specOf);
     let angles = ANGLE_OPTIONS.filter(a => specs.every(sp => sp.angles.includes(a)));
     const g = {
@@ -559,8 +614,11 @@ function buildBanks(){
       spec: {
         radius: Math.max(...specs.map(sp => sp.radius)),
         bendR: Math.max(...specs.map(sp => sp.bendR)) + maxOff,
-        stub: Math.max(...specs.map(sp => sp.stub)),
-        minLeg: Math.max(...specs.map(sp => sp.minLeg)),
+        /* offset lanes lose up to maxOff*tan(turn/2) per corner on the inside
+           of a bend — budget maxOff onto the straights so every lane still
+           carries its own stub and minLeg after offsetting */
+        stub: Math.max(...specs.map(sp => sp.stub)) + maxOff,
+        minLeg: Math.max(...specs.map(sp => sp.minLeg)) + maxOff,
         buffer: Math.max(...specs.map(sp => sp.buffer)),
         warnAngle: Math.min(...specs.map(sp => sp.warnAngle || 999)),
         angles
@@ -618,7 +676,7 @@ function bankSignature(G, banks){
     .map(H => [H.key, H.maxOff, H.maxRad, H.maxBuf, H.spec.stub,
                H.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]) : 0;
   return JSON.stringify([G.key, G.PS.map(Math.round), G.PE.map(Math.round),
-    G.ends.map(e => [Math.round(e.w0), Math.round(e.w1)]), [...G.levels], G.spec,
+    G.ends.map(e => [Math.round(e.w0), Math.round(e.w1), Math.round(e.halfW)]), [...G.levels], G.spec, Math.round(G.maxOff),
     state.avoidChambers, state.avoidPipes, ROUTE_QUICK,
     state.obstacles.map(box), state.chambers.map(mh), others]);
 }
@@ -707,25 +765,18 @@ function recomputeRoutes(){
   for (const k of [...bankCache.keys()])
     if (!banks.some(G => G.key === k)) bankCache.delete(k);
 
-  /* faces carrying several same-level runs must be wide enough */
-  const groups = new Map();
-  for (const c of state.connections) for (const end of ['a','b']){
-    const k = c[end].mh + '|' + c[end].face + '|' + (c.level|0);
-    if (!groups.has(k)) groups.set(k, []);
-    groups.get(k).push(c);
-  }
-  for (const [k, runs] of groups){
-    if (runs.length < 2) continue;
+  /* every face must be wide enough for its conduit grid plus edge clearance */
+  const faceKeys = new Set();
+  for (const c of state.connections) for (const end of ['a','b'])
+    faceKeys.add(c[end].mh + '|' + c[end].face);
+  for (const k of faceKeys){
     const [mhU, face] = k.split('|');
-    const c = byUid(mhU);
-    if (!c) continue;
-    const width = faceGeom(c, face).width;
-    const maxDia = Math.max(...runs.map(r => 2*specOf(r).radius));
-    const span = (runs.length-1)*c.latSpace + maxDia;
-    if (span > width + 1)
-      for (const r of runs) if (r.route && r.route.ok)
-        r.route.warnings.push({kind:'face',
-          text:`face ${c.ref}·${face} — ${runs.length} runs need ${fmt(span)} across a ${fmt(width)} face`});
+    const L = faceLayout(mhU, face);
+    if (!L || L.fits) continue;
+    const need = L.usedW + 2*(L.c.edgeClear || 0);
+    for (const r of faceRuns(mhU, face)) if (r.route && r.route.ok)
+      r.route.warnings.push({kind:'face',
+        text:`face ${L.c.ref}·${face} — grid needs ${fmt(need)} across a ${fmt(L.g.width)} face (pitch ${fmt(L.S)}, edge ${fmt(L.c.edgeClear||0)})`});
   }
 
   /* residual bank-to-bank separation check */
@@ -916,12 +967,25 @@ function drawConnection(cn){
     return out.join('');
   }
 
-  const d = routePathScreen(rt), body = Math.max(1.5, 2*sp.radius*s);
+  const body = Math.max(1.5, 2*sp.radius*s);
   const edge = on ? C.sel : sp.colour;
+  const cols = runCols(cn), S = Math.max(entryFor(cn,'a').S || 0, entryFor(cn,'b').S || 0);
+  const halfW = (cols-1)/2*S;
+  /* one polyline per column of the array, offset off the routed centreline */
+  const lanes = [];
+  for (let k = 0; k < cols; k++){
+    const w = (k - (cols-1)/2) * S;
+    let lane = rt;
+    if (Math.abs(w) > 1e-6){ try { lane = offsetMember(rt, w, w); } catch(_){ lane = rt; } }
+    lanes.push(routePathScreen(lane));
+  }
+  const d = lanes[Math.floor(cols/2)] || lanes[0];
   if (on && sp.buffer > 0)
-    out.push(`<path d="${d}" fill="none" stroke="${sp.colour}" stroke-width="${2*(sp.radius+sp.buffer)*s}" stroke-linejoin="round" stroke-linecap="round" opacity=".09"/>`);
-  out.push(`<path d="${d}" fill="none" stroke="${edge}" stroke-width="${body}" stroke-linejoin="round" stroke-linecap="butt" opacity=".95"/>`);
-  if (body > 4) out.push(`<path d="${d}" fill="none" stroke="${C.pipeBody}" stroke-width="${body-2.4}" stroke-linejoin="round" stroke-linecap="butt"/>`);
+    out.push(`<path d="${lanes[Math.floor(cols/2)]}" fill="none" stroke="${sp.colour}" stroke-width="${2*(halfW+sp.radius+sp.buffer)*s}" stroke-linejoin="round" stroke-linecap="round" opacity=".09"/>`);
+  for (const ld of lanes){
+    out.push(`<path d="${ld}" fill="none" stroke="${edge}" stroke-width="${body}" stroke-linejoin="round" stroke-linecap="butt" opacity=".95"/>`);
+    if (body > 4) out.push(`<path d="${ld}" fill="none" stroke="${C.pipeBody}" stroke-width="${body-2.4}" stroke-linejoin="round" stroke-linecap="butt"/>`);
+  }
   out.push(`<path d="${d}" fill="none" stroke="${edge}" stroke-width="1" stroke-dasharray="9 4 2 4" opacity=".8"/>`);
   out.push(`<circle cx="${p[0]}" cy="${p[1]}" r="3.2" fill="${edge}"/><circle cx="${q[0]}" cy="${q[1]}" r="3.2" fill="${edge}"/>`);
 
@@ -1107,7 +1171,7 @@ function pickFace(f){
   const dup = state.connections.find(c =>
     (same(c.a, state.pending) && same(c.b, f)) || (same(c.b, state.pending) && same(c.a, f)));
   if (dup){ state.pending = null; select('conn', dup.uid); return; }
-  const cn = {uid:uid(), a:state.pending, b:f, placed:false, level:0,
+  const cn = {uid:uid(), a:state.pending, b:f, placed:false, level:0, rows:1, cols:1,
               specId:(state.editSpec || state.specs[0].id), route:null};
   state.connections.push(cn);
   state.pending = null;
@@ -1152,7 +1216,7 @@ function renderObstacles(){
   const box = document.getElementById('obsList');
   document.getElementById('obsCount').textContent = state.obstacles.length || '';
   if (!state.obstacles.length){
-    box.innerHTML = `<div class="empty">None. Add one with <b>+ Obstacle</b> — conduit runs are routed around it, keeping its buffer zone.</div>`;
+    box.innerHTML = `<div class="empty">None. Add one with <b>+ Obstacle</b> — conduit runs are routed around it, keeping its clearance.</div>`;
     return;
   }
   box.innerHTML = '<div class="list">' + state.obstacles.map(o =>
@@ -1203,14 +1267,16 @@ function renderSpecEdit(){
     `<div class="row" style="margin-bottom:2px"><label>Minimum straight</label></div>` +
     numRow('sStub','off chamber face', sp.stub, 50, 'mm') +
     numRow('sLeg','between bends', sp.minLeg, 50, 'mm') +
-    numRow('sBuf','Buffer zone', sp.buffer, 50, 'mm') +
+    numRow('sBuf','Clearance', sp.buffer, 50, 'mm') +
+    numRow('sSpc','Array spacing', sp.spacing || 300, 25, 'mm') +
     numRow('sWarn','Warn above', sp.warnAngle, 5, '°') +
     `<div class="row" style="margin-top:4px"><label>Bend angles allowed</label></div>
      <div class="chips" id="sAngles">${ANGLE_OPTIONS.map(a =>
         `<button class="chip ${sp.angles.includes(a)?'on':''}" data-ang="${a}">${a}°</button>`).join('')}</div>
      <div class="derived"><b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
        <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
-       <b>Buffer</b> ${fmt(sp.buffer)} each side — pairs keep the larger buffer<br>
+       <b>Clearance</b> ${fmt(sp.buffer)} each side — pairs keep the larger clearance<br>
+       <b>Array pitch</b> ${fmt(sp.spacing || 300)} — faces snap to the largest pitch present<br>
        <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}</div>`;
 
   const bindS = (id, key, cast = Number) => {
@@ -1222,7 +1288,7 @@ function renderSpecEdit(){
     });
   };
   bindS('sName','name',String); bindS('sRad','radius'); bindS('sBend','bendR');
-  bindS('sStub','stub'); bindS('sLeg','minLeg'); bindS('sBuf','buffer'); bindS('sWarn','warnAngle');
+  bindS('sStub','stub'); bindS('sLeg','minLeg'); bindS('sBuf','buffer'); bindS('sSpc','spacing'); bindS('sWarn','warnAngle');
   box.querySelectorAll('[data-col]').forEach(el => el.onclick = () => {
     sp.colour = el.dataset.col; renderSpecEdit(); specChanged();
   });
@@ -1295,15 +1361,17 @@ function renderChamberProps(box, c){
     numRow('pX','Centre X', c.x, state.snap||1, 'mm') +
     numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
     numRow('pR','Rotation', c.rot, 15, '°') +
-    numRow('pB','Buffer zone', c.buffer, 50, 'mm') +
+    numRow('pB','Clearance', c.buffer, 50, 'mm') +
     `<div class="row" style="margin:10px 0 2px"><label>Conduit entries</label></div>` +
     numRow('pLat','Lateral spacing', c.latSpace, 50, 'mm') +
     numRow('pZ','Z spacing', c.zSpace, 50, 'mm') +
+    numRow('pEC','Edge clearance', c.edgeClear ?? 150, 25, 'mm') +
     `<div class="derived">
        <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
        <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
-       <b>Faces</b> ${FACES.map(f => f+' '+fmt(faceGeom(c,f).width)).join('  ')}</div>
-     <div class="btnrow"><button id="pDup">Duplicate</button><button id="pDel" class="warn">Delete</button></div>`;
+       <b>Faces</b> ${FACES.map(f => f+' '+fmt(faceGeom(c,f).width)).join('  ')}</div>` +
+    facesBlock(c) +
+    `<div class="btnrow"><button id="pDup">Duplicate</button><button id="pDel" class="warn">Delete</button></div>`;
   const bind = (id, key, cast = Number) => {
     const el = document.getElementById(id);
     el.addEventListener('input', () => {
@@ -1321,7 +1389,8 @@ function renderChamberProps(box, c){
   };
   bind('pRef','ref',String); bind('pIX','intX'); bind('pIY','intY');
   bind('pW','wall'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
-  bind('pLat','latSpace'); bind('pZ','zSpace');
+  bind('pLat','latSpace'); bind('pZ','zSpace'); bind('pEC','edgeClear');
+  wireFaceButtons(c);
   document.getElementById('pSq').onchange = e => {
     state.square = e.target.checked;
     if (state.square){ c.intY = c.intX; renderSel(); renderConnections(); draw(); }
@@ -1342,9 +1411,9 @@ function renderObstacleProps(box, o){
     numRow('oX','Centre X', o.x, state.snap||1, 'mm') +
     numRow('oY','Centre Y', o.y, state.snap||1, 'mm') +
     numRow('oR','Rotation', o.rot, 15, '°') +
-    numRow('oC','Buffer zone', o.buffer, 50, 'mm') +
+    numRow('oC','Clearance', o.buffer, 50, 'mm') +
     `<div class="derived"><b>Keep-out</b> ${fmt(o.w+2*o.buffer)} × ${fmt(o.d+2*o.buffer)} mm<br>
-       <span>Conduits are held off by the larger of this buffer and their own, plus their radius.</span></div>
+       <span>Conduits are held off by the larger of this clearance and their own, plus their radius.</span></div>
      <div class="btnrow"><button id="oDup">Duplicate</button><button id="oDel" class="warn">Delete</button></div>`;
   const bind = (id, key, cast = Number) => {
     const el = document.getElementById(id);
@@ -1376,9 +1445,11 @@ function renderRunProps(box, cn){
        `<option value="${s.id}" ${s.id === cn.specId ? 'selected':''}>${esc(s.name)} — Ø${fmt(s.radius*2)} R${fmt(s.bendR)}</option>`).join('')}</select>
      <div style="height:8px"></div>` +
     numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
+    numRow('qCols','Columns (wide)', runCols(cn), 1, '') +
+    numRow('qRows','Rows (high)', runRows(cn), 1, '') +
     `<div class="derived">
        <b>Run</b> ${esc(connLabel(cn))}<br>
-       ${entryLine(cn)}
+       ${entryLine(cn)}${arrayLine(cn)}
        <b>Angles</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}<br>` +
        (rt && rt.ok
          ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°').join(' · ') : 'none — straight run'}<br>
@@ -1400,6 +1471,13 @@ function renderRunProps(box, cn){
     cn.level = v;
     renderSel(); renderConnections(); draw();
   });
+  for (const [id, key] of [['qCols','cols'], ['qRows','rows']]){
+    const el = document.getElementById(id);
+    el.addEventListener('input', () => {
+      cn[key] = Math.max(1, Math.round(Number(el.value)||1));
+      renderSel(); renderConnections(); draw();
+    });
+  }
   document.getElementById('qSpec').onchange = e => {
     cn.specId = e.target.value;
     state.editSpec = cn.specId;
@@ -1415,6 +1493,85 @@ function renderRunProps(box, cn){
   };
 }
 
+/** Cross-section of one chamber face: the shared conduit grid to scale,
+    every conduit as a circle in its spec colour, edge-clearance guides,
+    and a caption saying whether the face carries it. */
+function faceSectionSVG(L, wpx = 232){
+  if (!L.groups.length) return '';
+  const ec = L.c.edgeClear || 0, W = L.g.width;
+  const pad = 12, scale = (wpx - pad*2) / W;
+  const rBig = Math.max(...L.groups.map(g => g.rMax));
+  let y = rBig; const tops = [];
+  L.groups.forEach((gr, gi) => { tops.push(y); y += (gr.rowsMax-1)*L.S; if (gi < L.groups.length-1) y += L.S; });
+  const contentH = y + rBig;
+  const hpx = contentH*scale + pad*2 + 16;
+  const X = mm => pad + (mm + W/2)*scale;
+  const Y = mm => pad + mm*scale;
+  const el = [];
+  el.push(`<rect x="${X(-W/2)}" y="${pad-4}" width="${W*scale}" height="${contentH*scale+8}" fill="none" stroke="${C.inkFaint}" stroke-width="1"/>`);
+  for (const sgn of [-1, 1])
+    el.push(`<line x1="${X(sgn*(W/2-ec))}" y1="${pad-4}" x2="${X(sgn*(W/2-ec))}" y2="${pad+contentH*scale+4}" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>`);
+  L.groups.forEach((gr, gi) => {
+    for (const it of gr.items){
+      if (!it.sp) continue;
+      const rp = Math.max(2.2, it.sp.radius*scale);
+      for (let rI = 0; rI < it.rows; rI++) for (let cI = 0; cI < it.cols; cI++){
+        const xo = it.centreOff + (cI-(it.cols-1)/2)*L.S;
+        el.push(`<circle cx="${X(xo)}" cy="${Y(tops[gi]+rI*L.S)}" r="${rp}" fill="none" stroke="${it.sp.colour}" stroke-width="1.6"/>`);
+      }
+    }
+  });
+  const cap = `pitch ${fmt(L.S)} · edge ≥${fmt(ec)} · grid ${fmt(L.usedW)} / face ${fmt(W)} ${L.fits ? '✓' : '✗ OVER'}`;
+  el.push(`<text x="${wpx/2}" y="${hpx-4}" fill="${L.fits ? C.inkFaint : C.bad}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${cap}</text>`);
+  return `<svg width="${wpx}" height="${hpx}" style="display:block;margin:4px 0 2px">${el.join('')}</svg>`;
+}
+
+/** Per-face list of connections with array sizes, level tags and ▲▼ stacking
+    controls, plus the section view — shown when a manhole is selected. */
+function facesBlock(c){
+  const blocks = [];
+  for (const f of FACES){
+    const runs = faceRuns(c.uid, f);
+    if (!runs.length) continue;
+    const L = faceLayout(c.uid, f);
+    const rows = L.groups.flatMap(gr => gr.items.map(it => {
+      const sp = it.sp || {colour:'#888', name:'?'};
+      return `<div style="display:flex;align-items:center;gap:6px;margin:2px 0;font-size:11px">
+        <span style="width:9px;height:9px;border-radius:2px;background:${sp.colour};flex:none"></span>
+        <span style="flex:1">${esc(sp.name)} — ${it.cols} × ${it.rows}</span>
+        <em style="opacity:.6;font-style:normal">L${gr.level}</em>
+        <button data-fup="${it.cn.uid}" title="raise (smaller level)" style="padding:0 5px">▲</button>
+        <button data-fdn="${it.cn.uid}" title="lower (bigger level)" style="padding:0 5px">▼</button></div>`;
+    }));
+    blocks.push(`<div style="margin:6px 0 10px">
+      <div style="font-size:11px;letter-spacing:.4px;opacity:.85;margin-bottom:2px"><b>${f} face</b> — ${runs.length} run${runs.length>1?'s':''}${L.fits ? '' : ` <span style="color:${C.bad}">too narrow</span>`}</div>
+      ${rows.join('')}${faceSectionSVG(L)}</div>`);
+  }
+  if (!blocks.length) return '';
+  return `<div class="row" style="margin:12px 0 2px"><label>Faces with connections</label></div>` + blocks.join('');
+}
+
+function wireFaceButtons(c){
+  document.querySelectorAll('[data-fup],[data-fdn]').forEach(b => {
+    b.onclick = () => {
+      const up = b.hasAttribute('data-fup');
+      const uidv = b.getAttribute(up ? 'data-fup' : 'data-fdn');
+      const cn = state.connections.find(x => x.uid === uidv);
+      if (!cn) return;
+      cn.level = Math.max(0, (cn.level|0) + (up ? -1 : 1));
+      recomputeRoutes();
+      renderSel(); renderConnections(); draw();
+    };
+  });
+}
+
+function arrayLine(cn){
+  const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
+  const S = Math.max(ea ? ea.S||0 : 0, eb ? eb.S||0 : 0);
+  const c = runCols(cn), r = runRows(cn);
+  if (c === 1 && r === 1) return '';
+  return `<b>Array</b> ${c} wide × ${r} high at ${fmt(S)} centres<br>`;
+}
 function entryLine(cn){
   const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
@@ -1491,6 +1648,7 @@ document.getElementById('btnExport').onclick = () => {
               zOffset: B ? -(cn.level|0)*B.zSpace : 0},
         spec: sp ? sp.name : null,
         level: cn.level|0,
+        rows: runRows(cn), cols: runCols(cn),
         placed: cn.placed,
         route: rt && rt.ok ? {
           vertices: rt.pts.map(p => [Math.round(p[0]), Math.round(p[1])]),
@@ -1533,6 +1691,7 @@ document.getElementById('fileIn').onchange = e => {
         if (!A || !B) return null;
         return {uid:uid(), a:{mh:A.uid, face:cn.from.face}, b:{mh:B.uid, face:cn.to.face},
                 placed: !!cn.placed, level: Math.max(0, cn.level|0),
+                rows: Math.max(1, cn.rows|0 || 1), cols: Math.max(1, cn.cols|0 || 1),
                 specId: byName(cn.spec).id, route:null};
       }).filter(Boolean);
       state.sel = null; state.editSpec = state.specs[0].id;
@@ -1582,11 +1741,11 @@ new ResizeObserver(() => draw()).observe(STAGE);
    ========================================================================== */
 
 state.specs = [
-  makeSpec({name:'MV',        colour:'#e0655f', radius:100, bendR:1800, stub:600, minLeg:600, buffer:600, warnAngle:45, angles:[11.25,22.5,45]}),
-  makeSpec({name:'LV',        colour:'#f0a35e', radius:75,  bendR:1200, stub:500, minLeg:500, buffer:300, warnAngle:45, angles:[11.25,22.5,45,90]}),
-  makeSpec({name:'ELV',       colour:'#35c3e8', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, warnAngle:90, angles:[22.5,45,90]}),
-  makeSpec({name:'FIBRE',     colour:'#6bd68a', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, warnAngle:45, angles:[11.25,22.5,45,90]}),
-  makeSpec({name:'TELECOMMS', colour:'#d8a0e0', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, warnAngle:90, angles:[22.5,45,90]})
+  makeSpec({name:'MV',        colour:'#e0655f', radius:100, bendR:1800, stub:600, minLeg:600, buffer:600, spacing:600, warnAngle:45, angles:[11.25,22.5,45]}),
+  makeSpec({name:'LV',        colour:'#f0a35e', radius:75,  bendR:1200, stub:500, minLeg:500, buffer:300, spacing:450, warnAngle:45, angles:[11.25,22.5,45,90]}),
+  makeSpec({name:'ELV',       colour:'#35c3e8', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, spacing:300, warnAngle:90, angles:[22.5,45,90]}),
+  makeSpec({name:'FIBRE',     colour:'#6bd68a', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, spacing:300, warnAngle:45, angles:[11.25,22.5,45,90]}),
+  makeSpec({name:'TELECOMMS', colour:'#d8a0e0', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, spacing:300, warnAngle:90, angles:[22.5,45,90]})
 ];
 state.editSpec = state.specs[0].id;
 
