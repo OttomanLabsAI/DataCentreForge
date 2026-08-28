@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Manhole plan — chamber layout</title>
+<title>Manhole plan — chambers and pipe runs</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=1.0">
+<link rel="stylesheet" href="/assets/css/site.css?v=1.1">
 </head>
 <body>
 
@@ -22,9 +22,8 @@
   <div id="stage">
     <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="hud" id="hint">
-      drag empty space — pan<br>
-      scroll — zoom<br>
-      drag chamber — move<br>
+      drag empty space — pan · scroll — zoom<br>
+      drag chamber — move · click pipe — select<br>
       arrows — nudge · del — remove
     </div>
     <div class="hud" id="scalebar"><div class="bar"></div><span></span></div>
@@ -33,19 +32,24 @@
       <span>X <b id="rx">—</b></span>
       <span>Y <b id="ry">—</b></span>
       <span>zoom <b id="rz">—</b></span>
-      <span id="rmode"></span>
+      <span class="msg" id="rmode"></span>
     </div>
   </div>
 
   <aside>
-    <div class="sec" id="propsSec">
+    <div class="sec">
       <h2>Chamber</h2>
       <div id="props"></div>
     </div>
 
     <div class="sec">
-      <h2>Connections <span id="connCount" style="color:var(--ink-faint)"></span></h2>
+      <h2>Connections <em id="connCount"></em></h2>
       <div id="connList"></div>
+    </div>
+
+    <div class="sec">
+      <h2>Pipe <em id="pipeWho"></em></h2>
+      <div id="pipe"></div>
     </div>
 
     <div class="sec">
@@ -55,7 +59,7 @@
         <input type="number" id="snap" min="0" step="5" value="50"><span class="unit">mm</span>
       </div>
       <div class="row"><label class="chk"><input type="checkbox" id="grid" checked> Show grid</label></div>
-      <div class="row"><label class="chk"><input type="checkbox" id="dims" checked> Show dimensions</label></div>
+      <div class="row"><label class="chk"><input type="checkbox" id="dims" checked> Show annotation</label></div>
     </div>
 
     <div class="sec">
@@ -70,6 +74,6 @@
   </aside>
 </main>
 
-<script src="/assets/js/app.js?v=1.0"></script>
+<script src="/assets/js/app.js?v=1.1"></script>
 </body>
 </html>

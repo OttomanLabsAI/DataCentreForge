@@ -103,3 +103,4 @@ and never regenerate them from memory.
 | Version | Title | Description |
 | --- | --- | --- |
 | v1.0 | The manhole plan drawing board goes live | The site opens with an interactive plan-view drawing board: lay out numbered chambers, set internal size and wall thickness, and join their faces with measured connection lines. Pan, zoom, snap to grid, and save or load the drawing as a file. |
+| v1.1 | Connections become real pipe runs with bends | Joining two chambers now draws an actual pipe run: it leaves one face square-on, arrives square-on at the other, and only turns through the fitting angles allowed. Each run reports its bends, straights and end-to-end length, and says when no route can be made. |
