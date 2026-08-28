@@ -54,7 +54,7 @@ function makeObstacle(o = {}){
 function makeSpec(o = {}){
   return Object.assign({
     id:uid(), name:'New spec', colour:SPEC_COLOURS[state.specs.length % SPEC_COLOURS.length],
-    radius:150, bendR:600, stub:500, warnAngle:45, angles:[22.5,45,90]
+    radius:150, bendR:600, stub:500, minLeg:500, warnAngle:45, angles:[22.5,45,90]
   }, o);
 }
 function nextRef(){
@@ -132,6 +132,11 @@ function distToSeg(p, a, b){
    ========================================================================== */
 
 const SAMPLES = 10, SEQ_CAP = 300, BUDGET = 30000;
+/* Route cost, in millimetres of pipe: every bend is worth this much extra
+   length, and a bend that trips a warning far more — so the router only
+   reaches for a big or over-limit bend when it saves serious pipe. */
+const BEND_COST = 1500, ANGLE_COST = 4000, RADIUS_COST = 3000;
+let ROUTE_QUICK = false;   // while dragging: smaller search, no fine pass
 
 function solve2(u, v, r){
   const det = u[0]*v[1] - u[1]*v[0];
@@ -167,25 +172,54 @@ function clearOf(poly, blockers){
   return true;
 }
 
-/** Fillet each bend, shrinking the radius where the straights leave no room. */
-function applyFillets(sol, bendR, warnAngle){
-  const {pts, segs, turns} = sol, fillets = [], warnings = [];
-  let length = segs.reduce((a,b) => a+b, 0);
+/** Minimum length of each straight as routed: ends are measured off the
+    chamber face, interiors between bends. Strict mode adds the bend tangents
+    on top, so the full radius fits without eating into the straight. */
+function segMins(turns, spec, strict){
+  const n = turns.length + 1;
+  const T = turns.map(t => spec.bendR * Math.tan(Math.abs(t)*D2R/2));
+  const lo = [];
+  for (let i = 0; i < n; i++){
+    const base = Math.max(1, (i === 0 || i === n-1) ? spec.stub : spec.minLeg);
+    lo.push(strict ? base + (i > 0 ? T[i-1] : 0) + (i < n-1 ? T[i] : 0) : base);
+  }
+  return lo;
+}
+
+/** Fillet every bend. Where the run is too short to carry both the bend and
+    the minimum straight, the straight is kept and the radius is cut back —
+    with a warning naming the bend. */
+function applyFillets(sol, spec){
+  const {segs, turns} = sol, n = segs.length;
+  const want = turns.map(t => spec.bendR * Math.tan(Math.abs(t)*D2R/2));
+  const scale = turns.map(() => 1);
+  for (let i = 0; i < n; i++){
+    const a = i-1, b = i < turns.length ? i : -1;
+    const need = (a >= 0 ? want[a] : 0) + (b >= 0 ? want[b] : 0);
+    const min = Math.max(1, (i === 0 || i === n-1) ? spec.stub : spec.minLeg);
+    const avail = Math.max(0, segs[i] - min);
+    if (need > avail + 1e-9){
+      const f = need > 0 ? avail/need : 0;
+      if (a >= 0) scale[a] = Math.min(scale[a], f);
+      if (b >= 0) scale[b] = Math.min(scale[b], f);
+    }
+  }
+  const fillets = [], warnings = [];
+  let length = segs.reduce((x,y) => x+y, 0);
   for (let i = 0; i < turns.length; i++){
     const d = Math.abs(turns[i])*D2R, th = Math.tan(d/2);
-    const before = segs[i]*(i > 0 ? 0.5 : 1), after = segs[i+1]*(i < turns.length-1 ? 0.5 : 1);
-    const cap = Math.min(before, after);
-    let R = bendR, T = R*th, cut = false;
-    if (T > cap + 1e-9){ T = cap; R = th > 1e-9 ? T/th : 0; cut = true; }
-    fillets.push({R, T, deflect: Math.abs(turns[i]), cut});
-    if (cut) warnings.push({kind:'radius', bend:i+1,
-      text:`bend ${i+1} — ${Math.round(bendR)} radius will not fit, cut to ${Math.round(R)}`});
-    if (warnAngle && Math.abs(turns[i]) > warnAngle + 1e-6) warnings.push({kind:'angle', bend:i+1,
-      text:`bend ${i+1} — ${fmt1(Math.abs(turns[i]))}° is over the ${fmt1(warnAngle)}° limit`});
+    const T = want[i]*scale[i], R = th > 1e-9 ? T/th : 0;
+    fillets.push({R, T, deflect: Math.abs(turns[i]), cut: scale[i] < 1-1e-6});
+    if (scale[i] < 1-1e-6) warnings.push({kind:'radius', bend:i+1,
+      text:`bend ${i+1} — R${fmt(spec.bendR)} will not fit beside the minimum straights, cut to R${fmt(R)}`});
+    if (spec.warnAngle && Math.abs(turns[i]) > spec.warnAngle+1e-6) warnings.push({kind:'angle', bend:i+1,
+      text:`bend ${i+1} — ${fmt1(Math.abs(turns[i]))}° is over the ${fmt1(spec.warnAngle)}° limit`});
     length += R*d - 2*T;
   }
-  return {...sol, fillets, length, warnings};
+  const clear = segs.map((L,i) => L - (i > 0 ? fillets[i-1].T : 0) - (i < n-1 ? fillets[i].T : 0));
+  return {...sol, fillets, clear, length, warnings};
 }
+
 /** Centreline as a polyline, arcs included — used for clash and hit testing. */
 function tessellate(rt, steps = 4){
   const out = [rt.pts[0].slice()];
@@ -222,19 +256,20 @@ function solveWith(ds, V, ia, ib, fixed){
   return t;
 }
 /** Feasible sets of straight lengths for one turn sequence. */
-function candidates(P, d0, V, turns, stub){
+function candidates(P, d0, V, turns, lo, fine){
   const ds = dirsFrom(d0, turns), n = ds.length, res = [];
   const span = Math.max(3000, Math.hypot(V[0],V[1])*1.5);
+  const NS = fine ? 30 : SAMPLES, GS = fine ? 9 : 4;
   const build = ts => {
     const pts = [P.slice()];
     for (let i = 0; i < n; i++){ const p = pts[i]; pts.push([p[0]+ds[i][0]*ts[i], p[1]+ds[i][1]*ts[i]]); }
     return {turns, pts, segs: ts.slice()};
   };
-  const push = t => { if (t && t.every(v => v >= stub-1e-6)) res.push(build(t)); };
+  const push = t => { if (t && t.every((v,i) => v >= lo[i]-1e-6)) res.push(build(t)); };
 
   if (n === 1){
     const cr = d0[0]*V[1]-d0[1]*V[0], dot = d0[0]*V[0]+d0[1]*V[1];
-    if (Math.abs(cr) <= 1 && dot >= stub) res.push(build([dot]));
+    if (Math.abs(cr) <= 1 && dot >= lo[0]) res.push(build([dot]));
     return res;
   }
   if (n === 2){ push(solveWith(ds, V, 0, 1, [0,0])); return res; }
@@ -242,16 +277,15 @@ function candidates(P, d0, V, turns, stub){
   const pairs = n === 3 ? [[1,2],[0,2],[0,1]] : n === 4 ? [[1,2],[0,3],[0,2]] : [[1,3],[2,3],[1,2]];
   for (const [ia,ib] of pairs){
     const free = []; for (let i = 0; i < n; i++) if (i !== ia && i !== ib) free.push(i);
-    const fixed = new Array(n).fill(stub);
+    const fixed = lo.slice();
     if (free.length === 1){
-      for (let k = 0; k <= SAMPLES; k++){
-        fixed[free[0]] = stub + span*k/SAMPLES;
+      for (let k = 0; k <= NS; k++){
+        fixed[free[0]] = lo[free[0]] + span*k/NS;
         push(solveWith(ds, V, ia, ib, fixed));
       }
     } else {
-      const S = 4;
-      for (let k = 0; k <= S; k++) for (let m = 0; m <= S; m++){
-        fixed[free[0]] = stub + span*k/S; fixed[free[1]] = stub + span*m/S;
+      for (let k = 0; k <= GS; k++) for (let m = 0; m <= GS; m++){
+        fixed[free[0]] = lo[free[0]] + span*k/GS; fixed[free[1]] = lo[free[1]] + span*m/GS;
         push(solveWith(ds, V, ia, ib, fixed));
       }
     }
@@ -303,33 +337,55 @@ function sequences(signed, delta, count){
   return seqOrder(out, SEQ_CAP);
 }
 
+function search(P, d0, V, delta, signed, spec, blockers, strict){
+  let sawSolution = false, sawBlocked = false, best = null;
+  let budget = ROUTE_QUICK ? 6000 : BUDGET;
+  const straightLine = Math.hypot(V[0], V[1]);
+  const scoreOf = f => f.length + BEND_COST*f.turns.length
+    + ANGLE_COST*f.warnings.filter(w => w.kind === 'angle').length
+    + RADIUS_COST*f.warnings.filter(w => w.kind === 'radius').length;
+  const evalCands = (seq, fine) => {
+    for (const sol of candidates(P, d0, V, seq, segMins(seq, spec, strict), fine)){
+      if (--budget < 0) return;
+      sawSolution = true;
+      const f = applyFillets(sol, spec);
+      f.poly = tessellate(f);
+      if (!clearOf(f.poly, blockers)){ sawBlocked = true; continue; }
+      f.score = scoreOf(f);
+      if (!best || f.score < best.score) best = f;
+    }
+  };
+  /* All bend counts compete on cost, not seniority: a fourth gentle bend
+     beats a shorter list of bends that swings kilometres out of the way.
+     A count is skipped only when even its best imaginable route — dead
+     straight, warning-free — could not beat what is already on the table. */
+  for (let n = 0; n <= 4 && budget >= 0; n++){
+    if (n > 0 && !signed.length) break;
+    if (best && straightLine + BEND_COST*n >= best.score) break;
+    for (const seq of sequences(signed, delta, n)){
+      evalCands(seq, false);
+      if (budget < 0) break;
+    }
+  }
+  if (best && !ROUTE_QUICK){ budget = 3000; evalCands(best.turns, true); }   // fine pass on the winner
+  return best ? {ok:true, ...best} : {ok:false, sawSolution, sawBlocked};
+}
+
+/** First pass keeps every bend at its full radius clear of the minimum
+    straights. Only if nothing fits does it try again with the radii cut
+    back, and then it says which bends had to give. */
 function solveRoute(P, d0, Q, d2, spec, blockers){
   const V = [Q[0]-P[0], Q[1]-P[1]];
   const delta = signedAngle(d0, d2);
   const angles = [...new Set(spec.angles)].filter(a => a > 0 && a < 180).sort((a,b) => a-b);
   const signed = []; for (const a of angles) signed.push(a, -a);
-  const stub = Math.max(1, spec.stub);
-  let sawSolution = false, sawBlocked = false, budget = BUDGET;
 
-  for (let n = 0; n <= 4; n++){
-    if (n > 0 && !signed.length) break;
-    let best = null;
-    for (const seq of sequences(signed, delta, n)){
-      for (const sol of candidates(P, d0, V, seq, stub)){
-        if (--budget < 0) break;
-        sawSolution = true;
-        const f = applyFillets(sol, spec.bendR, spec.warnAngle);
-        f.poly = tessellate(f);
-        if (!clearOf(f.poly, blockers)){ sawBlocked = true; continue; }
-        const score = f.warnings.filter(w => w.kind === 'angle').length*1e7 + f.length;
-        if (!best || score < best.score) best = {...f, score};
-      }
-      if (budget < 0) break;
-    }
-    if (best) return {ok:true, ...best};
-  }
-  return {ok:false, msg: sawBlocked ? 'blocked — no way past the obstacles'
-    : sawSolution ? 'no room — reduce the minimum straight'
+  const strict = search(P, d0, V, delta, signed, spec, blockers, true);
+  if (strict.ok) return strict;
+  const relaxed = search(P, d0, V, delta, signed, spec, blockers, false);
+  if (relaxed.ok) return relaxed;
+  return {ok:false, msg: relaxed.sawBlocked ? 'blocked — no way past the obstacles'
+    : relaxed.sawSolution ? 'no room — shorten the minimum straights'
     : angles.length ? 'no route to that face with these angles' : 'allow a bend angle'};
 }
 
@@ -358,7 +414,7 @@ function routeSignature(cn){
   const box = o => [o.x, o.y, o.w, o.d, o.rot, o.clearance];
   const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot];
   return JSON.stringify([cn.a.face, cn.b.face, A && mh(A), B && mh(B), specOf(cn),
-    state.avoidChambers, state.obstacles.map(box), state.chambers.map(mh)]);
+    state.avoidChambers, ROUTE_QUICK, state.obstacles.map(box), state.chambers.map(mh)]);
 }
 function recomputeRoutes(){
   for (const cn of state.connections){
@@ -635,9 +691,9 @@ STAGE.addEventListener('pointerdown', e => {
     return;
   }
   const c = hitChamber(wp);
-  if (c){ select('chamber', c.uid); drag = {kind:'move', obj:c, dx:wp[0]-c.x, dy:wp[1]-c.y}; return; }
+  if (c){ select('chamber', c.uid); drag = {kind:'move', obj:c, dx:wp[0]-c.x, dy:wp[1]-c.y}; ROUTE_QUICK = true; return; }
   const o = hitObstacle(wp);
-  if (o){ select('obstacle', o.uid); drag = {kind:'move', obj:o, dx:wp[0]-o.x, dy:wp[1]-o.y}; return; }
+  if (o){ select('obstacle', o.uid); drag = {kind:'move', obj:o, dx:wp[0]-o.x, dy:wp[1]-o.y}; ROUTE_QUICK = true; return; }
   const cn = hitConnection(wp);
   if (cn){ select('conn', cn.uid); return; }
   select(null);
@@ -668,7 +724,10 @@ STAGE.addEventListener('pointermove', e => {
   if (changed) draw();
 });
 
-STAGE.addEventListener('pointerup', () => { drag = null; });
+STAGE.addEventListener('pointerup', () => {
+  drag = null;
+  if (ROUTE_QUICK){ ROUTE_QUICK = false; renderSel(); renderConnections(); draw(); }
+});
 STAGE.addEventListener('pointerleave', () => {
   state.hoverFace = null; showCallout(null); draw();
   document.getElementById('rx').textContent = '—';
@@ -809,12 +868,15 @@ function renderSpecEdit(){
         `<div class="sw ${c === sp.colour ? 'on':''}" data-col="${c}" style="background:${c}" title="${c}"></div>`).join('')}</div>` +
     numRow('sRad','Pipe radius', sp.radius, 25, 'mm') +
     numRow('sBend','Bend radius', sp.bendR, 50, 'mm') +
-    numRow('sStub','Min straight', sp.stub, 50, 'mm') +
+    `<div class="row" style="margin-bottom:2px"><label>Minimum straight</label></div>` +
+    numRow('sStub','off chamber face', sp.stub, 50, 'mm') +
+    numRow('sLeg','between bends', sp.minLeg, 50, 'mm') +
     numRow('sWarn','Warn above', sp.warnAngle, 5, '°') +
     `<div class="row" style="margin-top:4px"><label>Bend angles allowed</label></div>
      <div class="chips" id="sAngles">${ANGLE_OPTIONS.map(a =>
         `<button class="chip ${sp.angles.includes(a)?'on':''}" data-ang="${a}">${a}°</button>`).join('')}</div>
      <div class="derived"><b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
+       <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
        <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}</div>`;
 
   const bindS = (id, key, cast = Number) => {
@@ -826,7 +888,7 @@ function renderSpecEdit(){
     });
   };
   bindS('sName','name',String); bindS('sRad','radius'); bindS('sBend','bendR');
-  bindS('sStub','stub'); bindS('sWarn','warnAngle');
+  bindS('sStub','stub'); bindS('sLeg','minLeg'); bindS('sWarn','warnAngle');
   box.querySelectorAll('[data-col]').forEach(el => el.onclick = () => {
     sp.colour = el.dataset.col; renderSpecEdit(); specChanged();
   });
@@ -842,6 +904,7 @@ function specChanged(){
   const sp = specBy(state.editSpec), der = document.querySelector('#specEdit .derived');
   if (sp && der) der.innerHTML =
     `<b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
+     <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
      <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}`;
   renderSpecs(); renderSel(); renderConnections(); draw();
 }
@@ -977,7 +1040,7 @@ function renderRunProps(box, cn){
        <b>Angles</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}<br>` +
        (rt && rt.ok
          ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°').join(' · ') : 'none — straight run'}<br>
-            <b>Straights</b> ${rt.segs.map(v => fmt(v)).join(' · ')} mm<br>
+            <b>Straight pipe</b> ${rt.clear.map(v => fmt(Math.max(0,v))).join(' · ')} mm<br>
             <b>Centreline</b> ${metres(rt.length)} face to face`
          : `<span style="color:${C.bad}">${esc(rt ? rt.msg : '')}</span>`) +
     `</div>` +
@@ -1066,6 +1129,7 @@ document.getElementById('btnExport').onclick = () => {
           vertices: rt.pts.map(p => [Math.round(p[0]), Math.round(p[1])]),
           bends: rt.turns.map((t,i) => ({deflection:t, radius: Math.round(rt.fillets[i].R)})),
           straights: rt.segs.map(v => Math.round(v)),
+          straightPipe: rt.clear.map(v => Math.round(Math.max(0,v))),
           centrelineLength: Math.round(rt.length),
           warnings: rt.warnings.map(w => w.text)
         } : null,
@@ -1087,7 +1151,9 @@ document.getElementById('fileIn').onchange = e => {
     try {
       const d = JSON.parse(rd.result);
       if (Array.isArray(d.specs) && d.specs.length)
-        state.specs = d.specs.map(s => makeSpec({...s, id:uid(), angles:[...(s.angles||[])]}));
+        state.specs = d.specs.map(s => makeSpec({...s, id:uid(),
+          minLeg: s.minLeg != null ? s.minLeg : (s.stub != null ? s.stub : 500),
+          angles:[...(s.angles||[])]}));
       state.chambers  = (d.chambers ||[]).map(c => makeChamber({...c, uid:uid()}));
       state.obstacles = (d.obstacles||[]).map(o => makeObstacle({...o, uid:uid()}));
       const byRef  = r => state.chambers.find(c => c.ref === r);
@@ -1145,9 +1211,9 @@ new ResizeObserver(() => draw()).observe(STAGE);
    ========================================================================== */
 
 state.specs = [
-  makeSpec({name:'DN300 storm',  colour:SPEC_COLOURS[0], radius:150,   bendR:600, stub:500, warnAngle:45, angles:[22.5,45,90]}),
-  makeSpec({name:'DN225 foul',   colour:SPEC_COLOURS[1], radius:112.5, bendR:450, stub:400, warnAngle:45, angles:[11.25,22.5,45,90]}),
-  makeSpec({name:'DN150 branch', colour:SPEC_COLOURS[2], radius:75,    bendR:300, stub:300, warnAngle:90, angles:[45,90]})
+  makeSpec({name:'DN300 storm',  colour:SPEC_COLOURS[0], radius:150,   bendR:600, stub:500, minLeg:750, warnAngle:45, angles:[22.5,45,90]}),
+  makeSpec({name:'DN225 foul',   colour:SPEC_COLOURS[1], radius:112.5, bendR:450, stub:400, minLeg:600, warnAngle:45, angles:[11.25,22.5,45,90]}),
+  makeSpec({name:'DN150 branch', colour:SPEC_COLOURS[2], radius:75,    bendR:300, stub:300, minLeg:450, warnAngle:90, angles:[45,90]})
 ];
 state.editSpec = state.specs[0].id;
 

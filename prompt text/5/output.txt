@@ -1,0 +1,17 @@
+That deep V is the router preferring fewest bends above everything — a 3-bend solution beats a 4-bend one no matter how much longer it is, and the sampling was too coarse to find the shallow hug. Fixing the scoring so length wins:
+
+Ran 4 commands, read a file
+
+Found it — two problems stacked. The router was staged by bend count, so any 3-bend route beat every 4-bend route no matter how far it swung, and that deep V was the only 3-bend shape that cleared the box. And the sampling was too coarse to even find the shallow versions.
+
+Now routes compete on cost, in millimetres of pipe:
+
+score = length + 1,500/bend + 4,000/over-limit bend + 3,000/cut radius
+
+So a fourth gentle bend is cheap, but a route that swings kilometres out of the way — or leans on a flagged 90 — pays for it. The staging is kept only as a pruning bound: a bend count is skipped when even a dead-straight, warning-free route at that count couldn't beat what's already found. And once a winner emerges, it gets a fine re-sampling pass (3× resolution) so the hug sits as tight to the obstacle as the clearance allows.
+
+On a reconstruction of your layout, the old answer was the 14.49 m V with the flagged 90. The new answer is a 22.5°/−22.5° pair at 13.63 m that doesn't dip below the line at all — it threads under the obstacle's clearance. With the obstacle pushed right down onto the line it becomes −45/45/45/−45 hugging underneath, no warnings — your red line. And the demo run that used to place as 45/−90/45 with a warning now solves clean as four 45s, shorter.
+
+The deeper search costs up to ~100 ms on hard cases, so while you're dragging a chamber or obstacle it runs a quick reduced search, then does the full solve the moment you let go — you may see a route tighten slightly on release.
+
+If a route still looks too keen or too shy on bends for your taste, those three cost constants are named at the top of the routing block (BEND_COST, ANGLE_COST, RADIUS_COST) — say the word and I'll expose them as sliders.
