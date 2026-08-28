@@ -1,0 +1,23 @@
+Buffer zones on everything means pipes must also keep clear of other pipes — that's the meaty part. Building it:
+
+Ran 3 commands
+
+The "crossing" run actually did something smarter than I expected — it routed around the end of the blocking run rather than failing. Let me verify mid-run bowing too:
+
+Ran 2 commands, read a file
+
+Buffer zones on everything now, and they're hard keep-outs.
+
+Every object carries a buffer:
+
+Chambers — new "Buffer zone" field (new ones default 300). Drawn as a faint dashed outline. Pipes not connected to that chamber stay out of footprint + buffer.
+Obstacles — the old clearance is now the same "Buffer zone" concept, same dashed keep-out.
+Pipe specs — "Buffer zone" in each spec (defaults 300/300/200 on the seeded ones). Select a placed run and its keep-out corridor renders as a translucent band along the pipe.
+
+The pairing rule: separation is the pipe's radius plus the larger of the two buffers — as on site, the stricter service governs. Between two runs it's both radii plus the larger buffer.
+
+Pipes now avoid other placed runs. Route a second pipe near an existing one and it bows away with gentle bends to hold the separation; try to cross a corridor and it routes around the end of the run instead, or reports "blocked — no way past the keep-outs" if there's genuinely no way. Runs that share a chamber get a free zone around it, since converging there is the whole point — otherwise a second pipe into the same manhole could never start.
+
+Because runs constrain each other, a re-route can oblige a neighbour to move: the solver settles over a few passes, then cross-checks every placed pair and flags any residual violation — "buffer to MH02·E → MH03·W not met" — in the run panel and the list.
+
+Two caveats worth knowing. First, if a chamber itself sits inside another run's corridor, a pipe from it genuinely can't satisfy the buffer at its own endpoint — you'll get a clean failure, and the fix is moving the chamber or trimming a buffer, not a fudged route. Second, plan-view separation is the wrong constraint for pipes crossing at different inverts — that's what the "Pipes avoid other runs" toggle in Drawing is for; switch it off and crossings are allowed again, with the clash checker also standing down.

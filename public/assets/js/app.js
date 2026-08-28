@@ -31,7 +31,7 @@ const state = {
   mode: 'select',
   pending: null,
   snap: 50,
-  showGrid: true, showDims: true, avoidChambers: true, square: true
+  showGrid: true, showDims: true, avoidChambers: true, avoidPipes: true, square: true
 };
 
 let uidSeq = 1;
@@ -46,15 +46,15 @@ const selIs  = k => state.sel && state.sel.kind === k;
 /* ---------- model --------------------------------------------------------- */
 
 function makeChamber(o = {}){
-  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0}, o);
+  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300}, o);
 }
 function makeObstacle(o = {}){
-  return Object.assign({uid:uid(), name:nextName(), x:0, y:0, w:2400, d:2400, rot:0, clearance:250}, o);
+  return Object.assign({uid:uid(), name:nextName(), x:0, y:0, w:2400, d:2400, rot:0, buffer:250}, o);
 }
 function makeSpec(o = {}){
   return Object.assign({
     id:uid(), name:'New spec', colour:SPEC_COLOURS[state.specs.length % SPEC_COLOURS.length],
-    radius:150, bendR:600, stub:500, minLeg:500, warnAngle:45, angles:[22.5,45,90]
+    radius:150, bendR:600, stub:500, minLeg:500, buffer:300, warnAngle:45, angles:[22.5,45,90]
   }, o);
 }
 function nextRef(){
@@ -116,6 +116,56 @@ function pointInPoly(pt, poly){
   }
   return inside;
 }
+function segSegDist(p1, p2, q1, q2){
+  const d1 = [p2[0]-p1[0], p2[1]-p1[1]], d2 = [q2[0]-q1[0], q2[1]-q1[1]], r = [p1[0]-q1[0], p1[1]-q1[1]];
+  const a = d1[0]*d1[0]+d1[1]*d1[1], e = d2[0]*d2[0]+d2[1]*d2[1], f = d2[0]*r[0]+d2[1]*r[1];
+  let sN, tN;
+  if (a <= 1e-12 && e <= 1e-12) return Math.hypot(r[0], r[1]);
+  if (a <= 1e-12){ sN = 0; tN = Math.max(0, Math.min(1, f/e)); }
+  else {
+    const c = d1[0]*r[0]+d1[1]*r[1];
+    if (e <= 1e-12){ tN = 0; sN = Math.max(0, Math.min(1, -c/a)); }
+    else {
+      const b = d1[0]*d2[0]+d1[1]*d2[1], den = a*e - b*b;
+      sN = den > 1e-12 ? Math.max(0, Math.min(1, (b*f - c*e)/den)) : 0;
+      tN = (b*sN + f)/e;
+      if (tN < 0){ tN = 0; sN = Math.max(0, Math.min(1, -c/a)); }
+      else if (tN > 1){ tN = 1; sN = Math.max(0, Math.min(1, (b - c)/a)); }
+    }
+  }
+  return Math.hypot(p1[0]+d1[0]*sN - (q1[0]+d2[0]*tN), p1[1]+d1[1]*sN - (q1[1]+d2[1]*tN));
+}
+function polyBounds(pts){
+  let x0=1e15, y0=1e15, x1=-1e15, y1=-1e15;
+  for (const p of pts){ x0=Math.min(x0,p[0]); x1=Math.max(x1,p[0]); y0=Math.min(y0,p[1]); y1=Math.max(y1,p[1]); }
+  return [x0, y0, x1, y1];
+}
+/** Drop a length off each end of a polyline (frees the shared-chamber zone). */
+function clipEnds(pts, front, back){
+  const cum = [0];
+  for (let i = 1; i < pts.length; i++)
+    cum.push(cum[i-1] + Math.hypot(pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]));
+  const total = cum[cum.length-1];
+  if (front + back >= total - 1) return null;
+  const at = L => {
+    let i = 1; while (i < cum.length-1 && cum[i] < L) i++;
+    const t = (L - cum[i-1]) / Math.max(1e-9, cum[i]-cum[i-1]);
+    return [pts[i-1][0] + (pts[i][0]-pts[i-1][0])*t, pts[i-1][1] + (pts[i][1]-pts[i-1][1])*t];
+  };
+  const a = front, b = total - back, out = [at(a)];
+  for (let i = 0; i < pts.length; i++) if (cum[i] > a && cum[i] < b) out.push(pts[i]);
+  out.push(at(b));
+  return out;
+}
+function lineLineDist(A, B, stop){
+  let m = Infinity;
+  for (let i = 0; i < A.length-1; i++)
+    for (let j = 0; j < B.length-1; j++){
+      const d = segSegDist(A[i], A[i+1], B[j], B[j+1]);
+      if (d < m){ m = d; if (m < stop) return m; }
+    }
+  return m;
+}
 function distToSeg(p, a, b){
   const vx = b[0]-a[0], vy = b[1]-a[1], wx = p[0]-a[0], wy = p[1]-a[1];
   const L2 = vx*vx + vy*vy;
@@ -128,7 +178,7 @@ function distToSeg(p, a, b){
    Leaves the internal face along its outward normal, arrives at the far
    internal face along the inward normal, changes direction only by an angle
    the spec permits, keeps every straight at or above the minimum, and stays
-   clear of every blocker by the pipe radius plus the obstacle's clearance.
+   clear of every keep-out: pipe radius plus the larger of the two buffer zones.
    ========================================================================== */
 
 const SAMPLES = 10, SEQ_CAP = 300, BUDGET = 30000;
@@ -167,8 +217,20 @@ function hitsBlocker(p, q, B){
   return segBox(lp, lq, B.hw+B.margin, B.hh+B.margin);
 }
 function clearOf(poly, blockers){
-  for (let i = 0; i < poly.length-1; i++)
-    for (const B of blockers) if (hitsBlocker(poly[i], poly[i+1], B)) return false;
+  let bb = null;
+  for (const B of blockers){
+    if (B.type === 'line'){
+      if (!bb) bb = polyBounds(poly);
+      if (bb[0] > B.bb[2]+B.margin || bb[2] < B.bb[0]-B.margin ||
+          bb[1] > B.bb[3]+B.margin || bb[3] < B.bb[1]-B.margin) continue;
+      for (let i = 0; i < poly.length-1; i++)
+        for (let j = 0; j < B.pts.length-1; j++)
+          if (segSegDist(poly[i], poly[i+1], B.pts[j], B.pts[j+1]) < B.margin) return false;
+    } else {
+      for (let i = 0; i < poly.length-1; i++)
+        if (hitsBlocker(poly[i], poly[i+1], B)) return false;
+    }
+  }
   return true;
 }
 
@@ -384,19 +446,35 @@ function solveRoute(P, d0, Q, d2, spec, blockers){
   if (strict.ok) return strict;
   const relaxed = search(P, d0, V, delta, signed, spec, blockers, false);
   if (relaxed.ok) return relaxed;
-  return {ok:false, msg: relaxed.sawBlocked ? 'blocked — no way past the obstacles'
+  return {ok:false, msg: relaxed.sawBlocked ? 'blocked — no way past the keep-outs'
     : relaxed.sawSolution ? 'no room — shorten the minimum straights'
     : angles.length ? 'no route to that face with these angles' : 'allow a bend angle'};
 }
 
+/** Separation to anything is the pipe's own radius plus the LARGER of the
+    two buffer zones; between runs it is both radii plus the larger buffer. */
 function blockersFor(cn){
   const sp = specOf(cn), out = [];
   for (const o of state.obstacles)
-    out.push({cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2, margin: sp.radius + o.clearance});
+    out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
+              margin: sp.radius + Math.max(sp.buffer, o.buffer)});
   if (state.avoidChambers)
     for (const c of state.chambers){
       if (c.uid === cn.a.mh || c.uid === cn.b.mh) continue;
-      out.push({cx:c.x, cy:c.y, rot:c.rot, hw:c.intX/2+c.wall, hh:c.intY/2+c.wall, margin: sp.radius});
+      out.push({type:'box', cx:c.x, cy:c.y, rot:c.rot, hw:c.intX/2+c.wall, hh:c.intY/2+c.wall,
+                margin: sp.radius + Math.max(sp.buffer, c.buffer)});
+    }
+  if (state.avoidPipes)
+    for (const other of state.connections){
+      if (other === cn || !other.placed || !other.route || !other.route.ok) continue;
+      const so = specOf(other);
+      const margin = sp.radius + so.radius + Math.max(sp.buffer, so.buffer);
+      /* runs that share a chamber legitimately converge there — free that zone */
+      const shares = u => u === cn.a.mh || u === cn.b.mh;
+      const free = Math.max(sp.stub, so.stub) + margin;
+      const line = clipEnds(other.route.poly, shares(other.a.mh) ? free : 0, shares(other.b.mh) ? free : 0);
+      if (!line) continue;
+      out.push({type:'line', pts:line, margin, bb:polyBounds(line), run:other.uid});
     }
   return out;
 }
@@ -411,16 +489,45 @@ function routeOf(cn){
 /** Routes are only re-solved when something they depend on actually moved. */
 function routeSignature(cn){
   const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
-  const box = o => [o.x, o.y, o.w, o.d, o.rot, o.clearance];
-  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot];
+  const box = o => [o.x, o.y, o.w, o.d, o.rot, o.buffer];
+  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer];
+  const others = state.avoidPipes ? state.connections
+    .filter(o => o !== cn && o.placed && o.route && o.route.ok)
+    .map(o => [o.uid, specOf(o).radius, specOf(o).buffer, specOf(o).stub,
+               o.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]) : 0;
   return JSON.stringify([cn.a.face, cn.b.face, A && mh(A), B && mh(B), specOf(cn),
-    state.avoidChambers, ROUTE_QUICK, state.obstacles.map(box), state.chambers.map(mh)]);
+    state.avoidChambers, state.avoidPipes, ROUTE_QUICK, state.obstacles.map(box),
+    state.chambers.map(mh), others]);
 }
 function recomputeRoutes(){
-  for (const cn of state.connections){
-    const sig = routeSignature(cn);
-    if (cn._sig === sig && cn.route) continue;
-    cn._sig = sig; cn.route = routeOf(cn);
+  /* Runs are blockers for each other, so one re-route can oblige another:
+     settle in a few passes, then cross-check whatever is left standing. */
+  for (let pass = 0; pass < 3; pass++){
+    let changed = false;
+    for (const cn of state.connections){
+      const sig = routeSignature(cn);
+      if (cn._sig === sig && cn.route) continue;
+      cn._sig = sig; cn.route = routeOf(cn);
+      changed = true;
+    }
+    if (!changed) break;
+  }
+  const placed = state.connections.filter(c => c.placed && c.route && c.route.ok);
+  for (const c of placed) c.route.warnings = c.route.warnings.filter(w => w.kind !== 'clash');
+  if (!state.avoidPipes) return;
+  for (let i = 0; i < placed.length; i++) for (let j = i+1; j < placed.length; j++){
+    const X = placed[i], Y = placed[j], sx = specOf(X), sy = specOf(Y);
+    const margin = sx.radius + sy.radius + Math.max(sx.buffer, sy.buffer);
+    const free = Math.max(sx.stub, sy.stub) + margin;
+    const shared = u => (u === Y.a.mh || u === Y.b.mh);
+    const px = clipEnds(X.route.poly, shared(X.a.mh) ? free : 0, shared(X.b.mh) ? free : 0);
+    const sharedX = u => (u === X.a.mh || u === X.b.mh);
+    const py = clipEnds(Y.route.poly, sharedX(Y.a.mh) ? free : 0, sharedX(Y.b.mh) ? free : 0);
+    if (!px || !py) continue;
+    if (lineLineDist(px, py, margin) < margin - 1){
+      X.route.warnings.push({kind:'clash', text:`buffer to ${connLabel(Y)} not met`});
+      Y.route.warnings.push({kind:'clash', text:`buffer to ${connLabel(X)} not met`});
+    }
   }
 }
 
@@ -520,6 +627,8 @@ function draw(){
     const inner = corners(c, 0), outer = corners(c, c.wall);
     const on = selIs('chamber') && state.sel.id === c.uid;
     const stroke = on ? C.sel : C.ink, ext = c.intX + 2*c.wall;
+    if (c.buffer > 0)
+      out.push(`<polygon points="${pts(corners(c, c.wall + c.buffer))}" fill="none" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="5 4" opacity=".55"/>`);
     out.push(`<polygon points="${pts(inner)}" fill="${C.chamber}"/>`);
     out.push(`<path d="${poly(outer)} ${poly(inner)}" fill="url(#hatch)" fill-rule="evenodd" opacity=".85"/>`);
     out.push(`<polygon points="${pts(outer)}" fill="none" stroke="${stroke}" stroke-width="${on?2:1.4}"/>`);
@@ -553,10 +662,10 @@ function draw(){
 
 function drawObstacle(o){
   const on = selIs('obstacle') && state.sel.id === o.uid;
-  const s = state.view.s, body = boxCorners(o, 0), clr = boxCorners(o, o.clearance);
+  const s = state.view.s, body = boxCorners(o, 0), clr = boxCorners(o, o.buffer);
   const stroke = on ? C.sel : C.obsLine;
   const out = [];
-  if (o.clearance > 0)
+  if (o.buffer > 0)
     out.push(`<polygon points="${pts(clr)}" fill="none" stroke="${C.obsHatch}" stroke-width="1" stroke-dasharray="5 4" opacity=".85"/>`);
   out.push(`<polygon points="${pts(body)}" fill="${C.obsFill}"/>`);
   out.push(`<polygon points="${pts(body)}" fill="url(#obs)" opacity=".8"/>`);
@@ -592,6 +701,8 @@ function drawConnection(cn){
 
   const d = routePathScreen(rt), body = Math.max(1.5, 2*sp.radius*s);
   const edge = on ? C.sel : sp.colour;
+  if (on && sp.buffer > 0)
+    out.push(`<path d="${d}" fill="none" stroke="${sp.colour}" stroke-width="${2*(sp.radius+sp.buffer)*s}" stroke-linejoin="round" stroke-linecap="round" opacity=".09"/>`);
   out.push(`<path d="${d}" fill="none" stroke="${edge}" stroke-width="${body}" stroke-linejoin="round" stroke-linecap="butt" opacity=".95"/>`);
   if (body > 4) out.push(`<path d="${d}" fill="none" stroke="${C.pipeBody}" stroke-width="${body-2.4}" stroke-linejoin="round" stroke-linecap="butt"/>`);
   out.push(`<path d="${d}" fill="none" stroke="${edge}" stroke-width="1" stroke-dasharray="9 4 2 4" opacity=".8"/>`);
@@ -820,7 +931,7 @@ function renderObstacles(){
   const box = document.getElementById('obsList');
   document.getElementById('obsCount').textContent = state.obstacles.length || '';
   if (!state.obstacles.length){
-    box.innerHTML = `<div class="empty">None. Add one with <b>+ Obstacle</b> — pipe runs are routed around it, keeping its clearance.</div>`;
+    box.innerHTML = `<div class="empty">None. Add one with <b>+ Obstacle</b> — pipe runs are routed around it, keeping its buffer zone.</div>`;
     return;
   }
   box.innerHTML = '<div class="list">' + state.obstacles.map(o =>
@@ -871,12 +982,15 @@ function renderSpecEdit(){
     `<div class="row" style="margin-bottom:2px"><label>Minimum straight</label></div>` +
     numRow('sStub','off chamber face', sp.stub, 50, 'mm') +
     numRow('sLeg','between bends', sp.minLeg, 50, 'mm') +
+    numRow('sBuf','Buffer zone', sp.buffer, 50, 'mm') +
     numRow('sWarn','Warn above', sp.warnAngle, 5, '°') +
     `<div class="row" style="margin-top:4px"><label>Bend angles allowed</label></div>
      <div class="chips" id="sAngles">${ANGLE_OPTIONS.map(a =>
         `<button class="chip ${sp.angles.includes(a)?'on':''}" data-ang="${a}">${a}°</button>`).join('')}</div>
      <div class="derived"><b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
        <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
+     <b>Buffer</b> ${fmt(sp.buffer)} each side — pairs keep the larger buffer<br>
+       <b>Buffer</b> ${fmt(sp.buffer)} each side — pairs keep the larger buffer<br>
        <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}</div>`;
 
   const bindS = (id, key, cast = Number) => {
@@ -888,7 +1002,7 @@ function renderSpecEdit(){
     });
   };
   bindS('sName','name',String); bindS('sRad','radius'); bindS('sBend','bendR');
-  bindS('sStub','stub'); bindS('sLeg','minLeg'); bindS('sWarn','warnAngle');
+  bindS('sStub','stub'); bindS('sLeg','minLeg'); bindS('sBuf','buffer'); bindS('sWarn','warnAngle');
   box.querySelectorAll('[data-col]').forEach(el => el.onclick = () => {
     sp.colour = el.dataset.col; renderSpecEdit(); specChanged();
   });
@@ -961,6 +1075,7 @@ function renderChamberProps(box, c){
     numRow('pX','Centre X', c.x, state.snap||1, 'mm') +
     numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
     numRow('pR','Rotation', c.rot, 15, '°') +
+    numRow('pB','Buffer zone', c.buffer, 50, 'mm') +
     `<div class="derived">
        <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
        <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
@@ -982,7 +1097,7 @@ function renderChamberProps(box, c){
     });
   };
   bind('pRef','ref',String); bind('pIX','intX'); bind('pIY','intY');
-  bind('pW','wall'); bind('pX','x'); bind('pY','y'); bind('pR','rot');
+  bind('pW','wall'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
   document.getElementById('pSq').onchange = e => {
     state.square = e.target.checked;
     if (state.square){ c.intY = c.intX; renderSel(); renderConnections(); draw(); }
@@ -1003,9 +1118,9 @@ function renderObstacleProps(box, o){
     numRow('oX','Centre X', o.x, state.snap||1, 'mm') +
     numRow('oY','Centre Y', o.y, state.snap||1, 'mm') +
     numRow('oR','Rotation', o.rot, 15, '°') +
-    numRow('oC','Clearance', o.clearance, 50, 'mm') +
-    `<div class="derived"><b>Keep-out</b> ${fmt(o.w+2*o.clearance)} × ${fmt(o.d+2*o.clearance)} mm<br>
-       <span>Pipes are held off by this clearance plus their own radius.</span></div>
+    numRow('oC','Buffer zone', o.buffer, 50, 'mm') +
+    `<div class="derived"><b>Keep-out</b> ${fmt(o.w+2*o.buffer)} × ${fmt(o.d+2*o.buffer)} mm<br>
+       <span>Pipes are held off by the larger of this buffer and their own, plus their radius.</span></div>
      <div class="btnrow"><button id="oDup">Duplicate</button><button id="oDel" class="warn">Delete</button></div>`;
   const bind = (id, key, cast = Number) => {
     const el = document.getElementById(id);
@@ -1016,7 +1131,7 @@ function renderObstacleProps(box, o){
     });
   };
   bind('oName','name',String); bind('oW','w'); bind('oD','d');
-  bind('oX','x'); bind('oY','y'); bind('oR','rot'); bind('oC','clearance');
+  bind('oX','x'); bind('oY','y'); bind('oR','rot'); bind('oC','buffer');
   document.getElementById('oDup').onclick = () => {
     const n = makeObstacle({...o, uid:uid(), name:nextName(), x:o.x + o.w + 1000});
     state.obstacles.push(n); select('obstacle', n.uid);
@@ -1044,7 +1159,7 @@ function renderRunProps(box, cn){
             <b>Centreline</b> ${metres(rt.length)} face to face`
          : `<span style="color:${C.bad}">${esc(rt ? rt.msg : '')}</span>`) +
     `</div>` +
-    (warns.length ? `<div class="alert warn"><b>Check these bends</b>${warns.map(w => esc(w.text)).join('<br>')}</div>` : '') +
+    (warns.length ? `<div class="alert warn"><b>Check this run</b>${warns.map(w => esc(w.text)).join('<br>')}</div>` : '') +
     (rt && !rt.ok ? `<div class="alert bad"><b>Cannot place</b>${esc(rt.msg)}</div>` : '') +
     `<div class="btnrow">
        <button id="qPlace" class="primary" ${rt && rt.ok ? '' : 'disabled'}>${cn.placed ? 'Update line' : 'Place line'}</button>
@@ -1110,6 +1225,9 @@ document.getElementById('dims').onchange = e => { state.showDims = e.target.chec
 document.getElementById('avoidMH').onchange = e => {
   state.avoidChambers = e.target.checked; renderSel(); renderConnections(); draw();
 };
+document.getElementById('avoidPipe').onchange = e => {
+  state.avoidPipes = e.target.checked; renderSel(); renderConnections(); draw();
+};
 
 document.getElementById('btnExport').onclick = () => {
   recomputeRoutes();
@@ -1154,8 +1272,11 @@ document.getElementById('fileIn').onchange = e => {
         state.specs = d.specs.map(s => makeSpec({...s, id:uid(),
           minLeg: s.minLeg != null ? s.minLeg : (s.stub != null ? s.stub : 500),
           angles:[...(s.angles||[])]}));
-      state.chambers  = (d.chambers ||[]).map(c => makeChamber({...c, uid:uid()}));
-      state.obstacles = (d.obstacles||[]).map(o => makeObstacle({...o, uid:uid()}));
+      state.chambers  = (d.chambers ||[]).map(c => makeChamber({buffer:0, ...c, uid:uid()}));
+      state.obstacles = (d.obstacles||[]).map(o => {
+        const m = makeObstacle({...o, buffer: o.buffer != null ? o.buffer : (o.clearance != null ? o.clearance : 250), uid:uid()});
+        delete m.clearance; return m;
+      });
       const byRef  = r => state.chambers.find(c => c.ref === r);
       const byName = n => state.specs.find(s => s.name === n) || state.specs[0];
       state.connections = (d.runs || d.connections || []).map(cn => {
@@ -1211,9 +1332,9 @@ new ResizeObserver(() => draw()).observe(STAGE);
    ========================================================================== */
 
 state.specs = [
-  makeSpec({name:'DN300 storm',  colour:SPEC_COLOURS[0], radius:150,   bendR:600, stub:500, minLeg:750, warnAngle:45, angles:[22.5,45,90]}),
-  makeSpec({name:'DN225 foul',   colour:SPEC_COLOURS[1], radius:112.5, bendR:450, stub:400, minLeg:600, warnAngle:45, angles:[11.25,22.5,45,90]}),
-  makeSpec({name:'DN150 branch', colour:SPEC_COLOURS[2], radius:75,    bendR:300, stub:300, minLeg:450, warnAngle:90, angles:[45,90]})
+  makeSpec({name:'DN300 storm',  colour:SPEC_COLOURS[0], radius:150,   bendR:600, stub:500, minLeg:750, buffer:300, warnAngle:45, angles:[22.5,45,90]}),
+  makeSpec({name:'DN225 foul',   colour:SPEC_COLOURS[1], radius:112.5, bendR:450, stub:400, minLeg:600, buffer:300, warnAngle:45, angles:[11.25,22.5,45,90]}),
+  makeSpec({name:'DN150 branch', colour:SPEC_COLOURS[2], radius:75,    bendR:300, stub:300, minLeg:450, buffer:200, warnAngle:90, angles:[45,90]})
 ];
 state.editSpec = state.specs[0].id;
 
@@ -1222,7 +1343,7 @@ state.chambers = [
   makeChamber({ref:'MH02', x:12000, y:0,    intX:1500, intY:1500, wall:200}),
   makeChamber({ref:'MH03', x:22000, y:4500, intX:1200, intY:1200, wall:150, rot:45})
 ];
-state.obstacles = [ makeObstacle({name:'OBS01', x:6000, y:0, w:2400, d:3600, rot:0, clearance:250}) ];
+state.obstacles = [ makeObstacle({name:'OBS01', x:6000, y:0, w:2400, d:3600, rot:0, buffer:250}) ];
 state.connections = [
   {uid:uid(), a:{mh:state.chambers[0].uid, face:'E'}, b:{mh:state.chambers[1].uid, face:'W'},
    placed:true,  specId:state.specs[0].id, route:null},
