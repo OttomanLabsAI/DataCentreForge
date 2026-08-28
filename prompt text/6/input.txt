@@ -1,3 +1,0 @@
-add a buffer zone feature for all objects. things cannot enter that space
-
-include it in pipe settings

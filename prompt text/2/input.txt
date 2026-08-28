@@ -1,7 +1,0 @@
-i need to be able to disconnect connections
-
-also, there needs to be a list of connections made so i can select pipe settings
-
-there should be pipe saettins too that ask pipe radius, angles allowed and bend radius
-
-then a button that'll place a line with those settings

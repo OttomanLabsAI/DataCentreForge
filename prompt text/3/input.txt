@@ -1,9 +1,0 @@
-good,
-
-now, on the left side, let me do pipe bend settings and give them a name
-
-when selecting the connection, i need to choose one of these settings from a dropdown
-
-also, let me add obstaclesthat the pipes will go around
-
-make iot warn me when the bends are too big

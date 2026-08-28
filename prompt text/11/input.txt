@@ -1,1 +1,0 @@
-rename clearance to buffer zoen and make the allowed to overlap, so if 2 objects have a beffer zone of 200, they just need to be 200 away, if one has 200 and the other has 300, then 300

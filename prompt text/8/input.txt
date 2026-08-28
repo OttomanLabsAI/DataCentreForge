@@ -1,5 +1,0 @@
-also, these are conduits, not pipes
-
-ELV,MV,LV,FIBRE,TELECOMMS
-
-also, there needsto be manhole settings - lateral and z spacing between conduit runs

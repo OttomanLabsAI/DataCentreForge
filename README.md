@@ -16,7 +16,7 @@ public/                  everything served
   _headers               security + caching headers
   assets/css/site.css    the page's stylesheet
   assets/js/app.js       the drawing board's code
-prompt text/             provenance: one folder per version
+prompt text/             provenance for the version in service (replaced each release)
   <N>/input.txt          the prompt that produced version N, verbatim
   <N>/output.txt         the reply that shipped it, verbatim
   <N>/ai model.txt       the model attribution for that version

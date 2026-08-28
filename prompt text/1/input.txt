@@ -1,5 +1,0 @@
-make a html plan view of square boxes with wall thicknesses
-
-they will represent manholes
-
-later we will add logic for lines that connect the faces from internal face to internal face

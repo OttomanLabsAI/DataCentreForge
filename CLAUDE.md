@@ -17,7 +17,7 @@ public/            everything served
   robots.txt
   _headers         security + caching headers
   assets/css|js
-prompt text/       provenance archive, one numbered folder per version
+prompt text/       provenance for the version in service, replaced each release
 wrangler.jsonc     assets-only config, no Worker script
 package.json       wrangler devDependency + dev/deploy scripts
 ```
@@ -87,16 +87,21 @@ same positions, and bump the `?v=` release stamp on the asset URLs in
 
 ## The provenance archive
 
-Each version N of the page has a folder `prompt text/N/` (N is the owner's
-version number) added in the release that ships it:
+`prompt text/` holds the records for the version of the page currently in
+service — nothing else. Shipping version N replaces the folder's contents
+wholesale, in the same push to main that releases the version:
 
-- `input.txt` — the prompt that produced the version, byte-for-byte as supplied
-- `output.txt` — the reply that shipped it, byte-for-byte as supplied
-- `ai model.txt` — the model attribution the owner specifies for that version
-- input images referenced by the prompt, where the owner has provided them
+- remove the previous version's folder(s)
+- add `prompt text/N/` (N is the owner's version number) containing
+  `input.txt` — the prompt that produced the version, byte-for-byte as
+  supplied — `output.txt` — the reply that shipped it, byte-for-byte as
+  supplied — `ai model.txt` — the model attribution the owner specifies —
+  and any input images the owner has provided
 
-These are owner-supplied records. Never edit, reformat, trim, or "fix" them,
-and never regenerate them from memory.
+Do this with every push to main that ships a version. Older versions' records
+are not lost: each remains in the tree of the release that shipped it. The
+files themselves are owner-supplied records — never edit, reformat, trim, or
+"fix" them, and never regenerate them from memory.
 
 ## Release ledger
 
@@ -111,3 +116,4 @@ and never regenerate them from memory.
 | v1.6 | Runs travelling together share one road | Conduits joining the same two faces are now routed as a single bank — one centreline, many parallel lanes — so grouped runs read as one tidy road rather than a tangle of near-parallel paths. Routes also hold to the directions they leave and enter on, stepping aside only as far as needed. |
 | v1.7 | The spec panel stops repeating itself | The conduit spec editor listed its buffer measurement twice; it now appears once. |
 | v1.8 | Conduit arrays and a section through every face | A manhole now opens a cross-section of each connected face: every conduit drawn to scale on a shared grid, clearances marked, overcrowding flagged. Runs can be arrays of columns and rows, different services line up on the largest spacing present, and every leg between bends is guaranteed real straight duct or the route honestly refuses. |
+| v1.9 | The archive travels light with each release | The prompt archive now carries only the version in service; each release swaps in its own records and clears the rest. Earlier conversations remain with the releases that shipped them. |
