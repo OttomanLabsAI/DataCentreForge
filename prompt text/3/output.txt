@@ -1,0 +1,20 @@
+Three sizeable additions. Let me prototype the obstacle-aware router first, then rebuild.
+
+Ran 6 commands, created a file, read a file · 1 note
+
+Pipe specs, left panel. A named library — name, colour, pipe radius, bend radius, min straight, warn-above angle, and the bend angles allowed. New / Duplicate / Delete underneath. Three are seeded: DN300 storm, DN225 foul, DN150 branch. Edit a spec and every run on it re-solves immediately. The header shows how many runs use it, and deleting one that's in use asks first and moves those runs to another spec.
+
+Spec dropdown per run. Select a pipe run and the right panel opens with a dropdown of every spec. Switching re-routes the run, recolours it, and pulls that spec up in the left editor. New connections inherit whichever spec you're currently editing.
+
+Obstacles. + Obstacle drops a rectangle you can drag, rotate and resize, each with its own clearance. Pipes are held off by that clearance plus their own radius, and the dashed outline shows the keep-out. There's also a "Pipes avoid other chambers" toggle so a run won't cut through a chamber it isn't connected to.
+
+The router now searches up to four bends and rejects any centreline that clashes, so it will crank around a box rather than through it. If nothing gets past, it says "blocked" instead of drawing something wrong.
+
+Bend warnings. Two kinds, both on the route:
+
+The bend radius won't fit the straights either side, so it was cut down — "bend 1 — 600 radius will not fit, cut to 500"
+The deflection exceeds the spec's warn-above angle — "bend 2 — 90° is over the 45° limit"
+
+These show as an amber block in the run panel, a ⚠ against the run in the list, and an amber ring with the angle on the drawing itself. Among routes with the same bend count the router prefers the one with fewer over-limit bends, so it only uses a big bend when nothing gentler fits.
+
+The demo shows this: MH01→MH02 has a 3.6 m obstacle sitting on the centreline, and the only way past with 22.5/45/90 available is a 45/-90/45 crank — so it places, and flags the 90.

@@ -1,7 +1,7 @@
   :root{
     --bg:#0e1116; --panel:#151a21; --panel-2:#1a212a; --line:#232c38;
     --ink:#dfe6ef; --ink-dim:#8894a4; --ink-faint:#5b6675;
-    --sel:#ffb454; --pick:#35c3e8; --bad:#e0655f; --ok:#6bd68a;
+    --sel:#ffb454; --pick:#35c3e8; --bad:#e0655f; --warn:#e8b34a; --ok:#6bd68a;
     --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
     --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
@@ -22,13 +22,14 @@
     border:1px solid var(--line); padding:6px 11px; border-radius:3px; cursor:pointer; white-space:nowrap;
     transition:border-color .12s, background .12s, color .12s}
   button:hover,.filebtn:hover{border-color:#39465a; background:#1f2833}
-  button:focus-visible,.filebtn:focus-visible,input:focus-visible{outline:2px solid var(--pick); outline-offset:1px}
+  button:focus-visible,.filebtn:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--pick); outline-offset:1px}
   button.on{border-color:var(--pick); color:var(--pick); background:#12242c}
   button.primary{border-color:#2f6f86; background:#16303b; color:#bfe9f7}
   button.primary:hover{border-color:var(--pick); background:#1b3c4a}
   button.ghost{background:transparent}
   button.warn:hover{border-color:var(--bad); color:var(--bad)}
   button:disabled{opacity:.35; cursor:default}
+  button.mini{padding:4px 8px; font-size:11px}
 
   main{flex:1; display:flex; min-height:0}
   #stage{position:relative; flex:1; min-width:0; cursor:crosshair; touch-action:none}
@@ -47,18 +48,22 @@
   #hint{left:12px; top:12px; color:var(--ink-faint); line-height:1.7; text-transform:uppercase;
         letter-spacing:.1em; font-size:10px}
 
-  aside{flex:0 0 300px; background:var(--panel); border-left:1px solid var(--line); overflow-y:auto; padding-bottom:30px}
+  aside{background:var(--panel); overflow-y:auto; padding-bottom:30px}
+  #left{flex:0 0 252px; border-right:1px solid var(--line)}
+  #right{flex:0 0 302px; border-left:1px solid var(--line)}
   .sec{border-bottom:1px solid var(--line); padding:14px}
   .sec h2{margin:0 0 12px; font-size:10px; font-weight:600; color:var(--ink-faint);
           text-transform:uppercase; letter-spacing:.16em; display:flex; gap:8px; align-items:baseline}
   .sec h2 em{font-style:normal; font-family:var(--mono); letter-spacing:0; color:var(--ink-dim);
-             text-transform:none; font-size:11px}
+             text-transform:none; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .row{display:flex; align-items:center; gap:8px; margin-bottom:8px}
   .row label{flex:1; color:var(--ink-dim); font-size:12px}
-  input[type=number],input[type=text]{width:96px; font-family:var(--mono); font-size:12px; color:var(--ink);
-    background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:5px 7px; text-align:right}
-  input[type=text]{text-align:left}
-  input[type=number]:hover,input[type=text]:hover{border-color:#39465a}
+  input[type=number],input[type=text],select{font-family:var(--mono); font-size:12px; color:var(--ink);
+    background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:5px 7px}
+  input[type=number]{width:92px; text-align:right}
+  input[type=text]{width:130px}
+  select{width:100%; cursor:pointer}
+  input:hover,select:hover{border-color:#39465a}
   .unit{width:24px; color:var(--ink-faint); font-family:var(--mono); font-size:11px}
   .chk{display:flex; align-items:center; gap:7px; color:var(--ink-dim); font-size:12px; cursor:pointer}
   .derived{font-family:var(--mono); font-size:11px; color:var(--ink-faint); line-height:1.8;
@@ -66,32 +71,41 @@
   .derived b{color:var(--ink-dim); font-weight:400}
   .empty{color:var(--ink-faint); font-size:12px; line-height:1.6}
   .note{font-size:11px; color:var(--ink-faint); line-height:1.5; margin-top:9px}
-  .note.bad{color:var(--bad)}
+
+  .alert{margin-top:10px; padding:8px 9px; border-radius:3px; font-family:var(--mono);
+         font-size:11px; line-height:1.65}
+  .alert.warn{border:1px solid #6a5220; background:#241d0e; color:var(--warn)}
+  .alert.bad{border:1px solid #6a2f2c; background:#241211; color:var(--bad)}
+  .alert b{display:block; font-weight:600; letter-spacing:.06em; text-transform:uppercase; font-size:9.5px; margin-bottom:3px}
 
   .chips{display:flex; flex-wrap:wrap; gap:5px; margin:2px 0 4px}
-  .chip{padding:4px 9px; font-family:var(--mono); font-size:11px; border:1px solid var(--line);
+  .chip{padding:4px 8px; font-family:var(--mono); font-size:11px; border:1px solid var(--line);
         border-radius:12px; background:var(--panel-2); color:var(--ink-faint); cursor:pointer}
   .chip:hover{border-color:#39465a}
   .chip.on{border-color:var(--pick); color:var(--pick); background:#12242c}
+  .swatches{display:flex; gap:6px; margin:2px 0 10px}
+  .sw{width:20px; height:20px; border-radius:50%; border:2px solid transparent; cursor:pointer}
+  .sw.on{border-color:var(--ink)}
 
   .list{display:flex; flex-direction:column; gap:4px}
   .item{display:flex; align-items:center; gap:8px; padding:7px 8px; background:var(--panel-2);
         border:1px solid transparent; border-radius:3px; font-family:var(--mono); font-size:11px; cursor:pointer}
   .item:hover{border-color:#39465a}
   .item.on{border-color:var(--sel)}
-  .item .dot{width:7px; height:7px; border-radius:50%; flex:0 0 auto; background:var(--ink-faint)}
-  .item .dot.placed{background:var(--ok)}
-  .item .dot.bad{background:var(--bad)}
-  .item .meta{margin-left:auto; color:var(--ink-faint); text-align:right}
+  .item .dot{width:8px; height:8px; border-radius:50%; flex:0 0 auto; background:var(--ink-faint)}
+  .item .nm{overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .item .meta{margin-left:auto; color:var(--ink-faint); text-align:right; white-space:nowrap}
+  .item .meta.bad{color:var(--bad)} .item .meta.warn{color:var(--warn)} .item .meta.ok{color:var(--ok)}
   .item .x{padding:0 3px; color:var(--ink-faint); background:none; border:none; font-size:15px; line-height:1; cursor:pointer}
   .item .x:hover{color:var(--bad); background:none}
   .btnrow{display:flex; gap:6px; margin-top:10px}
   .btnrow button{flex:1}
   input[type=file]{display:none}
 
-  @media (max-width:860px){
+  @media (max-width:1000px){
     main{flex-direction:column}
-    aside{flex:0 0 auto; max-height:46vh; border-left:none; border-top:1px solid var(--line)}
+    aside{flex:0 0 auto; max-height:34vh; border:none; border-top:1px solid var(--line)}
+    #left{order:3} #right{order:2} #stage{order:1; min-height:44vh}
     #hint{display:none}
   }
   @media (prefers-reduced-motion: reduce){*{transition:none !important}}

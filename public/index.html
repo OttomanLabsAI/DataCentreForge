@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Manhole plan — chambers and pipe runs</title>
+<title>Manhole plan — chambers, pipe runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=1.1">
+<link rel="stylesheet" href="/assets/css/site.css?v=1.2">
 </head>
 <body>
 
@@ -13,55 +13,67 @@
   <div class="title"><b>Manhole plan</b><span>plan view · millimetres</span></div>
   <div class="tools">
     <button id="btnAdd">+ Chamber</button>
+    <button id="btnObs">+ Obstacle</button>
     <button id="btnConnect">Connect faces</button>
     <button id="btnFit" class="ghost">Fit view</button>
   </div>
 </header>
 
 <main>
+  <aside id="left">
+    <div class="sec">
+      <h2>Pipe specs</h2>
+      <div id="specList"></div>
+      <div class="btnrow">
+        <button id="specNew" class="mini">New</button>
+        <button id="specDup" class="mini">Duplicate</button>
+        <button id="specDel" class="mini warn">Delete</button>
+      </div>
+    </div>
+    <div class="sec">
+      <h2>Edit spec <em id="specWho"></em></h2>
+      <div id="specEdit"></div>
+    </div>
+  </aside>
+
   <div id="stage">
     <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="hud" id="hint">
       drag empty space — pan · scroll — zoom<br>
-      drag chamber — move · click pipe — select<br>
-      arrows — nudge · del — remove
+      drag chamber or obstacle — move<br>
+      click a pipe — select · del — remove
     </div>
     <div class="hud" id="scalebar"><div class="bar"></div><span></span></div>
     <div class="hud" id="callout"></div>
     <div class="hud" id="status">
-      <span>X <b id="rx">—</b></span>
-      <span>Y <b id="ry">—</b></span>
-      <span>zoom <b id="rz">—</b></span>
-      <span class="msg" id="rmode"></span>
+      <span>X <b id="rx">—</b></span><span>Y <b id="ry">—</b></span>
+      <span>zoom <b id="rz">—</b></span><span class="msg" id="rmode"></span>
     </div>
   </div>
 
-  <aside>
+  <aside id="right">
     <div class="sec">
-      <h2>Chamber</h2>
-      <div id="props"></div>
+      <h2 id="selTitle">Selection</h2>
+      <div id="sel"></div>
     </div>
-
     <div class="sec">
-      <h2>Connections <em id="connCount"></em></h2>
+      <h2>Pipe runs <em id="connCount"></em></h2>
       <div id="connList"></div>
     </div>
-
     <div class="sec">
-      <h2>Pipe <em id="pipeWho"></em></h2>
-      <div id="pipe"></div>
+      <h2>Obstacles <em id="obsCount"></em></h2>
+      <div id="obsList"></div>
     </div>
-
     <div class="sec">
       <h2>Drawing</h2>
       <div class="row">
         <label for="snap">Snap increment</label>
         <input type="number" id="snap" min="0" step="5" value="50"><span class="unit">mm</span>
       </div>
+      <div class="row"><label class="chk"><input type="checkbox" id="avoidMH" checked> Pipes avoid other chambers</label></div>
       <div class="row"><label class="chk"><input type="checkbox" id="grid" checked> Show grid</label></div>
       <div class="row"><label class="chk"><input type="checkbox" id="dims" checked> Show annotation</label></div>
     </div>
-
     <div class="sec">
       <h2>File</h2>
       <div class="btnrow">
@@ -74,6 +86,6 @@
   </aside>
 </main>
 
-<script src="/assets/js/app.js?v=1.1"></script>
+<script src="/assets/js/app.js?v=1.2"></script>
 </body>
 </html>
