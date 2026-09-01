@@ -1,0 +1,7 @@
+Version 16 — the property panels fold away until needed.
+
+Every dense block of fields now sits behind a cluster button that shows its key numbers at a glance and expands in place when pressed. A chamber offers Geometry, Position, and Spacing & clearance; an obstacle offers Size & position and Clearance; a run offers Array & level and Route; a conduit spec offers Sizes, Minimum straights, Spacing & clearance, and Fittings & warnings. Open clusters stay open while values are edited and when selection moves away and comes back.
+
+What must stay visible, stays visible: warnings, Place line and Disconnect, the side settings buttons, and each object's name or reference.
+
+Verified in a driven browser: fourteen checks across the four panels — collapsed defaults, expansion, live summaries, edits inside open clusters, fitting chips, the side dialog — plus the full regression batteries from versions 14 and 15, all passing with no console errors.

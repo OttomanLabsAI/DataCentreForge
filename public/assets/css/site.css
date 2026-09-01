@@ -132,3 +132,14 @@
   .dlgrow .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .dlgrow em{font-style:normal; color:var(--ink-faint)}
   .dlgrow button{padding:0 6px}
+
+  /* ---------- collapsible property clusters ---------- */
+  .clus{margin:0 0 6px}
+  .clushead{display:flex; align-items:center; gap:8px; width:100%; text-align:left; padding:7px 9px}
+  .clushead span{font-size:12px; color:var(--ink); white-space:nowrap}
+  .clushead em{flex:1; font-style:normal; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);
+               overflow:hidden; text-overflow:ellipsis; white-space:nowrap; text-align:right}
+  .clushead i{font-style:normal; color:var(--ink-faint); font-size:10px}
+  .clushead.open{border-color:#39465a}
+  .clusbody{padding:8px 2px 2px}
+  .clusbody[hidden]{display:none}

@@ -1,1 +1,0 @@
-when theres no obstacle, it should be straight

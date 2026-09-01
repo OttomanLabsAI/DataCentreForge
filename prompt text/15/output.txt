@@ -1,7 +1,0 @@
-Version 15 — when nothing is in the way, the run is straight.
-
-The hump came from a hidden misalignment: one of the manholes sat a snap-step (50 mm) out of line, so a perfectly straight run was geometrically impossible, and the minimum-straight rules made every small corrective jog illegal — the router then built the only legal thing left, a full-height detour of 45° fittings, even though the obstacle had been moved away.
-
-Now a pair of faces within about two degrees of square takes a single straight duct laid between its entry points. A chamber nudged a step or three out of line reads and routes dead straight; a genuinely offset chamber still gets proper fittings; and an obstacle actually on the line still forces the detour — clearance checks apply to the straight like everything else.
-
-Verified in a driven browser: the reported scene now routes straight, misalignments beyond the tolerance still jog, obstacles on the line still divert, and the full feature checks from version 14 all pass unchanged.

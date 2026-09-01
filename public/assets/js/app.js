@@ -1272,22 +1272,26 @@ function renderSpecEdit(){
     `<div class="row"><label for="sName">Name</label><input type="text" id="sName" value="${esc(sp.name)}"></div>
      <div class="swatches">${SPEC_COLOURS.map(c =>
         `<div class="sw ${c === sp.colour ? 'on':''}" data-col="${c}" style="background:${c}" title="${c}"></div>`).join('')}</div>` +
-    numRow('sRad','Conduit radius', sp.radius, 25, 'mm') +
-    numRow('sBend','Bend radius', sp.bendR, 50, 'mm') +
-    `<div class="row" style="margin-bottom:2px"><label>Minimum straight</label></div>` +
-    numRow('sStub','off chamber face', sp.stub, 50, 'mm') +
-    numRow('sLeg','between bends', sp.minLeg, 50, 'mm') +
-    numRow('sBuf','Clearance', sp.buffer, 50, 'mm') +
-    numRow('sSpc','Array spacing', sp.spacing || 300, 25, 'mm') +
-    numRow('sWarn','Warn above', sp.warnAngle, 5, '°') +
-    `<div class="row" style="margin-top:4px"><label>Bend angles allowed</label></div>
-     <div class="chips" id="sAngles">${ANGLE_OPTIONS.map(a =>
-        `<button class="chip ${sp.angles.includes(a)?'on':''}" data-ang="${a}">${a}°</button>`).join('')}</div>
-     <div class="derived"><b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
-       <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
-       <b>Clearance</b> ${fmt(sp.buffer)} each side — pairs keep the larger clearance<br>
-       <b>Array pitch</b> ${fmt(sp.spacing || 300)} — faces snap to the largest pitch present<br>
-       <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}</div>`;
+    cluster('spSize', 'Sizes', `Ø${fmt(sp.radius*2)} · R${fmt(sp.bendR)}`,
+      numRow('sRad','Conduit radius', sp.radius, 25, 'mm') +
+      numRow('sBend','Bend radius', sp.bendR, 50, 'mm')) +
+    cluster('spStr', 'Minimum straights', `≥${fmt(sp.stub)} · ≥${fmt(sp.minLeg)}`,
+      numRow('sStub','off chamber face', sp.stub, 50, 'mm') +
+      numRow('sLeg','between bends', sp.minLeg, 50, 'mm')) +
+    cluster('spSpc', 'Spacing & clearance', `clr ${fmt(sp.buffer)} · pitch ${fmt(sp.spacing || 300)}`,
+      numRow('sBuf','Clearance', sp.buffer, 50, 'mm') +
+      numRow('sSpc','Array spacing', sp.spacing || 300, 25, 'mm')) +
+    cluster('spRul', 'Fittings & warnings',
+      sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' ') : 'straight only',
+      numRow('sWarn','Warn above', sp.warnAngle, 5, '°') +
+      `<div class="row" style="margin-top:4px"><label>Bend angles allowed</label></div>
+       <div class="chips" id="sAngles">${ANGLE_OPTIONS.map(a =>
+          `<button class="chip ${sp.angles.includes(a)?'on':''}" data-ang="${a}">${a}°</button>`).join('')}</div>
+       <div class="derived"><b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
+         <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
+         <b>Clearance</b> ${fmt(sp.buffer)} each side — pairs keep the larger clearance<br>
+         <b>Array pitch</b> ${fmt(sp.spacing || 300)} — faces snap to the largest pitch present<br>
+         <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}</div>`);
 
   const bindS = (id, key, cast = Number) => {
     const el = document.getElementById(id);
@@ -1309,6 +1313,7 @@ function renderSpecEdit(){
     b.classList.toggle('on');
     specChanged();
   });
+  wireClusters(box, renderSpecEdit);
 }
 function specChanged(){
   const sp = specBy(state.editSpec), der = document.querySelector('#specEdit .derived');
@@ -1350,6 +1355,23 @@ function numRow(id, label, val, step, unit){
     <input type="number" id="${id}" value="${val}" step="${step}"><span class="unit">${unit}</span></div>`;
 }
 
+/** Collapsible property cluster: a full-width button headline carrying a live
+    summary, with the fields hidden until expanded. Open state lives in
+    state.openClus so it survives the constant panel re-renders. */
+function cluster(key, label, summary, body){
+  const open = !!(state.openClus || (state.openClus = {}))[key];
+  return `<div class="clus">
+    <button class="clushead${open ? ' open' : ''}" data-clus="${key}">
+      <span>${label}</span><em>${summary}</em><i>${open ? '▾' : '▸'}</i></button>
+    <div class="clusbody"${open ? '' : ' hidden'}>${body}</div></div>`;
+}
+function wireClusters(box, rerender){
+  box.querySelectorAll('[data-clus]').forEach(b => b.onclick = () => {
+    state.openClus[b.dataset.clus] = !state.openClus[b.dataset.clus];
+    rerender();
+  });
+}
+
 function renderSel(){
   recomputeRoutes();
   const box = document.getElementById('sel'), ttl = document.getElementById('selTitle');
@@ -1364,22 +1386,24 @@ function renderChamberProps(box, c){
   if (!c){ box.innerHTML = ''; return; }
   box.innerHTML =
     `<div class="row"><label for="pRef">Reference</label><input type="text" id="pRef" value="${esc(c.ref)}"></div>` +
-    numRow('pIX','Internal L (X)', c.intX, 25, 'mm') +
-    numRow('pIY','Internal W (Y)', c.intY, 25, 'mm') +
-    `<div class="row"><label class="chk"><input type="checkbox" id="pSq" ${state.square?'checked':''}> Keep square</label></div>` +
-    numRow('pW','Wall thickness', c.wall, 25, 'mm') +
-    numRow('pX','Centre X', c.x, state.snap||1, 'mm') +
-    numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
-    numRow('pR','Rotation', c.rot, 15, '°') +
-    numRow('pB','Clearance', c.buffer, 50, 'mm') +
-    `<div class="row" style="margin:10px 0 2px"><label>Conduit entries</label></div>` +
-    numRow('pLat','Lateral spacing', c.latSpace, 50, 'mm') +
-    numRow('pZ','Z spacing', c.zSpace, 50, 'mm') +
-    numRow('pEC','Edge clearance', c.edgeClear ?? 150, 25, 'mm') +
-    `<div class="derived">
-       <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
-       <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
-       <b>Faces</b> ${FACES.map(f => f+' '+fmt(faceGeom(c,f).width)).join('  ')}</div>` +
+    cluster('chGeo', 'Geometry', `${fmt(c.intX)}×${fmt(c.intY)} · w${fmt(c.wall)}`,
+      numRow('pIX','Internal L (X)', c.intX, 25, 'mm') +
+      numRow('pIY','Internal W (Y)', c.intY, 25, 'mm') +
+      `<div class="row"><label class="chk"><input type="checkbox" id="pSq" ${state.square?'checked':''}> Keep square</label></div>` +
+      numRow('pW','Wall thickness', c.wall, 25, 'mm') +
+      `<div class="derived">
+         <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
+         <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
+         <b>Sides</b> ${FACES.map(f => f+' '+fmt(faceGeom(c,f).width)).join('  ')}</div>`) +
+    cluster('chPos', 'Position', `${fmt(c.x)}, ${fmt(c.y)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}`,
+      numRow('pX','Centre X', c.x, state.snap||1, 'mm') +
+      numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
+      numRow('pR','Rotation', c.rot, 15, '°')) +
+    cluster('chSpc', 'Spacing & clearance', `lat ${fmt(c.latSpace)} · z ${fmt(c.zSpace)}`,
+      numRow('pB','Clearance', c.buffer, 50, 'mm') +
+      numRow('pLat','Lateral spacing', c.latSpace, 50, 'mm') +
+      numRow('pZ','Z spacing', c.zSpace, 50, 'mm') +
+      numRow('pEC','Edge clearance', c.edgeClear ?? 150, 25, 'mm')) +
     facesBlock(c) +
     `<div class="btnrow"><button id="pDup">Duplicate</button><button id="pDel" class="warn">Delete</button></div>`;
   const bind = (id, key, cast = Number) => {
@@ -1401,6 +1425,7 @@ function renderChamberProps(box, c){
   bind('pW','wall'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
   bind('pLat','latSpace'); bind('pZ','zSpace'); bind('pEC','edgeClear');
   wireFaceButtons(c);
+  wireClusters(box, renderSel);
   document.getElementById('pSq').onchange = e => {
     state.square = e.target.checked;
     if (state.square){ c.intY = c.intX; renderSel(); renderConnections(); draw(); }
@@ -1416,15 +1441,17 @@ function renderObstacleProps(box, o){
   if (!o){ box.innerHTML = ''; return; }
   box.innerHTML =
     `<div class="row"><label for="oName">Name</label><input type="text" id="oName" value="${esc(o.name)}"></div>` +
-    numRow('oW','Width (X)', o.w, 100, 'mm') +
-    numRow('oD','Depth (Y)', o.d, 100, 'mm') +
-    numRow('oX','Centre X', o.x, state.snap||1, 'mm') +
-    numRow('oY','Centre Y', o.y, state.snap||1, 'mm') +
-    numRow('oR','Rotation', o.rot, 15, '°') +
-    numRow('oC','Clearance', o.buffer, 50, 'mm') +
-    `<div class="derived"><b>Keep-out</b> ${fmt(o.w+2*o.buffer)} × ${fmt(o.d+2*o.buffer)} mm<br>
-       <span>Conduits are held off by the larger of this clearance and their own, plus their radius.</span></div>
-     <div class="btnrow"><button id="oDup">Duplicate</button><button id="oDel" class="warn">Delete</button></div>`;
+    cluster('obGeo', 'Size & position', `${fmt(o.w)}×${fmt(o.d)} at ${fmt(o.x)}, ${fmt(o.y)}`,
+      numRow('oW','Width (X)', o.w, 100, 'mm') +
+      numRow('oD','Depth (Y)', o.d, 100, 'mm') +
+      numRow('oX','Centre X', o.x, state.snap||1, 'mm') +
+      numRow('oY','Centre Y', o.y, state.snap||1, 'mm') +
+      numRow('oR','Rotation', o.rot, 15, '°')) +
+    cluster('obClr', 'Clearance', `${fmt(o.buffer)} mm`,
+      numRow('oC','Clearance', o.buffer, 50, 'mm') +
+      `<div class="derived"><b>Keep-out</b> ${fmt(o.w+2*o.buffer)} × ${fmt(o.d+2*o.buffer)} mm<br>
+         <span>Conduits are held off by the larger of this clearance and their own, plus their radius.</span></div>`) +
+    `<div class="btnrow"><button id="oDup">Duplicate</button><button id="oDel" class="warn">Delete</button></div>`;
   const bind = (id, key, cast = Number) => {
     const el = document.getElementById(id);
     el.addEventListener('input', () => {
@@ -1435,6 +1462,7 @@ function renderObstacleProps(box, o){
   };
   bind('oName','name',String); bind('oW','w'); bind('oD','d');
   bind('oX','x'); bind('oY','y'); bind('oR','rot'); bind('oC','buffer');
+  wireClusters(box, renderSel);
   document.getElementById('oDup').onclick = () => {
     const n = makeObstacle({...o, uid:uid(), name:nextName(), x:o.x + o.w + 1000});
     state.obstacles.push(n); select('obstacle', n.uid);
@@ -1454,19 +1482,22 @@ function renderRunProps(box, cn){
      <select id="qSpec">${state.specs.map(s =>
        `<option value="${s.id}" ${s.id === cn.specId ? 'selected':''}>${esc(s.name)} — Ø${fmt(s.radius*2)} R${fmt(s.bendR)}</option>`).join('')}</select>
      <div style="height:8px"></div>` +
-    numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
-    numRow('qCols','Columns (wide)', runCols(cn), 1, '') +
-    numRow('qRows','Rows (high)', runRows(cn), 1, '') +
-    `<div class="derived">
-       <b>Run</b> ${esc(connLabel(cn))}<br>
-       ${entryLine(cn)}${arrayLine(cn)}
-       <b>Angles</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}<br>` +
-       (rt && rt.ok
-         ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°').join(' · ') : 'none — straight run'}<br>
-            <b>Straight duct</b> ${rt.clear.map(v => fmt(Math.max(0,v))).join(' · ')} mm<br>
-            <b>Centreline</b> ${metres(rt.length)} face to face`
-         : `<span style="color:${C.bad}">${esc(rt ? rt.msg : '')}</span>`) +
-    `</div>` +
+    cluster('runArr', 'Array & level', `${runCols(cn)} × ${runRows(cn)} · L${cn.level|0}`,
+      numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
+      numRow('qCols','Columns (wide)', runCols(cn), 1, '') +
+      numRow('qRows','Rows (high)', runRows(cn), 1, '')) +
+    cluster('runRt', 'Route',
+      rt && rt.ok ? metres(rt.length) + (rt.turns.length ? ` · ${rt.turns.length} bend${rt.turns.length === 1 ? '' : 's'}` : ' · straight') : 'no route',
+      `<div class="derived" style="border-top:none;margin-top:0;padding-top:2px">
+         <b>Run</b> ${esc(connLabel(cn))}<br>
+         ${entryLine(cn)}${arrayLine(cn)}
+         <b>Angles</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}<br>` +
+         (rt && rt.ok
+           ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°').join(' · ') : 'none — straight run'}<br>
+              <b>Straight duct</b> ${rt.clear.map(v => fmt(Math.max(0,v))).join(' · ')} mm<br>
+              <b>Centreline</b> ${metres(rt.length)} face to face`
+           : `<span style="color:${C.bad}">${esc(rt ? rt.msg : '')}</span>`) +
+      `</div>`) +
     (warns.length ? `<div class="alert warn"><b>Check this run</b>${warns.map(w => esc(w.text)).join('<br>')}</div>` : '') +
     (rt && !rt.ok ? `<div class="alert bad"><b>Cannot place</b>${esc(rt.msg)}</div>` : '') +
     `<div class="btnrow">
@@ -1501,6 +1532,7 @@ function renderRunProps(box, cn){
     state.editSpec = cn.specId; renderSpecs(); renderSpecEdit();
     document.getElementById('left').scrollTop = 9999;
   };
+  wireClusters(box, renderSel);
 }
 
 /** Cross-section of one chamber face: the shared conduit grid to scale,
