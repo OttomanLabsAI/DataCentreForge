@@ -95,8 +95,9 @@ wholesale, in the same push to main that releases the version:
 - add `prompt text/N/` (N is the owner's version number) containing
   `input.txt` — the prompt that produced the version, byte-for-byte as
   supplied — `output.txt` — the reply that shipped it, byte-for-byte as
-  supplied — `ai model.txt` — the model attribution the owner specifies —
-  and any input images the owner has provided
+  supplied — `ai model.txt` — the model attribution: unless the owner directs
+  otherwise for a version, it reads, on three lines, Anthropic / Claude /
+  Fable 5 Max — and any input images the owner has provided
 
 Do this with every push to main that ships a version. Older versions' records
 are not lost: each remains in the tree of the release that shipped it. The
@@ -119,3 +120,4 @@ files themselves are owner-supplied records — never edit, reformat, trim, or
 | v1.9 | The archive travels light with each release | The prompt archive now carries only the version in service; each release swaps in its own records and clears the rest. Earlier conversations remain with the releases that shipped them. |
 | v1.10 | Sides get names and their own settings | Chamber sides are now labelled A to D on the drawing and everywhere they are referred to. The per-side details left the panel: each side is a single button that opens its settings — runs, stacking and the cross-section — in a pop-up. |
 | v1.11 | Runs stop detouring around nothing | A manhole sitting a whisker out of line used to force a full flight of bends even with a clear path. Anything within a couple of degrees of square now lays as one dead-straight duct, while real offsets and real obstacles still get their honest fittings. |
+| v1.12 | The archive always names its maker | Every version's record now carries its model attribution as standard, filled in automatically unless directed otherwise. The records of the two newest versions were completed to match. |
