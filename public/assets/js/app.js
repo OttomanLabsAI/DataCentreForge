@@ -74,7 +74,8 @@ function nextName(){
    faceGeom() returns the INTERNAL face — the inside surface of that wall.
    ========================================================================== */
 
-const FACES = ['N','E','S','W'];
+const FACES = ['A','B','C','D'];
+const legacyFace = f => ({N:'A', E:'B', S:'C', W:'D'}[f] || f);   // old exports used compass names
 const D2R = Math.PI/180, R2D = 180/Math.PI;
 const norm = v => { const L = Math.hypot(v[0],v[1]) || 1; return [v[0]/L, v[1]/L]; };
 const rotv = (v,d) => { const r = d*D2R, c = Math.cos(r), s = Math.sin(r);
@@ -84,8 +85,8 @@ const signedAngle = (a,b) => wrap(Math.atan2(a[0]*b[1]-a[1]*b[0], a[0]*b[0]+a[1]
 
 function localFace(c, f){
   const a = c.intX/2, b = c.intY/2;
-  return {N:{p1:[-a,b], p2:[a,b], n:[0,1]},  E:{p1:[a,b], p2:[a,-b], n:[1,0]},
-          S:{p1:[a,-b], p2:[-a,-b], n:[0,-1]}, W:{p1:[-a,-b], p2:[-a,b], n:[-1,0]}}[f];
+  return {A:{p1:[-a,b], p2:[a,b], n:[0,1]},  B:{p1:[a,b], p2:[a,-b], n:[1,0]},
+          C:{p1:[a,-b], p2:[-a,-b], n:[0,-1]}, D:{p1:[-a,-b], p2:[-a,b], n:[-1,0]}}[f];
 }
 function toWorld(c, p){
   const r = c.rot*D2R, co = Math.cos(r), si = Math.sin(r);
@@ -907,6 +908,10 @@ function draw(){
       out.push(`<line x1="${ctr[0]}" y1="${ctr[1]-5}" x2="${ctr[0]}" y2="${ctr[1]+5}" stroke="${stroke}" stroke-width="1" opacity=".5"/>`);
     }
     if (ext*s > 46){
+      for (const f of FACES){
+        const g = faceGeom(c, f), m = W2S(g.mid), un = norm([g.n[0], -g.n[1]]);
+        out.push(`<text x="${m[0]-un[0]*11}" y="${m[1]-un[1]*11+3.4}" fill="${C.inkFaint}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${f}</text>`);
+      }
       out.push(`<text x="${ctr[0]}" y="${ctr[1]-6}" fill="${stroke}" font-family="${C.mono}" font-size="12" text-anchor="middle" letter-spacing="1">${esc(c.ref)}</text>`);
       if (state.showDims && ext*s > 96)
         out.push(`<text x="${ctr[0]}" y="${ctr[1]+11}" fill="${C.inkDim}" font-family="${C.mono}" font-size="10" text-anchor="middle">${fmt(c.intX)}×${fmt(c.intY)}  w${fmt(c.wall)}</text>`);
@@ -1526,41 +1531,66 @@ function faceSectionSVG(L, wpx = 232){
   return `<svg width="${wpx}" height="${hpx}" style="display:block;margin:4px 0 2px">${el.join('')}</svg>`;
 }
 
-/** Per-face list of connections with array sizes, level tags and ▲▼ stacking
-    controls, plus the section view — shown when a manhole is selected. */
+/** One compact button per side — the detail lives in the side dialog. */
 function facesBlock(c){
-  const blocks = [];
-  for (const f of FACES){
-    const runs = faceRuns(c.uid, f);
-    if (!runs.length) continue;
+  const btns = FACES.map(f => {
+    const n = faceRuns(c.uid, f).length;
+    if (!n) return `<button class="facebtn off" disabled title="side ${f} — no runs">${f}</button>`;
     const L = faceLayout(c.uid, f);
-    const rows = L.groups.flatMap(gr => gr.items.map(it => {
-      const sp = it.sp || {colour:'#888', name:'?'};
-      return `<div style="display:flex;align-items:center;gap:6px;margin:2px 0;font-size:11px">
-        <span style="width:9px;height:9px;border-radius:2px;background:${sp.colour};flex:none"></span>
-        <span style="flex:1">${esc(sp.name)} — ${it.cols} × ${it.rows}</span>
-        <em style="opacity:.6;font-style:normal">L${gr.level}</em>
-        <button data-fup="${it.cn.uid}" title="raise (smaller level)" style="padding:0 5px">▲</button>
-        <button data-fdn="${it.cn.uid}" title="lower (bigger level)" style="padding:0 5px">▼</button></div>`;
-    }));
-    blocks.push(`<div style="margin:6px 0 10px">
-      <div style="font-size:11px;letter-spacing:.4px;opacity:.85;margin-bottom:2px"><b>${f} face</b> — ${runs.length} run${runs.length>1?'s':''}${L.fits ? '' : ` <span style="color:${C.bad}">too narrow</span>`}</div>
-      ${rows.join('')}${faceSectionSVG(L)}</div>`);
-  }
-  if (!blocks.length) return '';
-  return `<div class="row" style="margin:12px 0 2px"><label>Faces with connections</label></div>` + blocks.join('');
+    return `<button class="facebtn${L.fits ? '' : ' bad'}" data-fdlg="${f}"
+      title="side ${f} — ${n} run${n === 1 ? '' : 's'}${L.fits ? '' : ', too narrow'}">${f} · ${n}${L.fits ? '' : ' ⚠'}</button>`;
+  });
+  return `<div class="row" style="margin:12px 0 2px"><label>Side settings</label></div>
+    <div class="btnrow" style="margin-top:2px">${btns.join('')}</div>`;
 }
 
 function wireFaceButtons(c){
-  document.querySelectorAll('[data-fup],[data-fdn]').forEach(b => {
-    b.onclick = () => {
+  document.querySelectorAll('[data-fdlg]').forEach(b => {
+    b.onclick = () => openFaceDialog(c.uid, b.dataset.fdlg);
+  });
+}
+
+/* ---------- side settings dialog ---------- */
+
+function openFaceDialog(mh, face){ state.faceDialog = {mh, face}; renderFaceDialog(); }
+function closeFaceDialog(){ state.faceDialog = null; renderFaceDialog(); }
+
+/** The launched settings for one side: its runs with stacking controls,
+    and the to-scale section through the face. */
+function renderFaceDialog(){
+  const wrap = document.getElementById('faceDlg');
+  const fd = state.faceDialog, c = fd && byUid(fd.mh);
+  const n = fd && c ? faceRuns(fd.mh, fd.face).length : 0;
+  if (!n){ state.faceDialog = null; wrap.hidden = true; wrap.innerHTML = ''; return; }
+  const L = faceLayout(fd.mh, fd.face);
+  const rows = L.groups.flatMap(gr => gr.items.map(it => {
+    const sp = it.sp || {colour:'#888', name:'?'};
+    return `<div class="dlgrow">
+      <span class="dot" style="background:${sp.colour}"></span>
+      <span class="nm">${esc(sp.name)} — ${it.cols} × ${it.rows}</span>
+      <em>L${gr.level}</em>
+      <button data-fup="${it.cn.uid}" title="raise (smaller level)">▲</button>
+      <button data-fdn="${it.cn.uid}" title="lower (bigger level)">▼</button></div>`;
+  }));
+  wrap.innerHTML = `<div class="dlgcard">
+    <div class="dlghead"><b>${esc(c.ref)} · side ${fd.face}</b>
+      <span>${n} run${n === 1 ? '' : 's'}${L.fits ? '' : ' — too narrow'}</span>
+      <button id="dlgClose" title="Close">×</button></div>
+    ${rows.join('')}
+    ${faceSectionSVG(L, 268)}
+  </div>`;
+  wrap.hidden = false;
+  wrap.onclick = e => { if (e.target === wrap) closeFaceDialog(); };
+  document.getElementById('dlgClose').onclick = closeFaceDialog;
+  wrap.querySelectorAll('[data-fup],[data-fdn]').forEach(b => {
+    b.onclick = ev => {
+      ev.stopPropagation();
       const up = b.hasAttribute('data-fup');
-      const uidv = b.getAttribute(up ? 'data-fup' : 'data-fdn');
-      const cn = state.connections.find(x => x.uid === uidv);
+      const cn = state.connections.find(x => x.uid === b.getAttribute(up ? 'data-fup' : 'data-fdn'));
       if (!cn) return;
       cn.level = Math.max(0, (cn.level|0) + (up ? -1 : 1));
       recomputeRoutes();
-      renderSel(); renderConnections(); draw();
+      renderSel(); renderConnections(); draw(); renderFaceDialog();
     };
   });
 }
@@ -1689,7 +1719,7 @@ document.getElementById('fileIn').onchange = e => {
       state.connections = (d.runs || d.connections || []).map(cn => {
         const A = byRef(cn.from?.ref), B = byRef(cn.to?.ref);
         if (!A || !B) return null;
-        return {uid:uid(), a:{mh:A.uid, face:cn.from.face}, b:{mh:B.uid, face:cn.to.face},
+        return {uid:uid(), a:{mh:A.uid, face:legacyFace(cn.from.face)}, b:{mh:B.uid, face:legacyFace(cn.to.face)},
                 placed: !!cn.placed, level: Math.max(0, cn.level|0),
                 rows: Math.max(1, cn.rows|0 || 1), cols: Math.max(1, cn.cols|0 || 1),
                 specId: byName(cn.spec).id, route:null};
@@ -1712,6 +1742,7 @@ document.getElementById('btnClear').onclick = () => {
 
 document.addEventListener('keydown', e => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+  if (state.faceDialog){ if (e.key === 'Escape') closeFaceDialog(); return; }
   if (e.key === 'Delete' || e.key === 'Backspace'){
     if (selIs('conn')){ e.preventDefault(); disconnect(state.sel.id); }
     else if (selIs('chamber')){ e.preventDefault(); removeChamber(state.sel.id); }
@@ -1756,11 +1787,11 @@ state.chambers = [
 ];
 state.obstacles = [ makeObstacle({name:'OBS01', x:6000, y:0, w:2400, d:3600, rot:0, buffer:250}) ];
 state.connections = [
-  {uid:uid(), a:{mh:state.chambers[0].uid, face:'E'}, b:{mh:state.chambers[1].uid, face:'W'},
+  {uid:uid(), a:{mh:state.chambers[0].uid, face:'B'}, b:{mh:state.chambers[1].uid, face:'D'},
    placed:true,  level:0, specId:state.specs[1].id, route:null},
-  {uid:uid(), a:{mh:state.chambers[0].uid, face:'E'}, b:{mh:state.chambers[1].uid, face:'W'},
+  {uid:uid(), a:{mh:state.chambers[0].uid, face:'B'}, b:{mh:state.chambers[1].uid, face:'D'},
    placed:true,  level:0, specId:state.specs[3].id, route:null},
-  {uid:uid(), a:{mh:state.chambers[1].uid, face:'E'}, b:{mh:state.chambers[2].uid, face:'W'},
+  {uid:uid(), a:{mh:state.chambers[1].uid, face:'B'}, b:{mh:state.chambers[2].uid, face:'D'},
    placed:false, level:0, specId:state.specs[0].id, route:null}
 ];
 

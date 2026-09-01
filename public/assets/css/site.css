@@ -111,3 +111,24 @@
     #hint{display:none}
   }
   @media (prefers-reduced-motion: reduce){*{transition:none !important}}
+
+  /* ---------- side buttons + side settings dialog ---------- */
+  .facebtn{font-family:var(--mono)}
+  .facebtn.off{opacity:.35}
+  .facebtn.bad{border-color:#6a5220; color:var(--warn)}
+  #faceDlg{position:fixed; inset:0; z-index:20; background:rgba(10,13,17,.62);
+           display:flex; align-items:center; justify-content:center}
+  #faceDlg[hidden]{display:none}
+  .dlgcard{width:300px; max-height:80vh; overflow-y:auto; background:var(--panel);
+           border:1px solid #39465a; border-radius:4px; padding:12px 14px 14px;
+           box-shadow:0 12px 40px rgba(0,0,0,.5)}
+  .dlghead{display:flex; align-items:baseline; gap:8px; margin-bottom:8px}
+  .dlghead b{font-size:13px; letter-spacing:.03em}
+  .dlghead span{flex:1; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint)}
+  .dlghead button{padding:0 7px; font-size:15px; line-height:1.4}
+  .dlgrow{display:flex; align-items:center; gap:7px; margin:3px 0; font-size:11px;
+          font-family:var(--mono)}
+  .dlgrow .dot{width:9px; height:9px; border-radius:2px; flex:none}
+  .dlgrow .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
+  .dlgrow em{font-style:normal; color:var(--ink-faint)}
+  .dlgrow button{padding:0 6px}

@@ -1,0 +1,7 @@
+Version 14 — sides are now named A, B, C and D, and the side detail moved behind buttons.
+
+Every chamber side is labelled on the plan: A at the top of the chamber in its own frame, then B, C, D clockwise, rotating with the chamber. Run labels, callouts, warnings and the JSON export all use the letters, and older exports that still say N/E/S/W import cleanly — the compass names are mapped across.
+
+Selecting a manhole no longer dumps every face's runs and section into the panel. It shows a single "Side settings" row instead — one button per side, carrying the run count and an over-width flag — and pressing a button launches that side's settings in a pop-up: the runs with their array sizes and level stacking arrows, plus the to-scale section through the face. Escape, the ×, or a click outside puts it away.
+
+Verified in a driven browser before release: letters drawn on every chamber, all demo routes solving, the dialog opening, restacking and closing cleanly, and a legacy compass-named export importing with its faces mapped.
