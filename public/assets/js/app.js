@@ -192,6 +192,10 @@ const BEND_COST = 1500, ANGLE_COST = 4000, RADIUS_COST = 3000;
    router steps aside briefly and runs straight, instead of sailing off on a
    long diagonal or tenting over an obstacle. */
 const OFF_AXIS_COST = 1.6;
+/* A pair of faces this close to square-on (about 2°) takes one straight duct
+   between the entry points instead of a detour of fittings — so a chamber a
+   snap-step out of line still routes dead straight. */
+const SKEW_TAN = Math.tan(2*D2R);
 let ROUTE_QUICK = false;   // while dragging: smaller search, no fine pass
 
 function solve2(u, v, r){
@@ -347,7 +351,8 @@ function candidates(P, d0, V, turns, lo, fine, ext){
 
   if (n === 1){
     const cr = d0[0]*V[1]-d0[1]*V[0], dot = d0[0]*V[0]+d0[1]*V[1];
-    if (Math.abs(cr) <= 1 && dot >= lo[0]) res.push(build([dot]));
+    if (dot >= lo[0] && Math.abs(cr) <= Math.max(1, dot*SKEW_TAN))
+      res.push({turns, pts:[P.slice(), [P[0]+V[0], P[1]+V[1]]], segs:[Math.hypot(V[0], V[1])]});
     return res;
   }
   if (n === 2){ push(solveWith(ds, V, 0, 1, [0,0])); return res; }

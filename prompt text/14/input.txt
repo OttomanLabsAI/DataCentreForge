@@ -1,3 +1,0 @@
-make it label the sides with a,b,c,d - that'll be the side naming convention
-
-also, I want less information on the sides, cluster that into appropriate buttons that'll launch the settings on the sides
