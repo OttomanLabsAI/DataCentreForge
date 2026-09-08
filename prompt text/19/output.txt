@@ -1,0 +1,7 @@
+Version 19 — the 3D view.
+
+A 3D view button now sits in the header (the 3 key toggles it too). It shows the whole drawing in three dimensions: every chamber as a box between its lid and base levels, every obstacle as a box between its top and bottom, and every conduit run drawn at its true depth along its route — each column and row of an array as its own tube — over the ground grid at Z 0. Drag to orbit, shift-drag to pan, scroll to zoom, click a chamber, obstacle or conduit to select it; Fit view refits the camera and Connect faces takes you back to the plan, where faces are picked.
+
+Everything is painted far to near, so a run that passes under an obstacle disappears beneath it and one that passes over rides on top, and a run entering a chamber is hidden inside its walls. Chambers gained Lid Z and Base Z in their geometry cluster (taken from the z1–z6 datums on a Revit import), and both come through in the export.
+
+Verified in a driven browser: entering and leaving the view by button and key, boxes and tubes drawn, painter order, orbit, pan, zoom, refit, selection by click on a chamber, a conduit and empty space, an under-crossing dipping in 3D, the new chamber fields, a Revit import viewed in 3D, and the export — plus the batteries from versions 14 to 18, all passing with no console errors.

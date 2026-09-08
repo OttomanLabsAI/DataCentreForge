@@ -75,6 +75,11 @@ impassable. The plan is routed first; the long section is then solved with the
 same engine in the chainage–Z plane, and each run shows it in its panel along
 with its laid length.
 
+**3D view** in the header (or the `3` key) shows the whole drawing in three
+dimensions: chambers and obstacles as boxes between their top and bottom
+levels, every conduit at its true depth, over the ground grid at Z 0. Drag to
+orbit, shift-drag to pan, scroll to zoom, click to select.
+
 ## External resources
 
 None. The page loads no external fonts, scripts, or images — the `"Inter"`

@@ -31,7 +31,9 @@ const state = {
   mode: 'select',
   pending: null,
   snap: 50,
-  showGrid: true, showDims: true, avoidChambers: true, avoidPipes: true, square: true
+  showGrid: true, showDims: true, avoidChambers: true, avoidPipes: true, square: true,
+  view3d: false,
+  cam: {az:32, el:38, s:0.03, cx:0, cy:0, cz:0, px:0, py:0}   // orbit camera for the 3D view
 };
 
 let uidSeq = 1;
@@ -46,7 +48,8 @@ const selIs  = k => state.sel && state.sel.kind === k;
 /* ---------- model --------------------------------------------------------- */
 
 function makeChamber(o = {}){
-  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300, latSpace:450, zSpace:300, edgeClear:150, z0:-600}, o);
+  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300, latSpace:450, zSpace:300, edgeClear:150,
+                        z0:-600, zLid:0, zBase:-1800}, o);
 }
 function makeObstacle(o = {}){
   return Object.assign({uid:uid(), name:nextName(), x:0, y:0, w:2400, d:2400, rot:0, buffer:250,
@@ -63,6 +66,7 @@ const obsRules = o => ['around','over','under'].filter(k => o[k]).join(' · ') |
 const obsRulesShort = o => o.around && o.over && o.under ? 'any way'
   : ['around','over','under'].filter(k => o[k]).join('/') || 'impassable';
 const chamberZ0 = c => Number.isFinite(c.z0) ? c.z0 : -600;
+const chamberZs = c => [Number.isFinite(c.zBase) ? c.zBase : -1800, Number.isFinite(c.zLid) ? c.zLid : 0];   // [base, lid]
 function makeSpec(o = {}){
   return Object.assign({
     id:uid(), name:'New spec', colour:SPEC_COLOURS[state.specs.length % SPEC_COLOURS.length],
@@ -1030,7 +1034,7 @@ const S2W = p => [(p[0]-state.view.tx)/state.view.s, (state.view.ty-p[1])/state.
 function fitView(pad = 90){
   const r = STAGE.getBoundingClientRect();
   if (!state.chambers.length && !state.obstacles.length){
-    state.view = {tx:r.width/2, ty:r.height/2, s:0.05}; return draw();
+    state.view = {tx:r.width/2, ty:r.height/2, s:0.05}; return state.view3d ? fit3d() : draw();
   }
   let minx=1e12, miny=1e12, maxx=-1e12, maxy=-1e12;
   const eat = p => { minx=Math.min(minx,p[0]); maxx=Math.max(maxx,p[0]);
@@ -1042,7 +1046,7 @@ function fitView(pad = 90){
   state.view.s = Math.max(0.0005, Math.min(3, s));
   state.view.tx = r.width/2  - (minx+maxx)/2*state.view.s;
   state.view.ty = r.height/2 + (miny+maxy)/2*state.view.s;
-  draw();
+  if (state.view3d) fit3d(); else draw();
 }
 
 /* ==========================================================================
@@ -1056,9 +1060,9 @@ const fmt1 = v => (Math.round(v*10)/10).toString();
 const metres = v => (v/1000).toFixed(2) + ' m';
 const poly  = arr => `M${pts(arr).replace(/ /g,' L')} Z`;
 
-function gridStep(){
+function gridStep(scale = state.view.s){
   const steps = [50,100,250,500,1000,2500,5000,10000,25000,50000,100000];
-  for (const st of steps) if (st*state.view.s >= 55) return st;
+  for (const st of steps) if (st*scale >= 55) return st;
   return steps[steps.length-1];
 }
 function routePathScreen(rt){
@@ -1081,6 +1085,7 @@ function routePathScreen(rt){
 
 function draw(){
   recomputeRoutes();
+  if (state.view3d) return draw3d();
   const r = STAGE.getBoundingClientRect();
   const W = r.width, H = r.height, s = state.view.s;
   const out = [];
@@ -1248,13 +1253,224 @@ function faceMarker(f, colour){
        + `<line x1="${b[0]-u[0]*6}" y1="${b[1]-u[1]*6}" x2="${b[0]+u[0]*6}" y2="${b[1]+u[1]*6}" stroke="${colour}" stroke-width="1.4"/>`
        + `<circle cx="${m[0]}" cy="${m[1]}" r="3.2" fill="${colour}"/>`;
 }
-function drawScaleBar(){
+function drawScaleBar(scale = state.view.s){
   const el = document.getElementById('scalebar');
   const opts = [100,200,500,1000,2000,5000,10000,20000,50000,100000];
   let pick = opts[0];
-  for (const o of opts){ pick = o; if (o*state.view.s >= 70) break; }
-  el.querySelector('.bar').style.width = (pick*state.view.s) + 'px';
+  for (const o of opts){ pick = o; if (o*scale >= 70) break; }
+  el.querySelector('.bar').style.width = (pick*scale) + 'px';
   el.querySelector('span').textContent = pick >= 1000 ? (pick/1000)+' m' : pick+' mm';
+}
+
+/* ==========================================================================
+   3D VIEW
+   An orthographic look at the whole drawing: chambers and obstacles as boxes
+   between their top and bottom levels, every conduit at its true depth along
+   its route, over the ground grid at Z 0. Drag to orbit, shift-drag to pan,
+   scroll to zoom, click to select. Faces and conduit segments are painted
+   far to near, so a run passing under an obstacle disappears beneath it and
+   one passing over rides on top.
+   ========================================================================== */
+
+let stageW = 0, stageH = 0, prims3d = [], drag3 = null;
+
+/** World [x,y,z] → screen [sx, sy, nearness] under the orbit camera. */
+function proj(p){
+  const cam = state.cam, a = cam.az*D2R, e = cam.el*D2R;
+  const x = p[0]-cam.cx, y = p[1]-cam.cy, z = (p[2]||0)-cam.cz;
+  const X = x*Math.cos(a) + y*Math.sin(a), U = -x*Math.sin(a) + y*Math.cos(a);
+  const up = z*Math.cos(e) + U*Math.sin(e), near = z*Math.sin(e) - U*Math.cos(e);
+  return [stageW/2 + cam.px + X*cam.s, stageH/2 + cam.py - up*cam.s, near];
+}
+
+/** The 3D centreline(s) of a run: plan route with the section's depth at
+    every chainage of either — one polyline per column and row of the array. */
+function run3d(cn){
+  const rt = cn.route, out = [];
+  if (!rt || !rt.ok) return out;
+  const pf = rt.profile, A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  const cols = runCols(cn), rows = runRows(cn);
+  const S = Math.max(entryFor(cn,'a').S || 0, entryFor(cn,'b').S || 0);
+  const zPitch = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);
+  const zFlat = chamberZ0(A) - (cn.level|0)*zPitch;
+  for (let k = 0; k < cols; k++){
+    const w = (k - (cols-1)/2) * S;
+    let lane = rt;
+    if (Math.abs(w) > 1e-6){ try { lane = offsetMember(rt, w, w); } catch(_){ lane = rt; } }
+    const {cum, k:kk} = chainage(lane), L = lane.length || 1, PS = pf ? (pf.S || L) : L;
+    const ss = cum.map(v => v*kk);
+    if (pf) for (const q of pf.poly) ss.push(q[0]*L/PS);
+    const sorted = [...new Set(ss.map(v => Math.round(v*10)/10))].filter(v => v >= 0 && v <= L + 1e-6).sort((a,b) => a-b);
+    const line = sorted.map(v => { const q = pointAt(lane, v); return [q[0], q[1], pf ? profileZ(pf, v*PS/L) : zFlat]; });
+    for (let rI = 0; rI < rows; rI++) out.push(rI ? line.map(q => [q[0], q[1], q[2] - rI*zPitch]) : line);
+  }
+  return out;
+}
+
+function drawingExtent(){
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  const eat = p => { x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); y0 = Math.min(y0, p[1]); y1 = Math.max(y1, p[1]); };
+  for (const c of state.chambers) corners(c, c.wall).forEach(eat);
+  for (const o of state.obstacles) boxCorners(o, 0).forEach(eat);
+  for (const cn of state.connections) if (cn.route && cn.route.ok) cn.route.pts.forEach(eat);
+  return x0 <= x1 ? [x0, y0, x1, y1] : null;
+}
+
+/** Fit the camera to everything drawn, keeping the current orbit angles. */
+function fit3d(pad = 70){
+  const r = STAGE.getBoundingClientRect(); stageW = r.width; stageH = r.height;
+  const cam = state.cam, pts = [];
+  for (const c of state.chambers){ const [zb, zl] = chamberZs(c); for (const p of corners(c, c.wall)) pts.push([p[0], p[1], zb], [p[0], p[1], zl]); }
+  for (const o of state.obstacles) for (const p of boxCorners(o, 0)) pts.push([p[0], p[1], Math.min(o.zTop, o.zBot)], [p[0], p[1], Math.max(o.zTop, o.zBot)]);
+  for (const cn of state.connections) if (cn.placed && cn.route && cn.route.ok) for (const line of run3d(cn)) pts.push(...line);
+  if (!pts.length){ Object.assign(cam, {cx:0, cy:0, cz:0, s:0.03, px:0, py:0}); return draw(); }
+  const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
+  for (const p of pts) for (let i = 0; i < 3; i++){ lo[i] = Math.min(lo[i], p[i]); hi[i] = Math.max(hi[i], p[i]); }
+  cam.cx = (lo[0]+hi[0])/2; cam.cy = (lo[1]+hi[1])/2; cam.cz = (lo[2]+hi[2])/2;
+  cam.s = 1; cam.px = 0; cam.py = 0;
+  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+  for (const p of pts){ const q = proj(p); x0 = Math.min(x0, q[0]); x1 = Math.max(x1, q[0]); y0 = Math.min(y0, q[1]); y1 = Math.max(y1, q[1]); }
+  cam.s = Math.max(0.0005, Math.min(3, Math.min((r.width-2*pad)/Math.max(1, x1-x0), (r.height-2*pad)/Math.max(1, y1-y0))));
+  cam.px = -((x0+x1)/2 - r.width/2)*cam.s;
+  cam.py = -((y0+y1)/2 - r.height/2)*cam.s;
+  draw();
+}
+
+function draw3d(){
+  const r = STAGE.getBoundingClientRect(); stageW = r.width; stageH = r.height;
+  const cam = state.cam, s = cam.s, prims = [], out = [];
+  const fp = q => q[0].toFixed(1) + ',' + q[1].toFixed(1);
+  const polyStr = qs => qs.map(fp).join(' ');
+  const line = (a, b, attrs) => `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" ${attrs}/>`;
+  const isOn = (kind, id) => !!state.sel && state.sel.kind === kind && state.sel.id === id;
+
+  out.push(`<defs><pattern id="obs" patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(-45)">
+      <line x1="0" y1="0" x2="0" y2="9" stroke="${C.obsHatch}" stroke-width="1.4"/></pattern></defs>`);
+
+  /* ground grid at Z 0 across the drawing's footprint */
+  const ext = drawingExtent();
+  if (state.showGrid && ext){
+    const st = gridStep(s), m = st*2;
+    const gx0 = Math.floor((ext[0]-m)/st)*st, gx1 = Math.ceil((ext[2]+m)/st)*st;
+    const gy0 = Math.floor((ext[1]-m)/st)*st, gy1 = Math.ceil((ext[3]+m)/st)*st;
+    for (let x = gx0; x <= gx1 + 1e-6; x += st){
+      const k = Math.round(x/st), col = k === 0 ? C.axisY : k % 5 === 0 ? C.gridMajor : C.gridMinor;
+      out.push(line(proj([x, gy0, 0]), proj([x, gy1, 0]), `stroke="${col}" stroke-width="1"`));
+    }
+    for (let y = gy0; y <= gy1 + 1e-6; y += st){
+      const k = Math.round(y/st), col = k === 0 ? C.axisX : k % 5 === 0 ? C.gridMajor : C.gridMinor;
+      out.push(line(proj([gx0, y, 0]), proj([gx1, y, 0]), `stroke="${col}" stroke-width="1"`));
+    }
+  }
+
+  /* boxes: six faces each, sorted with everything else by nearness */
+  const box = (pts4, zlo, zhi, fill, op, stroke, sw, pick, hatch) => {
+    const lo = pts4.map(p => [p[0], p[1], zlo]), hi = pts4.map(p => [p[0], p[1], zhi]);
+    const faces = [lo, hi];
+    for (let i = 0; i < 4; i++){ const j = (i+1)%4; faces.push([lo[i], lo[j], hi[j], hi[i]]); }
+    for (const f of faces){
+      const q = f.map(proj), near = q.reduce((a, v) => a + v[2], 0)/q.length;
+      let svg = `<polygon points="${polyStr(q)}" fill="${fill}" fill-opacity="${op}" stroke="${stroke}" stroke-width="${sw}" stroke-linejoin="round"/>`;
+      if (hatch) svg += `<polygon points="${polyStr(q)}" fill="url(#obs)" opacity=".7"/>`;
+      prims.push({near, pick, poly:q, svg});
+    }
+  };
+  const label = (p, text, colour, size = 11) => {
+    const q = proj(p);
+    prims.push({near:Infinity, svg:`<text x="${q[0].toFixed(1)}" y="${(q[1]-6).toFixed(1)}" fill="${colour}" font-family="${C.mono}" font-size="${size}" text-anchor="middle">${esc(text)}</text>`});
+  };
+  for (const o of state.obstacles){
+    const on = isOn('obstacle', o.uid), zb = Math.min(o.zTop, o.zBot), zt = Math.max(o.zTop, o.zBot);
+    box(boxCorners(o, 0), zb, zt, C.obsFill, .92, on ? C.sel : C.obsLine, on ? 1.8 : 1.1, {kind:'obstacle', id:o.uid}, true);
+    if (Math.min(o.w, o.d)*s > 30) label([o.x, o.y, zt], o.name, on ? C.sel : C.obsLine);
+  }
+  for (const c of state.chambers){
+    const on = isOn('chamber', c.uid), [zb, zl] = chamberZs(c);
+    box(corners(c, c.wall), zb, zl, C.chamber, .94, on ? C.sel : C.ink, on ? 1.8 : 1.1, {kind:'chamber', id:c.uid});
+    if ((c.intX + 2*c.wall)*s > 30) label([c.x, c.y, zl], c.ref, on ? C.sel : C.ink, 12);
+  }
+
+  /* conduits: every column and row of every run, segment by segment */
+  for (const cn of state.connections){
+    const rt = cn.route, sp = specOf(cn), on = isOn('conn', cn.uid);
+    const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+    if (!A || !B) continue;
+    if (!cn.placed || !rt || !rt.ok){
+      const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
+      if (!ea || !eb) continue;
+      const za = chamberZ0(A) - (cn.level|0)*A.zSpace, zb = chamberZ0(B) - (cn.level|0)*B.zSpace;
+      const p = proj([ea.point[0], ea.point[1], za]), q = proj([eb.point[0], eb.point[1], zb]);
+      const col = rt && !rt.ok ? C.bad : (on ? C.sel : C.ghost);
+      prims.push({near:(p[2]+q[2])/2, pick:{kind:'conn', id:cn.uid}, seg:[p, q], tol:8,
+        svg: line(p, q, `stroke="${col}" stroke-width="${on ? 1.8 : 1.2}" stroke-dasharray="6 5" opacity=".85"`)});
+      continue;
+    }
+    const body = Math.max(1.5, 2*sp.radius*s), edge = on ? C.sel : sp.colour;
+    for (const pl of run3d(cn)){
+      const q = pl.map(proj);
+      for (let i = 0; i < q.length-1; i++){
+        const a = q[i], b = q[i+1];
+        if (Math.hypot(b[0]-a[0], b[1]-a[1]) < 0.05) continue;
+        prims.push({near:(a[2]+b[2])/2, pick:{kind:'conn', id:cn.uid}, seg:[a, b], tol:Math.max(6, body/2 + 2),
+          svg: line(a, b, `stroke="${edge}" stroke-width="${body.toFixed(1)}" stroke-linecap="round" opacity=".95"`)});
+      }
+    }
+  }
+  prims.sort((a, b) => a.near - b.near);
+
+  /* axis triad, bottom left */
+  const o0 = [cam.cx, cam.cy, cam.cz], base = proj(o0), tri = [];
+  const ox = 46, oy = stageH - 62;
+  for (const [v, col, name] of [[[1,0,0], '#e0655f', 'X'], [[0,1,0], '#6bd68a', 'Y'], [[0,0,1], C.pick, 'Z']]){
+    const q = proj([o0[0]+v[0], o0[1]+v[1], o0[2]+v[2]]);
+    const dx = (q[0]-base[0])/cam.s, dy = (q[1]-base[1])/cam.s;   // unit direction on screen
+    tri.push(`<line x1="${ox}" y1="${oy}" x2="${(ox+dx*24).toFixed(1)}" y2="${(oy+dy*24).toFixed(1)}" stroke="${col}" stroke-width="1.6"/>`);
+    tri.push(`<text x="${(ox+dx*33).toFixed(1)}" y="${(oy+dy*33+3.5).toFixed(1)}" fill="${col}" font-family="${C.mono}" font-size="10" text-anchor="middle">${name}</text>`);
+  }
+
+  SVG.setAttribute('viewBox', `0 0 ${stageW} ${stageH}`);
+  SVG.innerHTML = out.join('') + prims.map(p => p.svg).join('') + tri.join('');
+  prims3d = prims;
+  drawScaleBar(s);
+  document.getElementById('rz').textContent = (s*100).toFixed(1) + ' px/cm';
+}
+
+/** Nearest thing under a screen point: front faces first, conduits by distance. */
+function pick3d(sp){
+  for (let i = prims3d.length-1; i >= 0; i--){
+    const p = prims3d[i];
+    if (!p.pick) continue;
+    if (p.poly && pointInPoly(sp, p.poly)) return p.pick;
+    if (p.seg && distToSeg(sp, p.seg[0], p.seg[1]) < p.tol) return p.pick;
+  }
+  return null;
+}
+function pointer3dDown(e, sp){
+  drag3 = {sx:sp[0], sy:sp[1], az:state.cam.az, el:state.cam.el, px:state.cam.px, py:state.cam.py,
+           pan:e.shiftKey || e.button === 1, moved:false};
+}
+function pointer3dMove(e, sp){
+  if (!drag3){ STAGE.style.cursor = pick3d(sp) ? 'pointer' : 'grab'; return; }
+  const dx = sp[0]-drag3.sx, dy = sp[1]-drag3.sy;
+  if (Math.hypot(dx, dy) > 3) drag3.moved = true;
+  if (drag3.pan){ state.cam.px = drag3.px + dx; state.cam.py = drag3.py + dy; }
+  else { state.cam.az = drag3.az - dx*0.4; state.cam.el = Math.max(5, Math.min(89.5, drag3.el + dy*0.4)); }
+  STAGE.style.cursor = drag3.pan ? 'move' : 'grabbing';
+  draw();
+}
+function pointer3dUp(sp){
+  if (drag3 && !drag3.moved){ const h = pick3d(sp); select(h ? h.kind : null, h ? h.id : null); }
+  drag3 = null;
+  STAGE.style.cursor = 'grab';
+}
+function setView3d(on){
+  state.view3d = on;
+  document.getElementById('btnView3d').classList.toggle('on', on);
+  state.hoverFace = null; showCallout(null);
+  if (on && state.mode === 'connect') btnConnect.onclick();       // connecting faces is a plan-view job
+  document.getElementById('rmode').textContent = on ? '3D — drag to orbit · shift-drag to pan · scroll to zoom · click to select' : '';
+  STAGE.style.cursor = on ? 'grab' : 'crosshair';
+  if (on) fit3d(); else draw();
 }
 
 /* ==========================================================================
@@ -1312,6 +1528,7 @@ STAGE.addEventListener('pointerdown', e => {
   STAGE.setPointerCapture(e.pointerId);
   const r = STAGE.getBoundingClientRect();
   const sp = [e.clientX-r.left, e.clientY-r.top], wp = S2W(sp);
+  if (state.view3d){ pointer3dDown(e, sp); return; }
 
   if (state.mode === 'connect'){
     const f = hitFace(wp, 12);
@@ -1331,6 +1548,11 @@ STAGE.addEventListener('pointerdown', e => {
 STAGE.addEventListener('pointermove', e => {
   const r = STAGE.getBoundingClientRect();
   const sp = [e.clientX-r.left, e.clientY-r.top], wp = S2W(sp);
+  if (state.view3d){
+    document.getElementById('rx').textContent = '—';
+    document.getElementById('ry').textContent = '—';
+    return pointer3dMove(e, sp);
+  }
   document.getElementById('rx').textContent = fmt(wp[0]);
   document.getElementById('ry').textContent = fmt(wp[1]);
 
@@ -1352,11 +1574,13 @@ STAGE.addEventListener('pointermove', e => {
   if (changed) draw();
 });
 
-STAGE.addEventListener('pointerup', () => {
+STAGE.addEventListener('pointerup', e => {
+  if (state.view3d){ const r = STAGE.getBoundingClientRect(); pointer3dUp([e.clientX-r.left, e.clientY-r.top]); return; }
   drag = null;
   if (ROUTE_QUICK){ ROUTE_QUICK = false; renderSel(); renderConnections(); draw(); }
 });
 STAGE.addEventListener('pointerleave', () => {
+  if (state.view3d){ drag3 = null; return; }
   state.hoverFace = null; showCallout(null); draw();
   document.getElementById('rx').textContent = '—';
   document.getElementById('ry').textContent = '—';
@@ -1366,6 +1590,13 @@ STAGE.addEventListener('wheel', e => {
   e.preventDefault();
   const r = STAGE.getBoundingClientRect();
   const sp = [e.clientX-r.left, e.clientY-r.top], before = S2W(sp);
+  if (state.view3d){
+    const cam = state.cam, ns = Math.max(0.0004, Math.min(4, cam.s*Math.exp(-e.deltaY*0.0016))), g = ns/cam.s;
+    cam.px = sp[0] - r.width/2 - (sp[0] - r.width/2 - cam.px)*g;   // keep the point under the cursor still
+    cam.py = sp[1] - r.height/2 - (sp[1] - r.height/2 - cam.py)*g;
+    cam.s = ns;
+    return draw();
+  }
   state.view.s = Math.max(0.0004, Math.min(4, state.view.s*Math.exp(-e.deltaY*0.0016)));
   const after = S2W(sp);
   state.view.tx += (after[0]-before[0])*state.view.s;
@@ -1615,6 +1846,8 @@ function renderChamberProps(box, c){
       numRow('pIY','Internal W (Y)', c.intY, 25, 'mm') +
       `<div class="row"><label class="chk"><input type="checkbox" id="pSq" ${state.square?'checked':''}> Keep square</label></div>` +
       numRow('pW','Wall thickness', c.wall, 25, 'mm') +
+      numRow('pZL','Lid Z', chamberZs(c)[1], 50, 'mm') +
+      numRow('pZB','Base Z', chamberZs(c)[0], 50, 'mm') +
       `<div class="derived">
          <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
          <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
@@ -1648,7 +1881,7 @@ function renderChamberProps(box, c){
     });
   };
   bind('pRef','ref',String); bind('pIX','intX'); bind('pIY','intY');
-  bind('pW','wall'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
+  bind('pW','wall'); bind('pZL','zLid'); bind('pZB','zBase'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
   bind('pLat','latSpace'); bind('pZ','zSpace'); bind('pZ0','z0'); bind('pEC','edgeClear');
   wireFaceButtons(c);
   wireClusters(box, renderSel);
@@ -1963,6 +2196,7 @@ function removeChamber(u){
    ========================================================================== */
 
 const viewCentre = () => {
+  if (state.view3d) return [state.cam.cx, state.cam.cy];
   const r = STAGE.getBoundingClientRect();
   return S2W([r.width/2, r.height/2]);
 };
@@ -1980,6 +2214,7 @@ document.getElementById('btnObs').onclick = () => {
 };
 const btnConnect = document.getElementById('btnConnect');
 btnConnect.onclick = () => {
+  if (state.view3d && state.mode !== 'connect') setView3d(false);
   state.mode = state.mode === 'connect' ? 'select' : 'connect';
   state.pending = null;
   btnConnect.classList.toggle('on', state.mode === 'connect');
@@ -1988,6 +2223,7 @@ btnConnect.onclick = () => {
   draw();
 };
 document.getElementById('btnFit').onclick = () => fitView();
+document.getElementById('btnView3d').onclick = () => setView3d(!state.view3d);
 document.getElementById('snap').oninput = e => { state.snap = Math.max(0, Number(e.target.value)||0); };
 document.getElementById('grid').onchange = e => { state.showGrid = e.target.checked; draw(); };
 document.getElementById('dims').onchange = e => { state.showDims = e.target.checked; draw(); };
@@ -2102,6 +2338,7 @@ function importRevit(d){
     const seq = L => Array.from({length:7}, (_, i) => pos(P[L + (i+1)]));
     const a = seq('a'), b = seq('b');
     const z = Array.from({length:6}, (_, i) => zpos(P['z' + (i+1)]));
+    const zs = z.filter(v => v != null);
     const pick = (arr, i, fb) => arr[i] != null ? arr[i] : fb;
     const ext = {a:[a[0], a[6]], b:[b[0], b[6]]};
     const inn = {a:[pick(a,1,a[0]), pick(a,5,a[6])], b:[pick(b,1,b[0]), pick(b,5,b[6])]};
@@ -2146,6 +2383,8 @@ function importRevit(d){
         x: Math.round(wx), y: Math.round(wy), rot: Math.round(rot*100)/100,
         intX: Math.round(intX), intY: Math.round(intY), wall,
         z0: Math.round(o[2] + (wZ ? wZ.hi - 150 : -600)),       // top row a half pitch below the window top
+        zLid: Math.round(o[2] + (zs.length ? Math.max(...zs) : 0)),
+        zBase: Math.round(o[2] + (zs.length ? Math.min(...zs) : -1800)),
         sides, win, lid, zd: z, src: 'revit', family: F.family || null, type: inst.type || null
       }));
     }
@@ -2221,6 +2460,7 @@ document.addEventListener('keydown', e => {
     }
   } else if (e.key === 'Escape'){ state.pending = null; select(null); }
   else if (e.key === 'f' || e.key === 'F'){ fitView(); }
+  else if (e.key === '3'){ setView3d(!state.view3d); }
   else if (e.key.startsWith('Arrow') && (selIs('chamber') || selIs('obstacle'))){
     e.preventDefault();
     const o = selIs('chamber') ? byUid(state.sel.id) : obsBy(state.sel.id);

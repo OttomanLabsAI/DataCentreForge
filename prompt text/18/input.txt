@@ -1,9 +1,0 @@
-good, now make it work in 3d
-
-the instance params will tell it if it can go over, around or under
-
-default to under if both are checked
-
-around is priority, then the others
-
-if both around and one of the others are ticked prioritse around but allow for both
