@@ -1,0 +1,3 @@
+it should include the revit id for tracking, so when i export a new one, it should keep my connections etc
+
+plus revit file ids etc should be in the export

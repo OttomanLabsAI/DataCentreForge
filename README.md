@@ -65,6 +65,12 @@ parameters `obstacle_around`, `obstacle_over`, `obstacle_under` (the
 `obstable_` spelling is accepted) is exported as its own bounding box in family
 coordinates, with its placement, top and bottom, and those three flags.
 
+Every manhole and obstacle keeps its Revit element id, unique id and source
+document. Importing a later export of the same model refreshes the matching
+elements in place — runs stay attached — adds what is new and keeps what the
+export no longer has; the tool's own JSON export carries those ids on every
+element and on both ends of every run, plus the list of source documents.
+
 ## Obstacles in three dimensions
 
 Every obstacle has a top, a bottom, and rules for how a run may pass it:

@@ -1916,6 +1916,10 @@ function renderSel(){
   box.innerHTML = `<div class="empty">Nothing selected. Click a chamber, an obstacle or a conduit run.</div>`;
 }
 
+const revitLine = e => e.src === 'revit'
+  ? `<br><b>Revit</b> id ${esc(e.revitId != null ? e.revitId : '?')}${e.family ? ' · ' + esc(e.family) : ''}${e.type ? ' : ' + esc(e.type) : ''}${e.revitDoc ? ' · ' + esc(String(e.revitDoc).split(/[\\/]/).pop()) : ''}`
+  : '';
+
 function renderChamberProps(box, c){
   if (!c){ box.innerHTML = ''; return; }
   box.innerHTML =
@@ -1930,7 +1934,7 @@ function renderChamberProps(box, c){
       `<div class="derived">
          <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
          <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
-         <b>Sides</b> ${FACES.map(f => f+' '+fmt(faceGeom(c,f).width)).join('  ')}</div>`) +
+         <b>Sides</b> ${FACES.map(f => f+' '+fmt(faceGeom(c,f).width)).join('  ')}${revitLine(c)}</div>`) +
     cluster('chPos', 'Position', `${fmt(c.x)}, ${fmt(c.y)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}`,
       numRow('pX','Centre X', c.x, state.snap||1, 'mm') +
       numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
@@ -1984,7 +1988,8 @@ function renderObstacleProps(box, o){
       numRow('oD','Depth (Y)', o.d, 100, 'mm') +
       numRow('oX','Centre X', o.x, state.snap||1, 'mm') +
       numRow('oY','Centre Y', o.y, state.snap||1, 'mm') +
-      numRow('oR','Rotation', o.rot, 15, '°')) +
+      numRow('oR','Rotation', o.rot, 15, '°') +
+      (o.src === 'revit' ? `<div class="derived">${revitLine(o).replace(/^<br>/, '')}</div>` : '')) +
     cluster('obZ', 'Levels & crossing', `${fmt(Math.max(o.zTop, o.zBot))}…${fmt(Math.min(o.zTop, o.zBot))} · ${obsRulesShort(o)}`,
       numRow('oZT','Top (Z)', o.zTop, 100, 'mm') +
       numRow('oZB','Bottom (Z)', o.zBot, 100, 'mm') +
@@ -2325,9 +2330,11 @@ function syncDrawingInputs(){
 
 document.getElementById('btnExport').onclick = () => {
   recomputeRoutes();
+  const revitDocs = [...new Set([...state.chambers, ...state.obstacles].map(e => e.revitDoc).filter(Boolean))];
   const data = {
     units:'mm', axes:'+X east, +Y north',
     ground: state.ground, cover: state.cover,
+    revit: revitDocs.length ? {documents: revitDocs} : undefined,
     specs: state.specs.map(({id, ...rest}) => rest),
     chambers: state.chambers.map(({uid, ...rest}) => rest),
     obstacles: state.obstacles.map(({uid, ...rest}) => rest),
@@ -2337,9 +2344,11 @@ document.getElementById('btnExport').onclick = () => {
       const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
       return {
         from:{ref: A?.ref, face: cn.a.face, lateralOffset: ea ? Math.round(ea.offset) : 0,
-              zOffset: A ? -(cn.level|0)*A.zSpace : 0, z: A ? chamberZ0(A) - (cn.level|0)*A.zSpace : null},
+              zOffset: A ? -(cn.level|0)*A.zSpace : 0, z: A ? chamberZ0(A) - (cn.level|0)*A.zSpace : null,
+              revitId: A?.revitId ?? undefined, revitUid: A?.revitUid ?? undefined},
         to:  {ref: B?.ref, face: cn.b.face, lateralOffset: eb ? Math.round(eb.offset) : 0,
-              zOffset: B ? -(cn.level|0)*B.zSpace : 0, z: B ? chamberZ0(B) - (cn.level|0)*B.zSpace : null},
+              zOffset: B ? -(cn.level|0)*B.zSpace : 0, z: B ? chamberZ0(B) - (cn.level|0)*B.zSpace : null,
+              revitId: B?.revitId ?? undefined, revitUid: B?.revitUid ?? undefined},
         spec: sp ? sp.name : null,
         level: cn.level|0,
         rows: runRows(cn), cols: runCols(cn),
@@ -2473,6 +2482,7 @@ function importRevit(d){
       const lid = lidX && lidY ? {x:lidX, y: mirrored ? [-lidY[1], -lidY[0]] : lidY} : null;
       made.push(makeChamber({
         ref: inst.mark || null,
+        revitId: inst.id != null ? inst.id : null, revitUid: inst.unique_id || null, revitDoc: d.document || d.source || null,
         x: Math.round(wx), y: Math.round(wy), rot: Math.round(rot*100)/100,
         intX: Math.round(intX), intY: Math.round(intY), wall,
         z0: Math.round(o[2] + (wZ ? wZ.hi - 150 : -600)),       // top row a half pitch below the window top
@@ -2493,6 +2503,7 @@ function importRevit(d){
     const flag = k => ob[k] == null ? true : !!ob[k];
     obstacles.push(makeObstacle({
       name: ob.mark || ob.name || null,
+      revitId: ob.id != null ? ob.id : null, revitUid: ob.unique_id || null, revitDoc: d.document || d.source || null,
       x: Math.round(o[0] + bx[0]*cx + by[0]*cy), y: Math.round(o[1] + bx[1]*cx + by[1]*cy),
       rot: Math.round((ob.rotation_deg != null ? ob.rotation_deg : Math.atan2(bx[1], bx[0])*R2D)*100)/100,
       w: Math.round(mx[0]-mn[0]), d: Math.round(mx[1]-mn[1]),
@@ -2504,26 +2515,61 @@ function importRevit(d){
   return {chambers: made, obstacles};
 }
 
+/** What identifies an element across exports of the same model: its Revit
+    unique id, or its element id within its document. */
+const revitKey = e => e.revitUid ? 'u:' + e.revitUid
+                    : (e.revitId != null ? 'i:' + e.revitId + '@' + (e.revitDoc || '') : null);
+
 document.getElementById('revitIn').onchange = e => {
   const f = e.target.files[0];
   if (!f) return;
   const rd = new FileReader();
   rd.onload = () => {
     try {
-      const {chambers: made, obstacles: obs} = importRevit(JSON.parse(rd.result));
+      const src = JSON.parse(rd.result);
+      const {chambers: made, obstacles: obs} = importRevit(src);
       if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) and no flagged obstacles found');
       const n = (k, w) => `${k} ${w}${k === 1 ? '' : 's'}`;
-      const replace = (!state.chambers.length && !state.obstacles.length) ||
-        confirm(`Import ${n(made.length, 'manhole')} and ${n(obs.length, 'obstacle')} from Revit — replace the current drawing? (Cancel adds them alongside.)`);
-      if (replace){ state.chambers = []; state.obstacles = []; state.connections = []; }
-      for (const c of made){
-        if (!c.ref || state.chambers.some(x => x.ref === c.ref)) c.ref = nextRef();
-        state.chambers.push(c);
+      const oldC = new Map(state.chambers.filter(revitKey).map(c => [revitKey(c), c]));
+      const oldO = new Map(state.obstacles.filter(revitKey).map(o => [revitKey(o), o]));
+      const hits = made.filter(c => oldC.has(revitKey(c))).length + obs.filter(o => oldO.has(revitKey(o))).length;
+      if (hits){
+        /* a later export of a model already on the drawing: refresh what matches
+           in place — every run stays attached — add what is new, keep the rest */
+        const CH = ['x','y','rot','intX','intY','wall','sides','win','lid','zd','z0','zLid','zBase','family','type','revitId','revitUid','revitDoc'];
+        const OB = ['x','y','rot','w','d','zTop','zBot','around','over','under','family','type','revitId','revitUid','revitDoc'];
+        let added = 0;
+        for (const c of made){
+          const old = oldC.get(revitKey(c));
+          if (!old){ if (!c.ref || state.chambers.some(x => x.ref === c.ref)) c.ref = nextRef(); state.chambers.push(c); added++; continue; }
+          for (const k of CH) old[k] = c[k];
+          if (c.ref && c.ref !== old.ref && !state.chambers.some(x => x !== old && x.ref === c.ref)) old.ref = c.ref;
+        }
+        for (const o of obs){
+          const old = oldO.get(revitKey(o));
+          if (!old){ if (!o.name || state.obstacles.some(x => x.name === o.name)) o.name = nextName(); state.obstacles.push(o); added++; continue; }
+          for (const k of OB) old[k] = o[k];
+          if (o.name && o.name !== old.name && !state.obstacles.some(x => x !== old && x.name === o.name)) old.name = o.name;
+        }
+        const seen = new Set([...made, ...obs].map(revitKey)), docNow = src.document || src.source || null;
+        const kept = [...state.chambers, ...state.obstacles]
+          .filter(e => e.src === 'revit' && revitKey(e) && !seen.has(revitKey(e)) && e.revitDoc === docNow).length;
+        document.getElementById('rmode').textContent =
+          `Revit update — ${hits} refreshed · ${added} added · ${kept} not in this export, kept`;
+      } else {
+        const replace = (!state.chambers.length && !state.obstacles.length) ||
+          confirm(`Import ${n(made.length, 'manhole')} and ${n(obs.length, 'obstacle')} from Revit — replace the current drawing? (Cancel adds them alongside.)`);
+        if (replace){ state.chambers = []; state.obstacles = []; state.connections = []; }
+        for (const c of made){
+          if (!c.ref || state.chambers.some(x => x.ref === c.ref)) c.ref = nextRef();
+          state.chambers.push(c);
+        }
+        for (const o of obs){
+          if (!o.name || state.obstacles.some(x => x.name === o.name)) o.name = nextName();
+          state.obstacles.push(o);
+        }
       }
-      for (const o of obs){
-        if (!o.name || state.obstacles.some(x => x.name === o.name)) o.name = nextName();
-        state.obstacles.push(o);
-      }
+      bankCache.clear();
       state.sel = null; state.pending = null;
       renderSel(); renderConnections(); renderObstacles(); fitView();
     } catch(err){ alert('That file is not a Revit manhole export: ' + err.message); }

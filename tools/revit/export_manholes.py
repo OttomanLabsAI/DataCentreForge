@@ -16,6 +16,8 @@ Run from pyRevit or RevitPythonShell:
 Planes exported (by name):   a1..a7   b1..b7   z1..z6
                              a_conduit_boundary_1/2  b_conduit_boundary_1/2
                              z_conduit_boundary_1/2
+Every instance carries its element id and unique id, and the file names its
+document, so a later export of the same model refreshes the drawing in place.
 Output: <model name>-manholes.json next to the model.
 """
 import json, math, os, re
@@ -74,6 +76,7 @@ def instance_record(inst):
     mark = inst.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)
     return {
         'id': eid(inst.Id),
+        'unique_id': inst.UniqueId,
         'mark': mark.AsString() if mark and mark.HasValue else None,
         'type': inst.Symbol.Name,
         'origin_mm': [to_mm(t.Origin.X), to_mm(t.Origin.Y), to_mm(t.Origin.Z)],
@@ -144,6 +147,7 @@ def obstacle_record(inst, flags):
     mark = inst.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)
     rec = {
         'id': eid(inst.Id),
+        'unique_id': inst.UniqueId,
         'mark': mark.AsString() if mark and mark.HasValue else None,
         'family': inst.Symbol.Family.Name,
         'type': inst.Symbol.Name,
@@ -160,7 +164,7 @@ def obstacle_record(inst, flags):
 
 
 def export():
-    data = {'units': 'mm', 'source': doc.PathName, 'families': [], 'obstacles': []}
+    data = {'units': 'mm', 'source': doc.PathName, 'document': doc.Title, 'families': [], 'obstacles': []}
     if doc.IsFamilyDocument:
         data['families'].append({'family': doc.Title, 'planes': plane_records(doc), 'instances': []})
     else:
