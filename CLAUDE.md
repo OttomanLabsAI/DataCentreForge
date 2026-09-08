@@ -8,6 +8,7 @@ A Cloudflare Workers static-assets site. Everything served lives in `public/`
 and there is no build step - the files in that directory are the site. The repo
 is connected to Cloudflare Workers Builds, so **every push to `main` deploys to
 production**.
+Production is served at https://datacentreforge.cloudflare-passport599.workers.dev/
 
 ```
 public/            everything served
@@ -122,3 +123,4 @@ files themselves are owner-supplied records — never edit, reformat, trim, or
 | v1.11 | Runs stop detouring around nothing | A manhole sitting a whisker out of line used to force a full flight of bends even with a clear path. Anything within a couple of degrees of square now lays as one dead-straight duct, while real offsets and real obstacles still get their honest fittings. |
 | v1.12 | The archive always names its maker | Every version's record now carries its model attribution as standard, filled in automatically unless directed otherwise. The records of the two newest versions were completed to match. |
 | v1.13 | The panels fold away until needed | The properties that filled both side panels now sit behind tidy buttons — geometry, position, spacing, sizes, rules — each showing its key numbers at a glance and opening only when pressed. Warnings and the main actions stay in view, so the screen carries far less at once. |
+| v1.14 | The site's address goes on record | The repository now states where the live site is served, so anyone reading it — or any future working session — knows the production address without asking. |
