@@ -8,7 +8,7 @@ A Cloudflare Workers static-assets site. Everything served lives in `public/`
 and there is no build step - the files in that directory are the site. The repo
 is connected to Cloudflare Workers Builds, so **every push to `main` deploys to
 production**.
-Production is served at https://datacentreforge.cloudflare-passport599.workers.dev/
+Production is served at https://datacentreforge.cloudflare-passport599.workers.dev/.
 
 ```
 public/            everything served

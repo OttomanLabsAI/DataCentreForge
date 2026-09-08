@@ -42,7 +42,8 @@ npm run check      # wrangler deploy --dry-run
 
 The repo connects to Cloudflare Workers Builds: every push to `main` deploys to
 production.
-The site is live at https://datacentreforge.cloudflare-passport599.workers.dev/ Releases are tagged `v1.0`, `v1.1`, … — one per push to `main` —
+The site is live at https://datacentreforge.cloudflare-passport599.workers.dev/.
+Releases are tagged `v1.0`, `v1.1`, … — one per push to `main` —
 so the release history is the version history of the page.
 
 ## External resources
