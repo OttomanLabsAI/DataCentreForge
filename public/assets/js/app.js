@@ -32,6 +32,7 @@ const state = {
   pending: null,
   snap: 50,
   showGrid: true, showDims: true, avoidChambers: true, avoidPipes: true, square: true,
+  ground: 0, cover: 500,        // ground level and the least cover over any conduit
   view3d: false,
   cam: {az:32, el:38, s:0.03, cx:0, cy:0, cz:0, px:0, py:0}   // orbit camera for the 3D view
 };
@@ -721,7 +722,7 @@ function bankSignature(G, banks){
                H.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]) : 0;
   return JSON.stringify([G.key, G.PS.map(Math.round), G.PE.map(Math.round),
     G.ends.map(e => [Math.round(e.w0), Math.round(e.w1), Math.round(e.halfW)]), [...G.levels], G.spec, Math.round(G.maxOff), G.zUp, G.zDn,
-    state.avoidChambers, state.avoidPipes, ROUTE_QUICK,
+    state.avoidChambers, state.avoidPipes, ROUTE_QUICK, state.ground, state.cover,
     state.obstacles.map(box), state.chambers.map(mh), others]);
 }
 
@@ -807,11 +808,63 @@ function finishProfile(pf, xs, S, zA, zB, lift){
   return pf;
 }
 
+/** Chainage bands (±T) taken by a profile's bends, against the plan's. */
+function compoundBends(f, zones){
+  const hits = [];
+  for (let i = 1; i < f.pts.length-1; i++){
+    const T = f.fillets[i-1].T, sc = f.pts[i][0];
+    zones.forEach((z, j) => { if (sc + T > z[0] - 1 && sc - T < z[1] + 1) hits.push([i, j+1]); });
+  }
+  return hits;
+}
+const profileWarn = (f, hits) => {
+  for (const [i, j] of hits)
+    f.warnings.push({kind:'plan', text:`vertical bend ${i} lands on plan bend ${j} — a compound bend`});
+  return f;
+};
+
+/** Build one dip (or hump) by construction: a flat at zFlat that covers
+    every band, joined to the end levels by diagonals at angle th, placed
+    as close to the bands as the straights and the plan's bends allow. */
+function buildDip(vs, S, zA, zB, zFlat, bands, th, zones, compound){
+  const bs = Math.min(...bands.map(b => b[0])), be = Math.max(...bands.map(b => b[1]));
+  const T = vs.bendR*Math.tan(th*D2R/2), tanT = Math.tan(th*D2R), sinT = Math.sin(th*D2R);
+  const d1 = zA - zFlat, d2 = zB - zFlat;
+  const L1 = Math.abs(d1)/sinT, L2 = Math.abs(d2)/sinT, S1 = Math.abs(d1)/tanT, S2 = Math.abs(d2)/tanT;
+  const legMin = vs.minLeg + 2*T;
+  if ((Math.abs(d1) > 1 && L1 < legMin) || (Math.abs(d2) > 1 && L2 < legMin)) return null;   // too steep for the drop
+  const clearZone = sc => compound || !zones.some(z => sc + T > z[0] - 1 && sc - T < z[1] + 1);
+  const STEP = 50;
+  let sb1 = null, sb2 = null, sb3 = null, sb4 = null;
+  if (Math.abs(d1) > 1){
+    for (let c = bs - T; c - S1 >= vs.stub; c -= STEP)
+      if (clearZone(c) && clearZone(c - S1)){ sb2 = c; sb1 = c - S1; break; }
+    if (sb2 == null) return null;
+  }
+  if (Math.abs(d2) > 1){
+    const flatFrom = sb2 != null ? sb2 : 0;
+    for (let c = Math.max(be + T, flatFrom + legMin); c + S2 <= S - vs.stub; c += STEP)
+      if (clearZone(c) && clearZone(c + S2)){ sb3 = c; sb4 = c + S2; break; }
+    if (sb3 == null) return null;
+  } else if (sb2 != null && S - sb2 < legMin) return null;
+  if (sb2 == null && sb3 == null) return null;
+  const pts = [[0, zA]], turns = [];
+  if (sb1 != null){ pts.push([sb1, zA], [sb2, zFlat]); const t = d1 > 0 ? -th : th; turns.push(t, -t); }
+  if (sb3 != null){ pts.push([sb3, zFlat], [sb4, zB]); const t = d2 > 0 ? th : -th; turns.push(t, -t); }
+  pts.push([S, zB]);
+  const segs = []; for (let i = 0; i < pts.length-1; i++) segs.push(Math.hypot(pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1]));
+  const f = applyFillets({pts, turns, segs}, vs);
+  f.ok = true; f.poly = tessellate(f);
+  return f;
+}
+
 /** The long section of a bank: from the level-0 datum at one chamber to the
     other, clear over or under every crossed obstacle. An obstacle the
-    straight line already clears is left alone. Otherwise each is forced to
-    its preferred side — under when allowed — and if that fails the ones
-    allowing both are flipped, one at a time, then all together. */
+    straight line already clears is left alone. For the rest, a dip under
+    and a hump over are each built (where allowed — over never rises into
+    the ground cover) and the one with the shorter deviation wins, under on
+    a tie. Vertical bends keep off the plan's bends when they can; when they
+    cannot, they coincide and the run says so. */
 function solveProfile(G, rt, xs){
   const zA = chamberZ0(G.A) - G.zUp, zB = chamberZ0(G.B) - G.zUp, S = rt.length;
   const lift = G.zDn - G.zUp;                       // how far the deepest row hangs below the profile
@@ -822,43 +875,69 @@ function solveProfile(G, rt, xs){
   const vs = {...G.spec, bendR: G.spec.bendR - G.maxOff + lift,
               stub: G.spec.stub - G.maxOff + lift, minLeg: G.spec.minLeg - G.maxOff + lift};
   const zones = bendZones(rt);
-  const accept = f => {
-    for (let i = 0; i < f.pts.length-1; i++) if (f.pts[i+1][0] < f.pts[i][0] - 1e-6) return false;   // never doubles back
-    for (let i = 1; i < f.pts.length-1; i++){
-      const T = f.fillets[i-1].T, s = f.pts[i][0];
-      for (const z of zones) if (s + T > z[0] - 1 && s - T < z[1] + 1) return false;                  // keep off the plan bends
-    }
-    return true;
-  };
-  const chord = s => zA + (zB-zA)*s/S;
+  const ceiling = state.ground - state.cover - G.maxRad;      // highest the top lane may run
+  const chord = s => zA + (zB-zA)*s/S, chordLen = Math.hypot(S, zB-zA);
   const info = xs.map(x => {
     const top = Math.max(x.o.zTop, x.o.zBot) + lift, bot = Math.min(x.o.zTop, x.o.zBot);
     const margin = G.maxRad + Math.max(G.maxBuf, x.o.buffer);
-    const clearOver  = x.o.over  && chord(x.s0) >= top + margin && chord(x.s1) >= top + margin;
-    const clearUnder = x.o.under && chord(x.s0) <= bot - margin && chord(x.s1) <= bot - margin;
-    return {x, top, bot, margin, free: clearOver || clearUnder, both: !!(x.o.over && x.o.under),
-            pref: x.o.under ? 'under' : 'over'};
+    const needOver = top + margin + 1, needUnder = bot - margin - 1;     // a hair clear of the keep-out
+    const clearOver  = x.o.over  && chord(x.s0) >= needOver  && chord(x.s1) >= needOver;
+    const clearUnder = x.o.under && chord(x.s0) <= needUnder && chord(x.s1) <= needUnder;
+    return {x, top, bot, margin, needOver, needUnder, free: clearOver || clearUnder,
+            canOver: !!x.o.over && needOver <= ceiling, canUnder: !!x.o.under};
   });
-  const flippable = info.filter(i => i.both && !i.free);
-  const attempts = [new Set()];
-  for (const i of flippable) attempts.push(new Set([i.x.o.uid]));
-  if (flippable.length > 1) attempts.push(new Set(flippable.map(i => i.x.o.uid)));
-  const BIG = 1e7;
-  for (const flip of attempts){
-    const blockers = info.map(i => {
-      let mode = i.free ? null : i.pref;
-      if (mode && i.both && flip.has(i.x.o.uid)) mode = mode === 'under' ? 'over' : 'under';
-      const zlo = mode === 'over' ? i.bot - BIG : i.bot, zhi = mode === 'under' ? i.top + BIG : i.top;
-      return {type:'box', cx:(i.x.s0+i.x.s1)/2, cy:(zlo+zhi)/2, rot:0,
-              hw:Math.max(0, (i.x.s1-i.x.s0)/2 - i.margin), hh:(zhi-zlo)/2, margin:i.margin};
-    });
-    blockers.accept = accept;
-    const pf = solveRoute([0, zA], [1, 0], [S, zB], [1, 0], vs, blockers);
-    if (pf.ok) return finishProfile(pf, xs, S, zA, zB, lift);
+  const boxes = info.map(i => ({type:'box', cx:(i.x.s0+i.x.s1)/2, cy:(i.bot+i.top)/2, rot:0,
+                                hw:Math.max(0, (i.x.s1-i.x.s0)/2 - i.margin), hh:(i.top-i.bot)/2, margin:i.margin}));
+  const noBack = f => f.pts.every((p, i) => i === 0 || p[0] >= f.pts[i-1][0] - 1e-6);
+  const angles = [...vs.angles].filter(a => a > 0 && a < 180);
+  const order = [...angles.filter(a => a <= (vs.warnAngle || 999)).sort((a,b) => b-a),
+                 ...angles.filter(a => a > (vs.warnAngle || 999)).sort((a,b) => b-a)];
+  const todo = info.filter(i => !i.free);
+
+  /* by construction: one flat under (or over) every crossing that needs it */
+  const built = mode => {
+    if (!todo.length) return null;
+    if (todo.some(i => mode === 'under' ? !i.canUnder : !i.canOver)) return null;
+    const zFlat = mode === 'under' ? Math.min(zA, zB, ...todo.map(i => i.needUnder))
+                                   : Math.max(zA, zB, ...todo.map(i => i.needOver));
+    if (mode === 'over' && zFlat > ceiling) return null;
+    const bands = todo.map(i => [i.x.s0, i.x.s1]);      // already widened by the clearance in plan
+    for (const compound of [false, true])
+      for (const th of order){
+        const f = buildDip(vs, S, zA, zB, zFlat, bands, th, zones, compound);
+        if (!f || !noBack(f) || !clearOf(f.poly, boxes)) continue;
+        return profileWarn(f, compound ? compoundBends(f, zones) : []);
+      }
+    return null;
+  };
+  if (todo.length){
+    const under = built('under'), over = built('over');
+    const dev = f => f ? f.length - chordLen : Infinity;
+    const pick = under && over ? (dev(over) < dev(under) - 1 ? over : under) : (under || over);
+    if (pick) return finishProfile(pick, xs, S, zA, zB, lift);
   }
-  const names = xs.map(x => x.o.name).join(', ');
-  const how = xs.length === 1 && !info[0].both ? info[0].pref : 'past';
-  return {ok:false, msg: xs.length ? `no way ${how} ${names} in section` : 'no way to change level in section'};
+
+  /* by search: the plan engine in the (chainage, z) plane, first keeping off
+     the plan's bends, then allowing compound bends */
+  const BIG = 1e7;
+  const modesFor = i => i.free ? [null] : [...(i.canUnder ? ['under'] : []), ...(i.canOver ? ['over'] : [])];
+  const combos = info.reduce((acc, i) => acc.flatMap(c => modesFor(i).map(m => [...c, m])), [[]]).slice(0, 8);
+  for (const compound of [false, true])
+    for (const modes of combos){
+      const blockers = info.map((i, k) => {
+        const zlo = modes[k] === 'over' ? i.bot - BIG : i.bot, zhi = modes[k] === 'under' ? i.top + BIG : i.top;
+        return {type:'box', cx:(i.x.s0+i.x.s1)/2, cy:(zlo+zhi)/2, rot:0,
+                hw:Math.max(0, (i.x.s1-i.x.s0)/2 - i.margin), hh:(zhi-zlo)/2, margin:i.margin};
+      });
+      blockers.accept = f => noBack(f) && (compound || !compoundBends(f, zones).length);
+      const pf = solveRoute([0, zA], [1, 0], [S, zB], [1, 0], vs, blockers);
+      if (pf.ok) return finishProfile(profileWarn(pf, compound ? compoundBends(pf, zones) : []), xs, S, zA, zB, lift);
+    }
+  const names = todo.map(i => i.x.o.name).join(', ');
+  if (!todo.length) return {ok:false, msg:'no way to change level in section'};
+  const ways = todo.map(i => (i.canUnder ? 'under' : '') + (i.canUnder && i.canOver ? ' or ' : '') + (i.canOver ? 'over' : ''));
+  return {ok:false, msg: ways.every(w => !w) ? `no way past ${names} — over would break the ground cover`
+                                             : `no way ${ways[0] || 'past'} ${names} in section`};
 }
 function reversedProfile(pf){
   const S = pf.S, flip = p => [S - p[0], p[1]];
@@ -1355,11 +1434,11 @@ function draw3d(){
     const gy0 = Math.floor((ext[1]-m)/st)*st, gy1 = Math.ceil((ext[3]+m)/st)*st;
     for (let x = gx0; x <= gx1 + 1e-6; x += st){
       const k = Math.round(x/st), col = k === 0 ? C.axisY : k % 5 === 0 ? C.gridMajor : C.gridMinor;
-      out.push(line(proj([x, gy0, 0]), proj([x, gy1, 0]), `stroke="${col}" stroke-width="1"`));
+      out.push(line(proj([x, gy0, state.ground]), proj([x, gy1, state.ground]), `stroke="${col}" stroke-width="1"`));
     }
     for (let y = gy0; y <= gy1 + 1e-6; y += st){
       const k = Math.round(y/st), col = k === 0 ? C.axisX : k % 5 === 0 ? C.gridMajor : C.gridMinor;
-      out.push(line(proj([gx0, y, 0]), proj([gx1, y, 0]), `stroke="${col}" stroke-width="1"`));
+      out.push(line(proj([gx0, y, state.ground]), proj([gx1, y, state.ground]), `stroke="${col}" stroke-width="1"`));
     }
   }
 
@@ -1913,7 +1992,7 @@ function renderObstacleProps(box, o){
        <div class="row"><label class="chk"><input type="checkbox" id="oAround" ${o.around?'checked':''}> around it — its footprint is a keep-out</label></div>
        <div class="row"><label class="chk"><input type="checkbox" id="oOver" ${o.over?'checked':''}> over it</label></div>
        <div class="row"><label class="chk"><input type="checkbox" id="oUnder" ${o.under?'checked':''}> under it</label></div>
-       <div class="derived"><span>Around comes first — a run crosses only when nothing gets round. Under is the default crossing, over the fallback. Nothing ticked makes it impassable.</span></div>`) +
+       <div class="derived"><span>Around comes first — a run crosses only when nothing gets round. Where both crossings are allowed, the shorter deviation wins (under on a tie), and over never rises into the ground cover. Nothing ticked makes it impassable.</span></div>`) +
     cluster('obClr', 'Clearance', `${fmt(o.buffer)} mm`,
       numRow('oC','Clearance', o.buffer, 50, 'mm') +
       `<div class="derived"><b>Keep-out</b> ${fmt(o.w+2*o.buffer)} × ${fmt(o.d+2*o.buffer)} mm<br>
@@ -2143,8 +2222,8 @@ function profileSVG(cn, wpx = 232){
   const hpx = Math.round((zMax - zMin)*sz + pad*2);
   const X = s => pad + s*sx, Y = z => pad + (zMax - z)*sz;
   const el = [];
-  if (zMin < 0 && zMax > 0)
-    el.push(`<line x1="${pad}" y1="${Y(0).toFixed(1)}" x2="${wpx-pad}" y2="${Y(0).toFixed(1)}" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>`);
+  zMax = Math.max(zMax, state.ground + 60);
+  el.push(`<line x1="${pad}" y1="${Y(state.ground).toFixed(1)}" x2="${wpx-pad}" y2="${Y(state.ground).toFixed(1)}" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>`);
   for (const x of pf.crossings){
     el.push(`<rect x="${X(x.s0).toFixed(1)}" y="${Y(x.zTop).toFixed(1)}" width="${Math.max(1, (x.s1-x.s0)*sx).toFixed(1)}" height="${Math.max(1, (x.zTop-x.zBot)*sz).toFixed(1)}" fill="${C.obsFill}" stroke="${C.obsLine}" stroke-width="1"/>`);
     el.push(`<text x="${X((x.s0+x.s1)/2).toFixed(1)}" y="${(Y(x.zTop)-3).toFixed(1)}" fill="${C.obsLine}" font-family="${C.mono}" font-size="9" text-anchor="middle">${esc(x.name)}</text>`);
@@ -2233,11 +2312,22 @@ document.getElementById('avoidMH').onchange = e => {
 document.getElementById('avoidPipe').onchange = e => {
   state.avoidPipes = e.target.checked; renderSel(); renderConnections(); draw();
 };
+for (const [id, key] of [['ground','ground'], ['cover','cover']])
+  document.getElementById(id).oninput = e => {
+    const v = Number(e.target.value);
+    if (!Number.isFinite(v) || (key === 'cover' && v < 0)) return;
+    state[key] = v; renderSel(); renderConnections(); draw();
+  };
+function syncDrawingInputs(){
+  document.getElementById('ground').value = state.ground;
+  document.getElementById('cover').value = state.cover;
+}
 
 document.getElementById('btnExport').onclick = () => {
   recomputeRoutes();
   const data = {
     units:'mm', axes:'+X east, +Y north',
+    ground: state.ground, cover: state.cover,
     specs: state.specs.map(({id, ...rest}) => rest),
     chambers: state.chambers.map(({uid, ...rest}) => rest),
     obstacles: state.obstacles.map(({uid, ...rest}) => rest),
@@ -2290,6 +2380,9 @@ document.getElementById('fileIn').onchange = e => {
         state.specs = d.specs.map(s => makeSpec({...s, id:uid(),
           minLeg: s.minLeg != null ? s.minLeg : (s.stub != null ? s.stub : 500),
           angles:[...(s.angles||[])]}));
+      if (Number.isFinite(d.ground)) state.ground = d.ground;
+      if (Number.isFinite(d.cover) && d.cover >= 0) state.cover = d.cover;
+      syncDrawingInputs();
       state.chambers  = (d.chambers ||[]).map(c => makeChamber({buffer:0, ...c, uid:uid()}));
       state.obstacles = (d.obstacles||[]).map(o => {
         const m = makeObstacle({...o, buffer: o.buffer != null ? o.buffer : (o.clearance != null ? o.clearance : 250), uid:uid()});

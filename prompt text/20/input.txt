@@ -1,0 +1,1 @@
+in this scenario, all obstacle methods were ticked. it should have a solution, under or over. the one with the shortest deviation, it says it cant do it

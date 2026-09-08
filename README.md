@@ -69,10 +69,13 @@ coordinates, with its placement, top and bottom, and those three flags.
 
 Every obstacle has a top, a bottom, and rules for how a run may pass it:
 around, over or under. Around always comes first — a run crosses an
-around-obstacle only when nothing gets round it. Where a crossing is allowed,
-under is the default and over the fallback; an obstacle allowing nothing is
-impassable. The plan is routed first; the long section is then solved with the
-same engine in the chainage–Z plane, and each run shows it in its panel along
+around-obstacle only when nothing gets round it. Where both crossings are
+allowed, the one with the shorter deviation wins (under on a tie), and over
+never rises into the ground cover set in the Drawing panel; an obstacle
+allowing nothing is impassable. The plan is routed first; the long section is
+then built in the chainage–Z plane with the same fittings, straights and
+clearances, keeping its bends off the plan's bends where it can and flagging a
+compound bend where it cannot. Each run shows its section in its panel along
 with its laid length.
 
 **3D view** in the header (or the `3` key) shows the whole drawing in three
