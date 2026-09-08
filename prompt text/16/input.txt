@@ -1,1 +1,0 @@
-i want buttons to expand properties. cluster the properties appropriately into buttons as there is too much information on screen atm

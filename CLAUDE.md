@@ -19,6 +19,7 @@ public/            everything served
   _headers         security + caching headers
   assets/css|js
 prompt text/       provenance for the version in service, replaced each release
+tools/revit/       Revit-side exporter script (not served)
 wrangler.jsonc     assets-only config, no Worker script
 package.json       wrangler devDependency + dev/deploy scripts
 ```
@@ -124,3 +125,4 @@ files themselves are owner-supplied records — never edit, reformat, trim, or
 | v1.12 | The archive always names its maker | Every version's record now carries its model attribution as standard, filled in automatically unless directed otherwise. The records of the two newest versions were completed to match. |
 | v1.13 | The panels fold away until needed | The properties that filled both side panels now sit behind tidy buttons — geometry, position, spacing, sizes, rules — each showing its key numbers at a glance and opening only when pressed. Warnings and the main actions stay in view, so the screen carries far less at once. |
 | v1.14 | The site's address goes on record | The repository now states where the live site is served, so anyone reading it — or any future working session — knows the production address without asking. |
+| v2.0 | Manholes arrive straight from Revit | The plan can now be built from a Revit project: each placed manhole comes in at its true position and rotation, with wall thickness, lid outline and conduit windows read from the family's named reference planes, and its sides carry the family's own plane names. A window from the family now governs how much each face can carry. |

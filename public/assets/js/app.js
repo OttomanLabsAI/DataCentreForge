@@ -513,7 +513,15 @@ function faceLayout(mhUid, face){
   /* canonical world-direction tangent, matching the banks */
   let t = norm([g.p2[0]-g.p1[0], g.p2[1]-g.p1[1]]);
   if (t[1] < -1e-9 || (Math.abs(t[1]) <= 1e-9 && t[0] < 0)) t = [-t[0], -t[1]];
-  if (!runs.length) return {c, g, t, S:c.latSpace, groups:[], usedW:0, rowsTotal:0, fits:true};
+  /* a conduit window imported from Revit replaces the face-width-less-edge rule:
+     its centre may sit off the face centre, measured along the face's local axis */
+  const win = c.win && c.win[face] ? c.win[face] : null;
+  let shift = 0;
+  if (win){
+    const lax = (face === 'A' || face === 'C') ? rotv([1,0], c.rot) : rotv([0,1], c.rot);
+    shift = win.off * (Math.sign(lax[0]*t[0] + lax[1]*t[1]) || 1);
+  }
+  if (!runs.length) return {c, g, t, S:c.latSpace, groups:[], usedW:0, rowsTotal:0, fits:true, win, shift};
   const S = Math.max(c.latSpace, ...runs.map(r => specOf(r) ? (specOf(r).spacing || 0) : 0));
   const order = rs => rs.map(r => {
     const far = (r.a.mh === mhUid && r.a.face === face) ? r.b : r.a;
@@ -533,13 +541,13 @@ function faceLayout(mhUid, face){
     const totalCols = col;
     const rMax = Math.max(...items.map(i => i.sp ? i.sp.radius : 0));
     const rowsMax = Math.max(...items.map(i => i.rows));
-    for (const i of items) i.centreOff = (i.colStart + (i.cols-1)/2 - (totalCols-1)/2) * S;
+    for (const i of items) i.centreOff = (i.colStart + (i.cols-1)/2 - (totalCols-1)/2) * S + shift;
     groups.push({level:lv, items, totalCols, rMax, rowsMax});
     rowsTotal += rowsMax;
     usedW = Math.max(usedW, (totalCols-1)*S + 2*rMax);
   }
-  const fits = usedW + 2*(c.edgeClear || 0) <= g.width + 1;
-  return {c, g, t, S, groups, usedW, rowsTotal, fits};
+  const fits = win ? usedW <= win.w + 1 : usedW + 2*(c.edgeClear || 0) <= g.width + 1;
+  return {c, g, t, S, groups, usedW, rowsTotal, fits, win, shift};
 }
 
 function entryFor(cn, end){
@@ -901,6 +909,8 @@ function draw(){
     const inner = corners(c, 0), outer = corners(c, c.wall);
     const on = selIs('chamber') && state.sel.id === c.uid;
     const stroke = on ? C.sel : C.ink, ext = c.intX + 2*c.wall;
+    if (c.lid)
+      out.push(`<polygon points="${pts([[c.lid.x[0],c.lid.y[0]],[c.lid.x[1],c.lid.y[0]],[c.lid.x[1],c.lid.y[1]],[c.lid.x[0],c.lid.y[1]]].map(p => toWorld(c, p)))}" fill="none" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="4 3" opacity=".7"/>`);
     if (c.buffer > 0)
       out.push(`<polygon points="${pts(corners(c, c.wall + c.buffer))}" fill="none" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="5 4" opacity=".55"/>`);
     out.push(`<polygon points="${pts(inner)}" fill="${C.chamber}"/>`);
@@ -1156,7 +1166,7 @@ function showCallout(f, sp){
   if (!f){ el.style.display = 'none'; return; }
   const c = byUid(f.mh), g = faceGeom(c, f.face);
   const k = faceRuns(f.mh, f.face).length;
-  el.innerHTML = `<u>${esc(c.ref)} · ${f.face} face</u>\n`
+  el.innerHTML = `<u>${esc(c.ref)} · ${f.face} face${c.sides && c.sides[f.face] ? ' · ' + esc(c.sides[f.face]) : ''}</u>\n`
     + `internal face   ${fmt(g.width)} wide\n`
     + `mid  X ${fmt(g.mid[0])}  Y ${fmt(g.mid[1])}\n`
     + `outward bearing ${g.bearing.toFixed(1)}°`
@@ -1551,6 +1561,11 @@ function faceSectionSVG(L, wpx = 232){
   const Y = mm => pad + mm*scale;
   const el = [];
   el.push(`<rect x="${X(-W/2)}" y="${pad-4}" width="${W*scale}" height="${contentH*scale+8}" fill="none" stroke="${C.inkFaint}" stroke-width="1"/>`);
+  if (L.win){
+    const x0 = X(L.shift - L.win.w/2), x1 = X(L.shift + L.win.w/2);
+    const yb = L.win.h ? Math.min(pad + L.win.h*scale, pad + contentH*scale + 4) : pad + contentH*scale + 4;
+    el.push(`<rect x="${x0}" y="${pad-4}" width="${x1-x0}" height="${yb-(pad-4)}" fill="none" stroke="${C.pick}" stroke-width="1" stroke-dasharray="3 3" opacity=".8"/>`);
+  } else
   for (const sgn of [-1, 1])
     el.push(`<line x1="${X(sgn*(W/2-ec))}" y1="${pad-4}" x2="${X(sgn*(W/2-ec))}" y2="${pad+contentH*scale+4}" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>`);
   L.groups.forEach((gr, gi) => {
@@ -1563,7 +1578,9 @@ function faceSectionSVG(L, wpx = 232){
       }
     }
   });
-  const cap = `pitch ${fmt(L.S)} · edge ≥${fmt(ec)} · grid ${fmt(L.usedW)} / face ${fmt(W)} ${L.fits ? '✓' : '✗ OVER'}`;
+  const cap = L.win
+    ? `pitch ${fmt(L.S)} · window ${fmt(L.win.w)}${L.win.h ? '×' + fmt(L.win.h) : ''} · grid ${fmt(L.usedW)} ${L.fits ? '✓' : '✗ OVER'}`
+    : `pitch ${fmt(L.S)} · edge ≥${fmt(ec)} · grid ${fmt(L.usedW)} / face ${fmt(W)} ${L.fits ? '✓' : '✗ OVER'}`;
   el.push(`<text x="${wpx/2}" y="${hpx-4}" fill="${L.fits ? C.inkFaint : C.bad}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${cap}</text>`);
   return `<svg width="${wpx}" height="${hpx}" style="display:block;margin:4px 0 2px">${el.join('')}</svg>`;
 }
@@ -1572,10 +1589,11 @@ function faceSectionSVG(L, wpx = 232){
 function facesBlock(c){
   const btns = FACES.map(f => {
     const n = faceRuns(c.uid, f).length;
-    if (!n) return `<button class="facebtn off" disabled title="side ${f} — no runs">${f}</button>`;
+    const nm = c.sides && c.sides[f] ? ' ' + esc(c.sides[f]) : '';
+    if (!n) return `<button class="facebtn off" disabled title="side ${f}${nm} — no runs">${f}${nm}</button>`;
     const L = faceLayout(c.uid, f);
     return `<button class="facebtn${L.fits ? '' : ' bad'}" data-fdlg="${f}"
-      title="side ${f} — ${n} run${n === 1 ? '' : 's'}${L.fits ? '' : ', too narrow'}">${f} · ${n}${L.fits ? '' : ' ⚠'}</button>`;
+      title="side ${f}${nm} — ${n} run${n === 1 ? '' : 's'}${L.fits ? '' : ', too narrow'}">${f}${nm} · ${n}${L.fits ? '' : ' ⚠'}</button>`;
   });
   return `<div class="row" style="margin:12px 0 2px"><label>Side settings</label></div>
     <div class="btnrow" style="margin-top:2px">${btns.join('')}</div>`;
@@ -1610,7 +1628,7 @@ function renderFaceDialog(){
       <button data-fdn="${it.cn.uid}" title="lower (bigger level)">▼</button></div>`;
   }));
   wrap.innerHTML = `<div class="dlgcard">
-    <div class="dlghead"><b>${esc(c.ref)} · side ${fd.face}</b>
+    <div class="dlghead"><b>${esc(c.ref)} · side ${fd.face}${c.sides && c.sides[fd.face] ? ' (' + esc(c.sides[fd.face]) + ')' : ''}</b>
       <span>${n} run${n === 1 ? '' : 's'}${L.fits ? '' : ' — too narrow'}</span>
       <button id="dlgClose" title="Close">×</button></div>
     ${rows.join('')}
@@ -1764,6 +1782,104 @@ document.getElementById('fileIn').onchange = e => {
       state.sel = null; state.editSpec = state.specs[0].id;
       renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); renderObstacles(); fitView();
     } catch(err){ alert('That file is not a plan export. Expected JSON with a chambers array.'); }
+    e.target.value = '';
+  };
+  rd.readAsText(f);
+};
+
+/* ==========================================================================
+   REVIT IMPORT
+   Reads the JSON written by export_manholes.py: per family, the named
+   reference planes (a1..a7, b1..b7, z1..z6 and the six conduit-boundary
+   planes) in family coordinates, plus each placed instance's origin and
+   axes. a1/a7 and b1/b7 are the chamber's external faces, a2/a6 and b2/b6
+   the inside faces of the walls, a3/a5 and b3/b5 the lid outline. The
+   conduit-boundary planes bound the insertion window on the sides
+   perpendicular to their letter; the z pair gives the window height.
+   ========================================================================== */
+
+function importRevit(d){
+  const made = [];
+  for (const F of (Array.isArray(d.families) ? d.families : [])){
+    const P = {};
+    for (const p of (F.planes || [])) if (p && p.name && p.normal) P[String(p.name).toLowerCase()] = p;
+    if (!(P.a1 && P.a7 && P.b1 && P.b7)) continue;
+    const axisIdx = p => Math.abs(p.normal[0]) >= Math.abs(p.normal[1]) ? 0 : 1;
+    const pos  = p => p ? p.offset_mm * (Math.sign(p.normal[axisIdx(p)]) || 1) : null;
+    const zpos = p => p ? p.offset_mm * (Math.sign(p.normal[2]) || 1) : null;
+    const aIdx = axisIdx(P.a1), bIdx = axisIdx(P.b1);
+    if (aIdx === bIdx) continue;
+    const seq = L => Array.from({length:7}, (_, i) => pos(P[L + (i+1)]));
+    const a = seq('a'), b = seq('b');
+    const z = Array.from({length:6}, (_, i) => zpos(P['z' + (i+1)]));
+    const pick = (arr, i, fb) => arr[i] != null ? arr[i] : fb;
+    const ext = {a:[a[0], a[6]], b:[b[0], b[6]]};
+    const inn = {a:[pick(a,1,a[0]), pick(a,5,a[6])], b:[pick(b,1,b[0]), pick(b,5,b[6])]};
+    const ctr = {a:(ext.a[0]+ext.a[1])/2, b:(ext.b[0]+ext.b[1])/2};
+    const walls = [inn.a[0]-ext.a[0], ext.a[1]-inn.a[1], inn.b[0]-ext.b[0], ext.b[1]-inn.b[1]].filter(v => v > 0);
+    const wall = walls.length ? Math.round(walls.reduce((x,y) => x+y, 0)/walls.length) : 150;
+    const cb = L => {
+      const p1 = P[L + '_conduit_boundary_1'], p2 = P[L + '_conduit_boundary_2'];
+      if (!p1 || !p2) return null;
+      const v = L === 'z' ? [zpos(p1), zpos(p2)] : [pos(p1), pos(p2)];
+      return {lo:Math.min(v[0], v[1]), hi:Math.max(v[0], v[1])};
+    };
+    const wA = cb('a'), wB = cb('b'), wZ = cb('z');
+    const winH = wZ ? Math.round(wZ.hi - wZ.lo) : null;
+    const winPerpA = wA ? {w:Math.round(wA.hi - wA.lo), off:Math.round((wA.lo + wA.hi)/2 - ctr.b), h:winH} : null;
+    const winPerpB = wB ? {w:Math.round(wB.hi - wB.lo), off:Math.round((wB.lo + wB.hi)/2 - ctr.a), h:winH} : null;
+    /* the tool's local X is the family X: sides B = +X, D = -X, A = +Y, C = -Y */
+    const aIsX = aIdx === 0;
+    const intX = aIsX ? inn.a[1]-inn.a[0] : inn.b[1]-inn.b[0];
+    const intY = aIsX ? inn.b[1]-inn.b[0] : inn.a[1]-inn.a[0];
+    const sidesBase = aIsX ? {B:'a7', D:'a1', A:'b7', C:'b1'} : {B:'b7', D:'b1', A:'a7', C:'a1'};
+    const winBase = aIsX ? {B:winPerpA, D:winPerpA, A:winPerpB, C:winPerpB}
+                         : {B:winPerpB, D:winPerpB, A:winPerpA, C:winPerpA};
+    const lidX = aIsX ? (a[2] != null && a[4] != null ? [a[2]-ctr.a, a[4]-ctr.a] : null)
+                      : (b[2] != null && b[4] != null ? [b[2]-ctr.b, b[4]-ctr.b] : null);
+    const lidY = aIsX ? (b[2] != null && b[4] != null ? [b[2]-ctr.b, b[4]-ctr.b] : null)
+                      : (a[2] != null && a[4] != null ? [a[2]-ctr.a, a[4]-ctr.a] : null);
+    const fx = aIsX ? ctr.a : ctr.b, fy = aIsX ? ctr.b : ctr.a;
+    const insts = (F.instances && F.instances.length) ? F.instances
+      : [{origin_mm:[0,0,0], family_x_axis:[1,0,0], family_y_axis:[0,1,0], rotation_deg:0}];
+    for (const inst of insts){
+      const bx = inst.family_x_axis || [1,0,0], by = inst.family_y_axis || [0,1,0], o = inst.origin_mm || [0,0,0];
+      const wx = o[0] + bx[0]*fx + by[0]*fy, wy = o[1] + bx[1]*fx + by[1]*fy;
+      const rot = inst.rotation_deg != null ? inst.rotation_deg : Math.atan2(bx[1], bx[0])*R2D;
+      const mirrored = (bx[0]*by[1] - bx[1]*by[0]) < 0;     // handedness flipped: family +Y is local -Y
+      const flipW = w => w ? {...w, off:-w.off} : w;
+      const sides = mirrored ? {A:sidesBase.C, C:sidesBase.A, B:sidesBase.B, D:sidesBase.D} : {...sidesBase};
+      const win = mirrored ? {A:winBase.C, C:winBase.A, B:flipW(winBase.B), D:flipW(winBase.D)} : {...winBase};
+      const lid = lidX && lidY ? {x:lidX, y: mirrored ? [-lidY[1], -lidY[0]] : lidY} : null;
+      made.push(makeChamber({
+        ref: inst.mark || null,
+        x: Math.round(wx), y: Math.round(wy), rot: Math.round(rot*100)/100,
+        intX: Math.round(intX), intY: Math.round(intY), wall,
+        sides, win, lid, zd: z, src: 'revit', family: F.family || null, type: inst.type || null
+      }));
+    }
+  }
+  return made;
+}
+
+document.getElementById('revitIn').onchange = e => {
+  const f = e.target.files[0];
+  if (!f) return;
+  const rd = new FileReader();
+  rd.onload = () => {
+    try {
+      const made = importRevit(JSON.parse(rd.result));
+      if (!made.length) throw new Error('no family with a1/a7 and b1/b7 planes found');
+      const replace = !state.chambers.length ||
+        confirm(`Import ${made.length} manhole${made.length === 1 ? '' : 's'} from Revit — replace the current chambers? (Cancel adds them alongside.)`);
+      if (replace){ state.chambers = []; state.connections = []; }
+      for (const c of made){
+        if (!c.ref || state.chambers.some(x => x.ref === c.ref)) c.ref = nextRef();
+        state.chambers.push(c);
+      }
+      state.sel = null; state.pending = null;
+      renderSel(); renderConnections(); fitView();
+    } catch(err){ alert('That file is not a Revit manhole export: ' + err.message); }
     e.target.value = '';
   };
   rd.readAsText(f);

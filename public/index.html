@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=1.13">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.0">
 </head>
 <body>
 
@@ -82,6 +82,10 @@
         <label class="filebtn" for="fileIn" style="flex:1;text-align:center">Import JSON</label>
         <input type="file" id="fileIn" accept="application/json,.json">
       </div>
+      <div class="btnrow">
+        <label class="filebtn" for="revitIn" style="flex:1;text-align:center">Import Revit JSON</label>
+        <input type="file" id="revitIn" accept="application/json,.json">
+      </div>
       <div class="btnrow"><button id="btnClear" class="warn ghost">Clear drawing</button></div>
     </div>
   </aside>
@@ -89,6 +93,6 @@
 
 <div id="faceDlg" hidden></div>
 
-<script src="/assets/js/app.js?v=1.13"></script>
+<script src="/assets/js/app.js?v=2.0"></script>
 </body>
 </html>

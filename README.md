@@ -21,6 +21,7 @@ prompt text/             provenance for the version in service (replaced each re
   <N>/output.txt         the reply that shipped it, verbatim
   <N>/ai model.txt       the model attribution for that version
   <N>/*.png              input images referenced by the prompt, where held
+tools/revit/             exporter script for Revit (not served)
 wrangler.jsonc           assets-only Workers config (no build step, no Worker script)
 package.json             wrangler devDependency + dev/deploy scripts
 ```
@@ -45,6 +46,19 @@ production.
 The site is live at https://datacentreforge.cloudflare-passport599.workers.dev/.
 Releases are tagged `v1.0`, `v1.1`, … — one per push to `main` —
 so the release history is the version history of the page.
+
+## Revit import
+
+Manholes can be brought in from a Revit project. Run `tools/revit/export_manholes.py`
+in Revit (pyRevit, RevitPythonShell, or a Dynamo Python node; Revit 2018–2026)
+inside the project, then use **Import Revit JSON** in the tool. The family must
+name its reference planes `a1`–`a7`, `b1`–`b7`, `z1`–`z6` and
+`a_conduit_boundary_1/2`, `b_conduit_boundary_1/2`, `z_conduit_boundary_1/2`:
+`a1`/`a7` and `b1`/`b7` are the external faces, `a2`/`a6` and `b2`/`b6` the
+inside faces of the walls, `a3`/`a5` and `b3`/`b5` the lid outline; the
+conduit-boundary planes bound the insertion window on the sides perpendicular
+to their letter, and the `z` pair gives its height. Coordinates are Revit
+internal-origin millimetres.
 
 ## External resources
 
