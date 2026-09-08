@@ -1,9 +1,0 @@
-Version 17 — manholes arrive straight from Revit.
-
-Two halves. On the Revit side, a script (tools/revit/export_manholes.py, for pyRevit, RevitPythonShell or a Dynamo Python node; Revit 2018 through 2026) writes a JSON file in millimetres: every named reference plane of each manhole family — a1–a7, b1–b7, z1–z6 and the six conduit-boundary planes — with its normal and offset in family coordinates, plus every placed instance's origin, axes, rotation and mirroring. Run it in the project and the whole site comes out at once.
-
-On the tool side, a new Import Revit JSON button reads that file. a1/a7 and b1/b7 are taken as the external faces, a2/a6 and b2/b6 as the inside faces of the walls (so wall thickness and internal size fall out), a3/a5 and b3/b5 as the lid outline, which now draws in plan. The a_ and b_ conduit-boundary planes give each side its insertion window and the z pair its height. Each instance lands at its Revit position and rotation; a mirrored instance swaps its sides; and every side carries the family plane it came from — the side buttons read "B a7", the side dialog "side B (a7)".
-
-Where a side has an imported window, that window governs how many conduits fit, replacing the face-width-less-edge-clearance rule, and the cross-section draws the window in place of the edge guides. The z datums are kept on the chamber for later use.
-
-Verified in a driven browser with a synthetic three-instance project export (plain, rotated 90°, mirrored): positions, rotation, sizes, wall thickness, side names, windows, lid outlines, routing between imported manholes, the dialog captions, and round-tripping through the plan's own export — plus the regression batteries from versions 14 to 16, all passing with no console errors.

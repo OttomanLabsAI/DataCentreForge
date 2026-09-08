@@ -46,11 +46,23 @@ const selIs  = k => state.sel && state.sel.kind === k;
 /* ---------- model --------------------------------------------------------- */
 
 function makeChamber(o = {}){
-  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300, latSpace:450, zSpace:300, edgeClear:150}, o);
+  return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300, latSpace:450, zSpace:300, edgeClear:150, z0:-600}, o);
 }
 function makeObstacle(o = {}){
-  return Object.assign({uid:uid(), name:nextName(), x:0, y:0, w:2400, d:2400, rot:0, buffer:250}, o);
+  return Object.assign({uid:uid(), name:nextName(), x:0, y:0, w:2400, d:2400, rot:0, buffer:250,
+                        zTop:0, zBot:-1500, around:true, over:true, under:true}, o);
 }
+/* How a conduit may pass an obstacle: AROUND it (its footprint is a plan
+   keep-out), OVER it or UNDER it. Around always comes first; a run crosses
+   an around-obstacle only when nothing gets round it. Of the two crossings,
+   under is the default and over the fallback. One allowing nothing at all is
+   simply impassable. */
+const obsCrossable  = o => !!(o.over || o.under);
+const obsBlocksPlan = o => !!o.around || !obsCrossable(o);
+const obsRules = o => ['around','over','under'].filter(k => o[k]).join(' · ') || 'impassable';
+const obsRulesShort = o => o.around && o.over && o.under ? 'any way'
+  : ['around','over','under'].filter(k => o[k]).join('/') || 'impassable';
+const chamberZ0 = c => Number.isFinite(c.z0) ? c.z0 : -600;
 function makeSpec(o = {}){
   return Object.assign({
     id:uid(), name:'New spec', colour:SPEC_COLOURS[state.specs.length % SPEC_COLOURS.length],
@@ -180,6 +192,7 @@ function distToSeg(p, a, b){
    internal face along the inward normal, changes direction only by an angle
    the spec permits, keeps every straight at or above the minimum, and stays
    clear of every keep-out: conduit radius plus the larger of the two buffer zones.
+   The same engine solves the long section (see THE THIRD DIMENSION below).
    ========================================================================== */
 
 const SAMPLES = 10, SEQ_CAP = 300, BUDGET = 30000;
@@ -451,6 +464,7 @@ function search(P, d0, V, delta, signed, spec, blockers, strict){
       const f = applyFillets(sol, spec);
       f.poly = tessellate(f);
       if (!clearOf(f.poly, blockers)){ sawBlocked = true; continue; }
+      if (blockers.accept && !blockers.accept(f)){ sawBlocked = true; continue; }
       f.score = scoreOf(f);
       if (!best || f.score < best.score) best = f;
     }
@@ -615,6 +629,11 @@ function buildBanks(){
     const maxOff = Math.max(0, ...ends.map(e => Math.max(Math.abs(e.w0), Math.abs(e.w1)) + e.halfW));
     const specs = members.map(specOf);
     let angles = ANGLE_OPTIONS.filter(a => specs.every(sp => sp.angles.includes(a)));
+    /* the bank in section: its shallowest lane (zUp below the level-0 datum)
+       carries the profile, its deepest row (zDn) sets how much sits beneath */
+    const zPitch = Math.max(1, A.zSpace || 0, B.zSpace || 0);
+    const zUp = Math.min(...members.map(cn => (cn.level|0) * zPitch));
+    const zDn = Math.max(...members.map(cn => ((cn.level|0) + runRows(cn) - 1) * zPitch));
     const g = {
       key, members, ends, A, B, start, finish,
       PS:[gS.mid[0]+tS[0]*meanS, gS.mid[1]+tS[1]*meanS],
@@ -624,6 +643,7 @@ function buildBanks(){
       maxRad: Math.max(...specs.map(sp => sp.radius)),
       maxBuf: Math.max(...specs.map(sp => sp.buffer)),
       levels: new Set(members.map(cn => cn.level|0)),
+      zPitch, zUp, zDn,
       anyPlaced: members.some(cn => cn.placed),
       spec: {
         radius: Math.max(...specs.map(sp => sp.radius)),
@@ -656,12 +676,18 @@ function bankSpacing(G, H){
 }
 const levelsMeet = (G, H) => [...G.levels].some(l => H.levels.has(l));
 
-function bankBlockers(G, banks){
+/** Plan keep-outs for a bank. Obstacles that may be crossed over or under
+    (and need not be gone round) are not keep-outs at all; those in `allow`
+    are the around-obstacles the run has been permitted to cross because
+    nothing gets round them. */
+function bankBlockers(G, banks, allow){
   const out = [];
   const pad = G.maxOff + G.maxRad;
-  for (const o of state.obstacles)
+  for (const o of state.obstacles){
+    if (!obsBlocksPlan(o) || (allow && allow.has(o.uid))) continue;
     out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
               margin: pad + Math.max(G.maxBuf, o.buffer)});
+  }
   if (state.avoidChambers)
     for (const c of state.chambers){
       if (c.uid === G.start.mh || c.uid === G.finish.mh) continue;
@@ -683,16 +709,189 @@ function bankBlockers(G, banks){
 }
 
 function bankSignature(G, banks){
-  const box = o => [o.x, o.y, o.w, o.d, o.rot, o.buffer];
-  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace];
+  const box = o => [o.x, o.y, o.w, o.d, o.rot, o.buffer, o.zTop, o.zBot, !!o.around, !!o.over, !!o.under];
+  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace, c.zSpace, chamberZ0(c)];
   const others = state.avoidPipes ? banks
     .filter(H => H !== G && H.anyPlaced && H.route && H.route.ok && levelsMeet(G, H))
     .map(H => [H.key, H.maxOff, H.maxRad, H.maxBuf, H.spec.stub,
                H.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]) : 0;
   return JSON.stringify([G.key, G.PS.map(Math.round), G.PE.map(Math.round),
-    G.ends.map(e => [Math.round(e.w0), Math.round(e.w1), Math.round(e.halfW)]), [...G.levels], G.spec, Math.round(G.maxOff),
+    G.ends.map(e => [Math.round(e.w0), Math.round(e.w1), Math.round(e.halfW)]), [...G.levels], G.spec, Math.round(G.maxOff), G.zUp, G.zDn,
     state.avoidChambers, state.avoidPipes, ROUTE_QUICK,
     state.obstacles.map(box), state.chambers.map(mh), others]);
+}
+
+/* ==========================================================================
+   THE THIRD DIMENSION
+   Every obstacle has a top and a bottom and says how a run may pass it:
+   around, over or under. The plan is routed first, going round everything
+   it must; only when nothing gets round does it cross the obstacles that
+   allow it, crossing as few as it can. The long section is then solved in
+   the (chainage, z) plane with the same engine — same fittings, same
+   minimum straights, same clearances — stepping under (by default) or over
+   each crossed obstacle and keeping its bends off the plan bends.
+   ========================================================================== */
+
+/** Distance from a plan point to an obstacle's footprint (0 inside). */
+function boxDist(p, o){
+  const c = Math.cos(-o.rot*D2R), s = Math.sin(-o.rot*D2R);
+  const lx = (p[0]-o.x)*c - (p[1]-o.y)*s, ly = (p[0]-o.x)*s + (p[1]-o.y)*c;
+  return Math.hypot(Math.max(0, Math.abs(lx) - o.w/2), Math.max(0, Math.abs(ly) - o.d/2));
+}
+/** Chainage along a route's tessellated centreline, scaled to its true length. */
+function chainage(rt){
+  const P = rt.poly, cum = [0];
+  for (let i = 1; i < P.length; i++) cum.push(cum[i-1] + Math.hypot(P[i][0]-P[i-1][0], P[i][1]-P[i-1][1]));
+  const total = cum[cum.length-1] || 1;
+  return {cum, total, k: (rt.length || total)/total};
+}
+/** Plan point at a chainage along the route. */
+function pointAt(rt, s){
+  const P = rt.poly, {cum, total, k} = chainage(rt);
+  const u = Math.max(0, Math.min(total, s/k));
+  let i = 1; while (i < cum.length-1 && cum[i] < u) i++;
+  const t = (u - cum[i-1]) / Math.max(1e-9, cum[i]-cum[i-1]);
+  return [P[i-1][0] + (P[i][0]-P[i-1][0])*t, P[i-1][1] + (P[i][1]-P[i-1][1])*t];
+}
+/** Crossable obstacles the bank passes, each with the chainage interval over
+    which any lane of the bank sits inside the obstacle's keep-out. */
+function routeCrossings(G, rt){
+  const P = rt.poly, {cum, k} = chainage(rt), reachBase = G.maxOff + G.maxRad;
+  const STEP = 25, out = [];
+  for (const o of state.obstacles){
+    if (!obsCrossable(o)) continue;
+    const reach = reachBase + Math.max(G.maxBuf, o.buffer);
+    let s0 = Infinity, s1 = -Infinity;
+    for (let i = 0; i < P.length-1; i++){
+      const L = cum[i+1]-cum[i], n = Math.max(1, Math.ceil(L/STEP));
+      for (let j = 0; j <= n; j++){
+        const t = j/n, p = [P[i][0] + (P[i+1][0]-P[i][0])*t, P[i][1] + (P[i+1][1]-P[i][1])*t];
+        if (boxDist(p, o) < reach){ const s = cum[i] + L*t; s0 = Math.min(s0, s); s1 = Math.max(s1, s); }
+      }
+    }
+    if (s0 <= s1) out.push({o, s0: Math.max(0, (s0-STEP)*k), s1: Math.min(rt.length, (s1+STEP)*k)});
+  }
+  return out.sort((a,b) => a.s0 - b.s0);
+}
+/** Chainage bands taken by the plan's own bends, tangent point to tangent point. */
+function bendZones(rt){
+  const zones = []; let s = 0;
+  for (let i = 0; i < rt.turns.length; i++){
+    s += rt.clear[i];
+    const arc = rt.fillets[i].R*Math.abs(rt.turns[i])*D2R;
+    zones.push([s, s + arc]);
+    s += arc;
+  }
+  return zones;
+}
+function profileZ(pf, s){
+  const P = pf.poly;
+  for (let i = 0; i < P.length-1; i++)
+    if (s >= P[i][0]-1e-6 && s <= P[i+1][0]+1e-6){
+      const ds = P[i+1][0]-P[i][0];
+      return ds < 1e-6 ? Math.min(P[i][1], P[i+1][1]) : P[i][1] + (P[i+1][1]-P[i][1])*(s-P[i][0])/ds;
+    }
+  return s <= 0 ? P[0][1] : P[P.length-1][1];
+}
+function finishProfile(pf, xs, S, zA, zB, lift){
+  pf.S = S; pf.zA = zA; pf.zB = zB;
+  pf.crossings = xs.map(x => {
+    const z = profileZ(pf, (x.s0+x.s1)/2);
+    return {uid:x.o.uid, name:x.o.name, s0:x.s0, s1:x.s1, zTop:Math.max(x.o.zTop, x.o.zBot), zBot:Math.min(x.o.zTop, x.o.zBot),
+            mode: z >= Math.max(x.o.zTop, x.o.zBot) + lift ? 'over' : 'under', z};
+  });
+  return pf;
+}
+
+/** The long section of a bank: from the level-0 datum at one chamber to the
+    other, clear over or under every crossed obstacle. An obstacle the
+    straight line already clears is left alone. Otherwise each is forced to
+    its preferred side — under when allowed — and if that fails the ones
+    allowing both are flipped, one at a time, then all together. */
+function solveProfile(G, rt, xs){
+  const zA = chamberZ0(G.A) - G.zUp, zB = chamberZ0(G.B) - G.zUp, S = rt.length;
+  const lift = G.zDn - G.zUp;                       // how far the deepest row hangs below the profile
+  if (!xs.length && Math.abs(zB-zA) < 1){
+    const pf = {ok:true, pts:[[0,zA],[S,zB]], turns:[], segs:[S], fillets:[], clear:[S], length:S, warnings:[], poly:[[0,zA],[S,zB]]};
+    return finishProfile(pf, xs, S, zA, zB, lift);
+  }
+  const vs = {...G.spec, bendR: G.spec.bendR - G.maxOff + lift,
+              stub: G.spec.stub - G.maxOff + lift, minLeg: G.spec.minLeg - G.maxOff + lift};
+  const zones = bendZones(rt);
+  const accept = f => {
+    for (let i = 0; i < f.pts.length-1; i++) if (f.pts[i+1][0] < f.pts[i][0] - 1e-6) return false;   // never doubles back
+    for (let i = 1; i < f.pts.length-1; i++){
+      const T = f.fillets[i-1].T, s = f.pts[i][0];
+      for (const z of zones) if (s + T > z[0] - 1 && s - T < z[1] + 1) return false;                  // keep off the plan bends
+    }
+    return true;
+  };
+  const chord = s => zA + (zB-zA)*s/S;
+  const info = xs.map(x => {
+    const top = Math.max(x.o.zTop, x.o.zBot) + lift, bot = Math.min(x.o.zTop, x.o.zBot);
+    const margin = G.maxRad + Math.max(G.maxBuf, x.o.buffer);
+    const clearOver  = x.o.over  && chord(x.s0) >= top + margin && chord(x.s1) >= top + margin;
+    const clearUnder = x.o.under && chord(x.s0) <= bot - margin && chord(x.s1) <= bot - margin;
+    return {x, top, bot, margin, free: clearOver || clearUnder, both: !!(x.o.over && x.o.under),
+            pref: x.o.under ? 'under' : 'over'};
+  });
+  const flippable = info.filter(i => i.both && !i.free);
+  const attempts = [new Set()];
+  for (const i of flippable) attempts.push(new Set([i.x.o.uid]));
+  if (flippable.length > 1) attempts.push(new Set(flippable.map(i => i.x.o.uid)));
+  const BIG = 1e7;
+  for (const flip of attempts){
+    const blockers = info.map(i => {
+      let mode = i.free ? null : i.pref;
+      if (mode && i.both && flip.has(i.x.o.uid)) mode = mode === 'under' ? 'over' : 'under';
+      const zlo = mode === 'over' ? i.bot - BIG : i.bot, zhi = mode === 'under' ? i.top + BIG : i.top;
+      return {type:'box', cx:(i.x.s0+i.x.s1)/2, cy:(zlo+zhi)/2, rot:0,
+              hw:Math.max(0, (i.x.s1-i.x.s0)/2 - i.margin), hh:(zhi-zlo)/2, margin:i.margin};
+    });
+    blockers.accept = accept;
+    const pf = solveRoute([0, zA], [1, 0], [S, zB], [1, 0], vs, blockers);
+    if (pf.ok) return finishProfile(pf, xs, S, zA, zB, lift);
+  }
+  const names = xs.map(x => x.o.name).join(', ');
+  const how = xs.length === 1 && !info[0].both ? info[0].pref : 'past';
+  return {ok:false, msg: xs.length ? `no way ${how} ${names} in section` : 'no way to change level in section'};
+}
+function reversedProfile(pf){
+  const S = pf.S, flip = p => [S - p[0], p[1]];
+  return {...pf, pts:[...pf.pts].reverse().map(flip), segs:[...pf.segs].reverse(),
+    turns:[...pf.turns].reverse(), fillets:[...pf.fillets].reverse(), clear:[...pf.clear].reverse(),
+    poly:[...pf.poly].reverse().map(flip), zA:pf.zB, zB:pf.zA,
+    crossings: pf.crossings.map(x => ({...x, s0:S - x.s1, s1:S - x.s0})).reverse()};
+}
+function memberProfile(pf, shift){
+  const dz = p => [p[0], p[1] - shift];
+  return {...pf, pts:pf.pts.map(dz), poly:pf.poly.map(dz), zA:pf.zA - shift, zB:pf.zB - shift,
+          crossings: pf.crossings.map(x => ({...x, z: x.z - shift}))};
+}
+
+/** Plan first, going round everything it must. When nothing gets round, the
+    run is allowed through the around-obstacles that may be crossed, then
+    re-routed with every obstacle it did not need put back as a keep-out,
+    until the set it crosses stops shrinking. Then the section. */
+function solveBank(G, banks){
+  let rt = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks, null));
+  if (!rt.ok){
+    let allow = new Set(state.obstacles.filter(o => obsBlocksPlan(o) && obsCrossable(o)).map(o => o.uid));
+    for (let i = 0; i < 4 && allow.size; i++){
+      const r2 = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks, allow));
+      if (!r2.ok) break;
+      rt = r2;
+      const crossed = new Set(routeCrossings(G, r2).map(x => x.o.uid).filter(u => allow.has(u)));
+      if (crossed.size === allow.size) break;
+      allow = crossed;
+    }
+    if (!rt.ok) return rt;
+  }
+  const pf = solveProfile(G, rt, routeCrossings(G, rt));
+  if (!pf.ok) return {ok:false, msg:pf.msg};
+  rt.profile = pf;
+  rt.crossings = pf.crossings;
+  return rt;
 }
 
 /** A member's route is the bank centreline shifted sideways, its offset
@@ -755,6 +954,14 @@ function deriveMembers(G){
         r.warnings.push({kind:'angle', bend:i+1,
           text:`bend ${i+1} — ${fmt1(Math.abs(t))}° is over the ${fmt1(sp.warnAngle)}° limit`});
     });
+    /* the section: the bank profile dropped to this member's level */
+    let pf = G.route.profile ? memberProfile(G.route.profile, (cn.level|0)*G.zPitch - G.zUp) : null;
+    if (pf && e.se !== 'a') pf = reversedProfile(pf);
+    r.profile = pf;
+    r.crossings = pf ? pf.crossings : [];
+    r.leadLane = e === G.ends[0];        // the lane that carries the bank's crossing labels
+    r.length3d = pf ? r.length + (pf.length - pf.S) : r.length;
+    if (pf) for (const w of pf.warnings) r.warnings.push({kind:'v' + w.kind, text:`in section, ${w.text}`});
     cn.route = r;
   }
 }
@@ -769,7 +976,7 @@ function recomputeRoutes(){
       if (cached) G.route = cached.route;
       const sig = bankSignature(G, banks);
       if (cached && cached.sig === sig && cached.route) continue;
-      G.route = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks));
+      G.route = solveBank(G, banks);
       bankCache.set(G.key, {sig, route:G.route});
       changed = true;
     }
@@ -961,6 +1168,8 @@ function drawObstacle(o){
   if (Math.min(o.w,o.d)*s > 44){
     const ctr = W2S([o.x, o.y]);
     out.push(`<text x="${ctr[0]}" y="${ctr[1]+4}" fill="${stroke}" font-family="${C.mono}" font-size="11" text-anchor="middle">${esc(o.name)}</text>`);
+    if (state.showDims && Math.min(o.w,o.d)*s > 76)
+      out.push(`<text x="${ctr[0]}" y="${ctr[1]+17}" fill="${C.inkDim}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${esc(obsRules(o))}</text>`);
   }
   return out.join('');
 }
@@ -1020,10 +1229,15 @@ function drawConnection(cn){
     }
   });
   if (state.showDims && rt.length*s > 80){
-    const m = W2S(rt.pts[Math.floor(rt.pts.length/2)]);
+    const m = W2S(pointAt(rt, rt.length/2));
     const lvl = (cn.level|0) ? ' · L' + (cn.level|0) : '';
-    out.push(`<text x="${m[0]}" y="${m[1]-body/2-7}" fill="${edge}" font-family="${C.mono}" font-size="10.5" text-anchor="middle">${metres(rt.length)}${lvl}</text>`);
+    out.push(`<text x="${m[0]}" y="${m[1]-body/2-7}" fill="${edge}" font-family="${C.mono}" font-size="10.5" text-anchor="middle">${metres(rt.length3d || rt.length)}${lvl}</text>`);
   }
+  if (state.showDims && rt.leadLane && rt.crossings && rt.crossings.length)
+    for (const x of rt.crossings){
+      const m = W2S(pointAt(rt, x.s0));
+      out.push(`<text x="${m[0]}" y="${m[1]+body/2+13}" fill="${edge}" font-family="${C.mono}" font-size="10" text-anchor="middle">${x.mode === 'under' ? '▼ under' : '▲ over'} ${esc(x.name)}</text>`);
+    }
   return out.join('');
 }
 
@@ -1221,7 +1435,7 @@ function renderConnections(){
     const cls = !rt || !rt.ok ? 'bad' : warn ? 'warn' : cn.placed ? 'ok' : '';
     const meta = !rt || !rt.ok ? 'no route'
                : !cn.placed ? 'not placed'
-               : (warn ? '⚠ ' : '') + metres(rt.length);
+               : (warn ? '⚠ ' : '') + metres(rt.length3d || rt.length);
     return `<div class="item ${selIs('conn') && state.sel.id === cn.uid ? 'on':''}" data-conn="${cn.uid}">
       <span class="dot" style="background:${sp ? sp.colour : C.inkFaint}"></span>
       <span class="nm">${esc(connLabel(cn))}</span>
@@ -1409,11 +1623,13 @@ function renderChamberProps(box, c){
       numRow('pX','Centre X', c.x, state.snap||1, 'mm') +
       numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
       numRow('pR','Rotation', c.rot, 15, '°')) +
-    cluster('chSpc', 'Spacing & clearance', `lat ${fmt(c.latSpace)} · z ${fmt(c.zSpace)}`,
+    cluster('chSpc', 'Spacing & clearance', `lat ${fmt(c.latSpace)} · z ${fmt(c.zSpace)} · L0 at ${fmt(chamberZ0(c))}`,
       numRow('pB','Clearance', c.buffer, 50, 'mm') +
       numRow('pLat','Lateral spacing', c.latSpace, 50, 'mm') +
       numRow('pZ','Z spacing', c.zSpace, 50, 'mm') +
-      numRow('pEC','Edge clearance', c.edgeClear ?? 150, 25, 'mm')) +
+      numRow('pZ0','Level 0 Z', chamberZ0(c), 50, 'mm') +
+      numRow('pEC','Edge clearance', c.edgeClear ?? 150, 25, 'mm') +
+      `<div class="derived"><span>Level 0 Z is the centreline of the top row of conduits; each level below sits one Z spacing lower.</span></div>`) +
     facesBlock(c) +
     `<div class="btnrow"><button id="pDup">Duplicate</button><button id="pDel" class="warn">Delete</button></div>`;
   const bind = (id, key, cast = Number) => {
@@ -1433,7 +1649,7 @@ function renderChamberProps(box, c){
   };
   bind('pRef','ref',String); bind('pIX','intX'); bind('pIY','intY');
   bind('pW','wall'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
-  bind('pLat','latSpace'); bind('pZ','zSpace'); bind('pEC','edgeClear');
+  bind('pLat','latSpace'); bind('pZ','zSpace'); bind('pZ0','z0'); bind('pEC','edgeClear');
   wireFaceButtons(c);
   wireClusters(box, renderSel);
   document.getElementById('pSq').onchange = e => {
@@ -1457,10 +1673,18 @@ function renderObstacleProps(box, o){
       numRow('oX','Centre X', o.x, state.snap||1, 'mm') +
       numRow('oY','Centre Y', o.y, state.snap||1, 'mm') +
       numRow('oR','Rotation', o.rot, 15, '°')) +
+    cluster('obZ', 'Levels & crossing', `${fmt(Math.max(o.zTop, o.zBot))}…${fmt(Math.min(o.zTop, o.zBot))} · ${obsRulesShort(o)}`,
+      numRow('oZT','Top (Z)', o.zTop, 100, 'mm') +
+      numRow('oZB','Bottom (Z)', o.zBot, 100, 'mm') +
+      `<div class="row" style="margin-top:6px"><label>Conduits may pass</label></div>
+       <div class="row"><label class="chk"><input type="checkbox" id="oAround" ${o.around?'checked':''}> around it — its footprint is a keep-out</label></div>
+       <div class="row"><label class="chk"><input type="checkbox" id="oOver" ${o.over?'checked':''}> over it</label></div>
+       <div class="row"><label class="chk"><input type="checkbox" id="oUnder" ${o.under?'checked':''}> under it</label></div>
+       <div class="derived"><span>Around comes first — a run crosses only when nothing gets round. Under is the default crossing, over the fallback. Nothing ticked makes it impassable.</span></div>`) +
     cluster('obClr', 'Clearance', `${fmt(o.buffer)} mm`,
       numRow('oC','Clearance', o.buffer, 50, 'mm') +
       `<div class="derived"><b>Keep-out</b> ${fmt(o.w+2*o.buffer)} × ${fmt(o.d+2*o.buffer)} mm<br>
-         <span>Conduits are held off by the larger of this clearance and their own, plus their radius.</span></div>`) +
+         <span>Conduits are held off by the larger of this clearance and their own, plus their radius — in plan and in section.</span></div>`) +
     `<div class="btnrow"><button id="oDup">Duplicate</button><button id="oDel" class="warn">Delete</button></div>`;
   const bind = (id, key, cast = Number) => {
     const el = document.getElementById(id);
@@ -1471,7 +1695,9 @@ function renderObstacleProps(box, o){
     });
   };
   bind('oName','name',String); bind('oW','w'); bind('oD','d');
-  bind('oX','x'); bind('oY','y'); bind('oR','rot'); bind('oC','buffer');
+  bind('oX','x'); bind('oY','y'); bind('oR','rot'); bind('oC','buffer'); bind('oZT','zTop'); bind('oZB','zBot');
+  for (const [id, key] of [['oAround','around'], ['oOver','over'], ['oUnder','under']])
+    document.getElementById(id).onchange = ev => { o[key] = ev.target.checked; renderSel(); renderObstacles(); renderConnections(); draw(); };
   wireClusters(box, renderSel);
   document.getElementById('oDup').onclick = () => {
     const n = makeObstacle({...o, uid:uid(), name:nextName(), x:o.x + o.w + 1000});
@@ -1497,7 +1723,8 @@ function renderRunProps(box, cn){
       numRow('qCols','Columns (wide)', runCols(cn), 1, '') +
       numRow('qRows','Rows (high)', runRows(cn), 1, '')) +
     cluster('runRt', 'Route',
-      rt && rt.ok ? metres(rt.length) + (rt.turns.length ? ` · ${rt.turns.length} bend${rt.turns.length === 1 ? '' : 's'}` : ' · straight') : 'no route',
+      rt && rt.ok ? metres(rt.length3d || rt.length) + (rt.turns.length ? ` · ${rt.turns.length} bend${rt.turns.length === 1 ? '' : 's'}` : ' · straight')
+                    + (rt.profile && rt.profile.turns.length ? ` + ${rt.profile.turns.length} vertical` : '') : 'no route',
       `<div class="derived" style="border-top:none;margin-top:0;padding-top:2px">
          <b>Run</b> ${esc(connLabel(cn))}<br>
          ${entryLine(cn)}${arrayLine(cn)}
@@ -1505,9 +1732,11 @@ function renderRunProps(box, cn){
          (rt && rt.ok
            ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°').join(' · ') : 'none — straight run'}<br>
               <b>Straight duct</b> ${rt.clear.map(v => fmt(Math.max(0,v))).join(' · ')} mm<br>
-              <b>Centreline</b> ${metres(rt.length)} face to face`
+              <b>Centreline</b> ${metres(rt.length)} in plan${rt.profile && rt.profile.turns.length ? ` · ${metres(rt.length3d)} laid` : ''}` +
+             sectionLines(rt)
            : `<span style="color:${C.bad}">${esc(rt ? rt.msg : '')}</span>`) +
       `</div>`) +
+    cluster('runSec', 'Long section', sectionSummary(rt), profileSVG(cn, 232)) +
     (warns.length ? `<div class="alert warn"><b>Check this run</b>${warns.map(w => esc(w.text)).join('<br>')}</div>` : '') +
     (rt && !rt.ok ? `<div class="alert bad"><b>Cannot place</b>${esc(rt.msg)}</div>` : '') +
     `<div class="btnrow">
@@ -1650,6 +1879,60 @@ function renderFaceDialog(){
   });
 }
 
+function sectionSummary(rt){
+  if (!rt || !rt.ok || !rt.profile) return '—';
+  const pf = rt.profile, xs = rt.crossings || [];
+  if (xs.length) return xs.map(x => `${x.mode} ${x.name}`).join(' · ');
+  return pf.turns.length ? `${pf.turns.length} vertical bend${pf.turns.length === 1 ? '' : 's'}` : 'level';
+}
+function sectionLines(rt){
+  const pf = rt.profile;
+  if (!pf) return '';
+  let s = `<br><b>In section</b> ${pf.turns.length ? pf.turns.map(t => fmt1(Math.abs(t))+'°').join(' · ') : 'no vertical bends'}`;
+  const xs = rt.crossings || [];
+  if (xs.length)
+    s += `<br><b>Crossings</b> ${xs.map(x => `${x.mode} ${esc(x.name)} at Z ${fmt(x.z)}`).join(' · ')}`;
+  return s;
+}
+/** Long section of one run: chainage across, Z up (exaggerated, and the
+    caption says by how much), the crossed obstacles as boxes, the conduit
+    in its spec colour at its own radius. */
+function profileSVG(cn, wpx = 232){
+  const rt = cn.route, pf = rt && rt.ok ? rt.profile : null;
+  if (!pf) return `<div class="empty">No section — the run has no route.</div>`;
+  const sp = specOf(cn), A = byUid(cn.a.mh), B = byUid(cn.b.mh), S = pf.S, r = sp.radius;
+  let zMin = Math.min(...pf.poly.map(p => p[1])) - r, zMax = Math.max(...pf.poly.map(p => p[1])) + r;
+  for (const x of pf.crossings){ zMin = Math.min(zMin, x.zBot); zMax = Math.max(zMax, x.zTop); }
+  zMin -= 150; zMax += 380;                       // headroom for the chamber names and depths
+  const pad = 12, capH = 16;
+  const sx = (wpx - pad*2) / Math.max(1, S);
+  const sz = Math.min(sx*4, 126 / Math.max(1, zMax - zMin));
+  const hpx = Math.round((zMax - zMin)*sz + pad*2);
+  const X = s => pad + s*sx, Y = z => pad + (zMax - z)*sz;
+  const el = [];
+  if (zMin < 0 && zMax > 0)
+    el.push(`<line x1="${pad}" y1="${Y(0).toFixed(1)}" x2="${wpx-pad}" y2="${Y(0).toFixed(1)}" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="3 3" opacity=".6"/>`);
+  for (const x of pf.crossings){
+    el.push(`<rect x="${X(x.s0).toFixed(1)}" y="${Y(x.zTop).toFixed(1)}" width="${Math.max(1, (x.s1-x.s0)*sx).toFixed(1)}" height="${Math.max(1, (x.zTop-x.zBot)*sz).toFixed(1)}" fill="${C.obsFill}" stroke="${C.obsLine}" stroke-width="1"/>`);
+    el.push(`<text x="${X((x.s0+x.s1)/2).toFixed(1)}" y="${(Y(x.zTop)-3).toFixed(1)}" fill="${C.obsLine}" font-family="${C.mono}" font-size="9" text-anchor="middle">${esc(x.name)}</text>`);
+  }
+  for (const [s, ref, z, anchor, dx] of [[0, A ? A.ref : '?', pf.zA, 'start', 3], [S, B ? B.ref : '?', pf.zB, 'end', -3]]){
+    el.push(`<line x1="${X(s).toFixed(1)}" y1="${pad}" x2="${X(s).toFixed(1)}" y2="${hpx-pad}" stroke="${C.ink}" stroke-width="1.2"/>`);
+    el.push(`<text x="${(X(s)+dx).toFixed(1)}" y="${pad+9}" fill="${C.ink}" font-family="${C.mono}" font-size="9.5" text-anchor="${anchor}">${esc(ref)}</text>`);
+    el.push(`<text x="${(X(s)+dx).toFixed(1)}" y="${pad+20}" fill="${C.inkDim}" font-family="${C.mono}" font-size="9" text-anchor="${anchor}">Z ${fmt(z)}</text>`);
+  }
+  const d = pf.poly.map((p, i) => (i ? 'L' : 'M') + X(p[0]).toFixed(1) + ',' + Y(p[1]).toFixed(1)).join(' ');
+  el.push(`<path d="${d}" fill="none" stroke="${sp.colour}" stroke-width="${Math.max(2, 2*r*sz).toFixed(1)}" stroke-linejoin="round" opacity=".95"/>`);
+  const zLow = Math.min(...pf.poly.map(p => p[1])), zHigh = Math.max(...pf.poly.map(p => p[1]));
+  const low = pf.poly.find(p => p[1] === zLow), high = pf.poly.find(p => p[1] === zHigh);
+  if (high && zHigh > Math.max(pf.zA, pf.zB) + 1)
+    el.push(`<text x="${X(high[0]).toFixed(1)}" y="${(Y(zHigh)-r*sz-4).toFixed(1)}" fill="${C.inkDim}" font-family="${C.mono}" font-size="9" text-anchor="middle">Z ${fmt(zHigh)}</text>`);
+  if (low && zLow < Math.min(pf.zA, pf.zB) - 1)
+    el.push(`<text x="${X(low[0]).toFixed(1)}" y="${(Y(zLow)+r*sz+11).toFixed(1)}" fill="${C.inkDim}" font-family="${C.mono}" font-size="9" text-anchor="middle">Z ${fmt(zLow)}</text>`);
+  const cap = `${metres(rt.length3d || rt.length)} laid · ${pf.turns.length ? pf.turns.length + ' vertical bend' + (pf.turns.length === 1 ? '' : 's') : 'no vertical bends'} · Z ×${(sz/sx).toFixed(1)}`;
+  el.push(`<text x="${wpx/2}" y="${hpx+capH-4}" fill="${C.inkFaint}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${cap}</text>`);
+  return `<svg width="${wpx}" height="${hpx+capH}" style="display:block;margin:4px 0 2px">${el.join('')}</svg>`;
+}
 function arrayLine(cn){
   const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
   const S = Math.max(ea ? ea.S||0 : 0, eb ? eb.S||0 : 0);
@@ -1664,7 +1947,7 @@ function entryLine(cn){
   const lvl = cn.level|0;
   const side = o => o === 0 ? 'centre' : (o > 0 ? '+' : '−') + fmt(Math.abs(o));
   let line = `<b>Entry</b> ${side(ea.offset)} at ${esc(A.ref)} · ${side(eb.offset)} at ${esc(B.ref)}`;
-  if (lvl) line += `<br><b>Level</b> ${lvl} — Z −${fmt(lvl*A.zSpace)} at ${esc(A.ref)} · −${fmt(lvl*B.zSpace)} at ${esc(B.ref)}`;
+  line += `<br><b>Depth</b> Z ${fmt(chamberZ0(A) - lvl*A.zSpace)} at ${esc(A.ref)} · Z ${fmt(chamberZ0(B) - lvl*B.zSpace)} at ${esc(B.ref)}${lvl ? ` (level ${lvl})` : ''}`;
   return line + '<br>';
 }
 
@@ -1728,9 +2011,9 @@ document.getElementById('btnExport').onclick = () => {
       const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
       return {
         from:{ref: A?.ref, face: cn.a.face, lateralOffset: ea ? Math.round(ea.offset) : 0,
-              zOffset: A ? -(cn.level|0)*A.zSpace : 0},
+              zOffset: A ? -(cn.level|0)*A.zSpace : 0, z: A ? chamberZ0(A) - (cn.level|0)*A.zSpace : null},
         to:  {ref: B?.ref, face: cn.b.face, lateralOffset: eb ? Math.round(eb.offset) : 0,
-              zOffset: B ? -(cn.level|0)*B.zSpace : 0},
+              zOffset: B ? -(cn.level|0)*B.zSpace : 0, z: B ? chamberZ0(B) - (cn.level|0)*B.zSpace : null},
         spec: sp ? sp.name : null,
         level: cn.level|0,
         rows: runRows(cn), cols: runCols(cn),
@@ -1741,6 +2024,13 @@ document.getElementById('btnExport').onclick = () => {
           straights: rt.segs.map(v => Math.round(v)),
           straightDuct: rt.clear.map(v => Math.round(Math.max(0,v))),
           centrelineLength: Math.round(rt.length),
+          laidLength: Math.round(rt.length3d || rt.length),
+          crossings: (rt.crossings || []).map(x => ({obstacle:x.name, mode:x.mode, from:Math.round(x.s0), to:Math.round(x.s1), z:Math.round(x.z)})),
+          section: rt.profile ? {
+            vertices: rt.profile.pts.map(p => [Math.round(p[0]), Math.round(p[1])]),
+            bends: rt.profile.turns.map((t,i) => ({deflection:t, radius: Math.round(rt.profile.fillets[i].R)})),
+            straights: rt.profile.segs.map(v => Math.round(v))
+          } : null,
           warnings: rt.warnings.map(w => w.text)
         } : null,
         error: rt && !rt.ok ? rt.msg : undefined
@@ -1855,11 +2145,31 @@ function importRevit(d){
         ref: inst.mark || null,
         x: Math.round(wx), y: Math.round(wy), rot: Math.round(rot*100)/100,
         intX: Math.round(intX), intY: Math.round(intY), wall,
+        z0: Math.round(o[2] + (wZ ? wZ.hi - 150 : -600)),       // top row a half pitch below the window top
         sides, win, lid, zd: z, src: 'revit', family: F.family || null, type: inst.type || null
       }));
     }
   }
-  return made;
+  /* obstacles: any instance flagged with the obstacle_around / _over / _under
+     parameters, as its own bounding box in family coordinates plus placement */
+  const obstacles = [];
+  for (const ob of (Array.isArray(d.obstacles) ? d.obstacles : [])){
+    const mn = ob.local_min_mm, mx = ob.local_max_mm;
+    if (!mn || !mx) continue;
+    const bx = ob.family_x_axis || [1,0,0], by = ob.family_y_axis || [0,1,0], o = ob.origin_mm || [0,0,0];
+    const cx = (mn[0]+mx[0])/2, cy = (mn[1]+mx[1])/2;
+    const flag = k => ob[k] == null ? true : !!ob[k];
+    obstacles.push(makeObstacle({
+      name: ob.mark || ob.name || null,
+      x: Math.round(o[0] + bx[0]*cx + by[0]*cy), y: Math.round(o[1] + bx[1]*cx + by[1]*cy),
+      rot: Math.round((ob.rotation_deg != null ? ob.rotation_deg : Math.atan2(bx[1], bx[0])*R2D)*100)/100,
+      w: Math.round(mx[0]-mn[0]), d: Math.round(mx[1]-mn[1]),
+      zTop: Math.round(o[2] + mx[2]), zBot: Math.round(o[2] + mn[2]),
+      around: flag('around'), over: flag('over'), under: flag('under'),
+      src: 'revit', family: ob.family || null, type: ob.type || null
+    }));
+  }
+  return {chambers: made, obstacles};
 }
 
 document.getElementById('revitIn').onchange = e => {
@@ -1868,17 +2178,22 @@ document.getElementById('revitIn').onchange = e => {
   const rd = new FileReader();
   rd.onload = () => {
     try {
-      const made = importRevit(JSON.parse(rd.result));
-      if (!made.length) throw new Error('no family with a1/a7 and b1/b7 planes found');
-      const replace = !state.chambers.length ||
-        confirm(`Import ${made.length} manhole${made.length === 1 ? '' : 's'} from Revit — replace the current chambers? (Cancel adds them alongside.)`);
-      if (replace){ state.chambers = []; state.connections = []; }
+      const {chambers: made, obstacles: obs} = importRevit(JSON.parse(rd.result));
+      if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) and no flagged obstacles found');
+      const n = (k, w) => `${k} ${w}${k === 1 ? '' : 's'}`;
+      const replace = (!state.chambers.length && !state.obstacles.length) ||
+        confirm(`Import ${n(made.length, 'manhole')} and ${n(obs.length, 'obstacle')} from Revit — replace the current drawing? (Cancel adds them alongside.)`);
+      if (replace){ state.chambers = []; state.obstacles = []; state.connections = []; }
       for (const c of made){
         if (!c.ref || state.chambers.some(x => x.ref === c.ref)) c.ref = nextRef();
         state.chambers.push(c);
       }
+      for (const o of obs){
+        if (!o.name || state.obstacles.some(x => x.name === o.name)) o.name = nextName();
+        state.obstacles.push(o);
+      }
       state.sel = null; state.pending = null;
-      renderSel(); renderConnections(); fitView();
+      renderSel(); renderConnections(); renderObstacles(); fitView();
     } catch(err){ alert('That file is not a Revit manhole export: ' + err.message); }
     e.target.value = '';
   };

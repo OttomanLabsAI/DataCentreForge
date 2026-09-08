@@ -60,6 +60,21 @@ conduit-boundary planes bound the insertion window on the sides perpendicular
 to their letter, and the `z` pair gives its height. Coordinates are Revit
 internal-origin millimetres.
 
+Obstacles come across in the same file: any placed instance carrying the Yes/No
+parameters `obstacle_around`, `obstacle_over`, `obstacle_under` (the
+`obstable_` spelling is accepted) is exported as its own bounding box in family
+coordinates, with its placement, top and bottom, and those three flags.
+
+## Obstacles in three dimensions
+
+Every obstacle has a top, a bottom, and rules for how a run may pass it:
+around, over or under. Around always comes first — a run crosses an
+around-obstacle only when nothing gets round it. Where a crossing is allowed,
+under is the default and over the fallback; an obstacle allowing nothing is
+impassable. The plan is routed first; the long section is then solved with the
+same engine in the chainage–Z plane, and each run shows it in its panel along
+with its laid length.
+
 ## External resources
 
 None. The page loads no external fonts, scripts, or images — the `"Inter"`

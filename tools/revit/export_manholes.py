@@ -8,7 +8,10 @@ Run from pyRevit or RevitPythonShell:
   - inside the FAMILY document: writes the family's named planes
   - inside a PROJECT: writes every placed instance of any family that carries
     the a/b/z plane convention, with each instance's origin and rotation, plus
-    the family's planes in family coordinates
+    the family's planes in family coordinates — and every OBSTACLE: any
+    instance carrying the Yes/No parameters obstacle_around, obstacle_over,
+    obstacle_under (the "obstable_" spelling is accepted too), exported as its
+    own bounding box in family coordinates with its placement and those flags
 
 Planes exported (by name):   a1..a7   b1..b7   z1..z6
                              a_conduit_boundary_1/2  b_conduit_boundary_1/2
@@ -17,7 +20,7 @@ Output: <model name>-manholes.json next to the model.
 """
 import json, math, os, re
 from Autodesk.Revit.DB import (FilteredElementCollector, ReferencePlane, FamilyInstance,
-                               BuiltInParameter, UnitUtils)
+                               BuiltInParameter, UnitUtils, Options, GeometryInstance, Transform)
 try:                                   # Revit 2021+
     from Autodesk.Revit.DB import UnitTypeId
     def to_mm(v): return round(UnitUtils.ConvertFromInternalUnits(v, UnitTypeId.Millimeters), 2)
@@ -81,13 +84,94 @@ def instance_record(inst):
     }
 
 
+# obstacle flags: instance parameter first, then the type's; missing = allowed
+FLAG_NAMES = {'around': ('obstacle_around', 'obstable_around'),
+              'over':   ('obstacle_over',   'obstable_over'),
+              'under':  ('obstacle_under',  'obstable_under')}
+
+
+def obstacle_flags(inst):
+    """{'around': bool, 'over': bool, 'under': bool} for an element carrying any
+    of the obstacle parameters, or None when it carries none."""
+    flags, found = {}, False
+    for key, names in FLAG_NAMES.items():
+        for holder in (inst, inst.Symbol):
+            p = None
+            for nm in names:
+                p = holder.LookupParameter(nm)
+                if p is not None:
+                    break
+            if p is not None:
+                found = True
+                flags[key] = (p.AsInteger() == 1) if p.HasValue else True
+                break
+        flags.setdefault(key, True)
+    return flags if found else None
+
+
+def local_bounds(inst):
+    """((min, max), transform): the instance's own geometry bounded in family
+    coordinates, with the transform placing it in the model. None when the
+    element has no instanced geometry."""
+    ge = inst.get_Geometry(Options())
+    if ge is None:
+        return None
+    lo, hi, t = [1e30] * 3, [-1e30] * 3, None
+    for g in ge:
+        if not isinstance(g, GeometryInstance):
+            continue
+        bb = g.GetSymbolGeometry().GetBoundingBox()
+        if bb is None:
+            continue
+        if t is None:
+            t = g.Transform
+        for i, ax in enumerate('XYZ'):
+            lo[i] = min(lo[i], getattr(bb.Min, ax))
+            hi[i] = max(hi[i], getattr(bb.Max, ax))
+    return ((lo, hi), t) if t is not None else None
+
+
+def obstacle_record(inst, flags):
+    lb = local_bounds(inst)
+    if lb:
+        (lo, hi), t = lb
+    else:                                          # no family geometry: world-aligned box
+        bb = inst.get_BoundingBox(None)
+        if bb is None:
+            return None
+        lo, hi = [bb.Min.X, bb.Min.Y, bb.Min.Z], [bb.Max.X, bb.Max.Y, bb.Max.Z]
+        t = Transform.Identity
+    mark = inst.get_Parameter(BuiltInParameter.ALL_MODEL_MARK)
+    rec = {
+        'id': eid(inst.Id),
+        'mark': mark.AsString() if mark and mark.HasValue else None,
+        'family': inst.Symbol.Family.Name,
+        'type': inst.Symbol.Name,
+        'origin_mm': [to_mm(t.Origin.X), to_mm(t.Origin.Y), to_mm(t.Origin.Z)],
+        'family_x_axis': [round(t.BasisX.X, 6), round(t.BasisX.Y, 6), round(t.BasisX.Z, 6)],
+        'family_y_axis': [round(t.BasisY.X, 6), round(t.BasisY.Y, 6), round(t.BasisY.Z, 6)],
+        'rotation_deg': round(math.degrees(math.atan2(t.BasisX.Y, t.BasisX.X)), 3),
+        'mirrored': inst.Mirrored,
+        'local_min_mm': [to_mm(v) for v in lo],
+        'local_max_mm': [to_mm(v) for v in hi],
+    }
+    rec.update(flags)
+    return rec
+
+
 def export():
-    data = {'units': 'mm', 'source': doc.PathName, 'families': []}
+    data = {'units': 'mm', 'source': doc.PathName, 'families': [], 'obstacles': []}
     if doc.IsFamilyDocument:
         data['families'].append({'family': doc.Title, 'planes': plane_records(doc), 'instances': []})
     else:
         fams = {}
         for inst in FilteredElementCollector(doc).OfClass(FamilyInstance).WhereElementIsNotElementType():
+            flags = obstacle_flags(inst)
+            if flags:
+                rec = obstacle_record(inst, flags)
+                if rec:
+                    data['obstacles'].append(rec)
+                continue
             fam = inst.Symbol.Family
             key = eid(fam.Id)
             if key not in fams:
@@ -107,7 +191,7 @@ def export():
     path = base + '-manholes.json'
     with open(path, 'w') as f:
         json.dump(data, f, indent=2)
-    print('Wrote {} ({} families)'.format(path, len(data['families'])))
+    print('Wrote {} ({} families, {} obstacles)'.format(path, len(data['families']), len(data['obstacles'])))
 
 
 export()
