@@ -50,51 +50,28 @@ const selIs  = k => state.sel && state.sel.kind === k;
 
 function makeChamber(o = {}){
   return Object.assign({uid:uid(), ref:nextRef(), x:0, y:0, intX:1200, intY:1200, wall:150, rot:0, buffer:300, latSpace:450, zSpace:300, edgeClear:150,
-                        z0:-600, zLid:0, zBase:-1800, pass:{around:true, over:true, under:true}}, o);
+                        z0:-600, zLid:0, zBase:-1800}, o);
 }
 function makeObstacle(o = {}){
   return Object.assign({uid:uid(), name:nextName(), x:0, y:0, w:2400, d:2400, rot:0, buffer:250,
-                        zTop:0, zBot:-1500, around:true, over:true, under:true}, o);
+                        zTop:0, zBot:-1500, method:'around'}, o);
 }
-/* How a conduit may pass an obstacle: AROUND it (its footprint is a plan
-   keep-out), OVER it or UNDER it. Around always comes first; a run crosses
-   an around-obstacle only when nothing gets round it. Of the two crossings,
-   under is the default and over the fallback. One allowing nothing at all is
-   simply impassable. */
-const obsCrossable  = o => !!(o.over || o.under);
-const obsBlocksPlan = o => !!o.around || !obsCrossable(o);
-const obsRules = o => ['around','over','under'].filter(k => o[k]).join(' · ') || 'impassable';
-const obsRulesShort = o => o.around && o.over && o.under ? 'any way'
-  : ['around','over','under'].filter(k => o[k]).join('/') || 'impassable';
-/* A chamber says how the runs leaving it may pass whatever they meet — the
-   Revit family's obstacle_around / _over / _under parameters — and a run
-   obeys both of its chambers. An obstacle's own rules can still forbid a
-   method. */
-const chamberPass = c => ({around: !c.pass || c.pass.around !== false,
-                           over:   !c.pass || c.pass.over   !== false,
-                           under:  !c.pass || c.pass.under  !== false});
-const passShort = P => {
-  const on = ['around','over','under'].filter(k => P[k]);
-  return on.length === 3 ? 'any way' : on.length === 1 ? on[0] + ' only' : on.join('/') || 'no way';
-};
-/** Read obstacle_* / obstable_* flags out of a Revit params object. */
-function passFlags(src, fallback){
-  const out = {...fallback};
-  if (!src || typeof src !== 'object') return out;
-  for (const k of ['around','over','under']){
-    const v = src['obstacle_' + k] ?? src['obstable_' + k] ?? src[k];
-    if (v != null) out[k] = v === true || v === 1 || v === '1' || String(v).toLowerCase() === 'true';
-  }
-  return out;
+/* How a run passes an obstacle is chosen on the drawing: every obstacle
+   carries a default method — around (its footprint is a plan keep-out), over
+   or under — and any run may choose differently for that obstacle alone. */
+const METHODS = ['around', 'over', 'under'];
+const obsMethod = o => METHODS.includes(o.method) ? o.method
+  : (o.around !== false ? 'around' : o.under !== false ? 'under' : o.over !== false ? 'over' : 'around');   // older flags
+const runMethod = (cn, o) => (cn.cross && METHODS.includes(cn.cross[o.uid])) ? cn.cross[o.uid] : obsMethod(o);
+/** What a bank does at an obstacle: what most of its runs ask for, the first
+    run breaking a tie; a run asking otherwise is told so. */
+function bankMethod(G, o){
+  const votes = {};
+  for (const cn of G.members){ const m = runMethod(cn, o); votes[m] = (votes[m] || 0) + 1; }
+  let best = runMethod(G.members[0], o);
+  for (const m of METHODS) if ((votes[m] || 0) > (votes[best] || 0)) best = m;
+  return best;
 }
-function passRules(G, o){
-  const P = G.pass || {around:true, over:true, under:true};
-  return {around: !!(P.around && o.around), over: !!(P.over && o.over), under: !!(P.under && o.under)};
-}
-const rulesCrossable = r => !!(r.over || r.under);
-/* a plan keep-out only where going round is allowed; anywhere else the run
-   meets the obstacle and must cross it — or fail honestly */
-const rulesBlock = r => !!r.around;
 const chamberZ0 = c => Number.isFinite(c.z0) ? c.z0 : -600;
 const chamberZs = c => [Number.isFinite(c.zBase) ? c.zBase : -1800, Number.isFinite(c.zLid) ? c.zLid : 0];   // [base, lid]
 function makeSpec(o = {}){
@@ -740,8 +717,6 @@ function buildBanks(){
     const zPitch = Math.max(1, A.zSpace || 0, B.zSpace || 0);
     const zUp = Math.min(...members.map(cn => (cn.level|0) * zPitch));
     const zDn = Math.max(...members.map(cn => ((cn.level|0) + runRows(cn) - 1) * zPitch));
-    const PA = chamberPass(A), PB = chamberPass(B);
-    const pass = {around: PA.around && PB.around, over: PA.over && PB.over, under: PA.under && PB.under};
     const g = {
       key, members, ends, A, B, start, finish,
       PS:[gS.mid[0]+tS[0]*meanS, gS.mid[1]+tS[1]*meanS],
@@ -751,7 +726,7 @@ function buildBanks(){
       maxRad: Math.max(...specs.map(sp => sp.radius)),
       maxBuf: Math.max(...specs.map(sp => sp.buffer)),
       levels: new Set(members.map(cn => cn.level|0)),
-      zPitch, zUp, zDn, pass,
+      zPitch, zUp, zDn,
       anyPlaced: members.some(cn => cn.placed),
       spec: {
         radius: Math.max(...specs.map(sp => sp.radius)),
@@ -784,15 +759,13 @@ function bankSpacing(G, H){
 }
 const levelsMeet = (G, H) => [...G.levels].some(l => H.levels.has(l));
 
-/** Plan keep-outs for a bank. Obstacles that may be crossed over or under
-    (and need not be gone round) are not keep-outs at all; those in `allow`
-    are the around-obstacles the run has been permitted to cross because
-    nothing gets round them. */
-function bankBlockers(G, banks, allow){
+/** Plan keep-outs for a bank: the obstacles its runs go round. One a run
+    crosses over or under is no keep-out at all. */
+function bankBlockers(G, banks){
   const out = [];
   const pad = G.maxOff + G.maxRad;
   for (const o of state.obstacles){
-    if (!rulesBlock(passRules(G, o)) || (allow && allow.has(o.uid))) continue;
+    if (bankMethod(G, o) !== 'around') continue;
     out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
               margin: pad + Math.max(G.maxBuf, o.buffer)});
   }
@@ -817,8 +790,8 @@ function bankBlockers(G, banks, allow){
 }
 
 function bankSignature(G, banks){
-  const box = o => [o.x, o.y, o.w, o.d, o.rot, o.buffer, o.zTop, o.zBot, !!o.around, !!o.over, !!o.under];
-  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace, c.zSpace, chamberZ0(c), passShort(chamberPass(c)), chamberZs(c), c.win ? Object.values(c.win).map(w => w && w.h) : 0];
+  const box = o => [o.x, o.y, o.w, o.d, o.rot, o.buffer, o.zTop, o.zBot, bankMethod(G, o)];
+  const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace, c.zSpace, chamberZ0(c), chamberZs(c), c.win ? Object.values(c.win).map(w => w && w.h) : 0];
   const others = state.avoidPipes ? banks
     .filter(H => H !== G && H.anyPlaced && H.route && H.route.ok && levelsMeet(G, H))
     .map(H => [H.key, H.maxOff, H.maxRad, H.maxBuf, H.spec.stub,
@@ -867,7 +840,7 @@ function routeCrossings(G, rt){
   const P = rt.poly, {cum, k} = chainage(rt), reachBase = G.maxOff + G.maxRad;
   const STEP = 25, out = [];
   for (const o of state.obstacles){
-    const rules = passRules(G, o);
+    const method = bankMethod(G, o);
     const reach = reachBase + Math.max(G.maxBuf, o.buffer);
     let s0 = Infinity, s1 = -Infinity;
     for (let i = 0; i < P.length-1; i++){
@@ -877,7 +850,7 @@ function routeCrossings(G, rt){
         if (boxDist(p, o) < reach){ const s = cum[i] + L*t; s0 = Math.min(s0, s); s1 = Math.max(s1, s); }
       }
     }
-    if (s0 <= s1) out.push({o, rules, s0: Math.max(0, (s0-STEP)*k), s1: Math.min(rt.length, (s1+STEP)*k)});
+    if (s0 <= s1) out.push({o, method, s0: Math.max(0, (s0-STEP)*k), s1: Math.min(rt.length, (s1+STEP)*k)});
   }
   return out.sort((a,b) => a.s0 - b.s0);
 }
@@ -984,10 +957,10 @@ function solveProfile(G, rt, xs){
     const top = Math.max(x.o.zTop, x.o.zBot) + lift, bot = Math.min(x.o.zTop, x.o.zBot);
     const margin = G.maxRad + Math.max(G.maxBuf, x.o.buffer);
     const needOver = top + margin + 1, needUnder = bot - margin - 1;     // a hair clear of the keep-out
-    const clearOver  = x.rules.over  && chord(x.s0) >= needOver  && chord(x.s1) >= needOver;
-    const clearUnder = x.rules.under && chord(x.s0) <= needUnder && chord(x.s1) <= needUnder;
+    const clearOver  = x.method === 'over'  && chord(x.s0) >= needOver  && chord(x.s1) >= needOver;
+    const clearUnder = x.method === 'under' && chord(x.s0) <= needUnder && chord(x.s1) <= needUnder;
     return {x, top, bot, margin, needOver, needUnder, free: clearOver || clearUnder,
-            canOver: !!x.rules.over && needOver <= ceiling, canUnder: !!x.rules.under};
+            canOver: x.method === 'over' && needOver <= ceiling, canUnder: x.method === 'under'};
   });
   const boxes = info.map(i => ({type:'box', cx:(i.x.s0+i.x.s1)/2, cy:(i.bot+i.top)/2, rot:0,
                                 hw:Math.max(0, (i.x.s1-i.x.s0)/2 - i.margin), hh:(i.top-i.bot)/2, margin:i.margin}));
@@ -1009,7 +982,7 @@ function solveProfile(G, rt, xs){
   const names = todo.map(i => i.x.o.name).join(', ');
   const built = mode => {
     if (!todo.length) return null;
-    if (todo.some(i => mode === 'under' ? !i.canUnder : !i.canOver)) return null;
+    if (todo.some(i => i.x.method !== mode) || todo.some(i => mode === 'under' ? !i.canUnder : !i.canOver)) return null;
     const bands = todo.map(i => [i.x.s0, i.x.s1]);      // already widened by the clearance in plan
     for (const [dA, dB] of (mode === 'under' ? drops : [[0, 0]])){
       const a = zA - dA, b = zB - dB;
@@ -1030,16 +1003,14 @@ function solveProfile(G, rt, xs){
     return null;
   };
   if (todo.length){
-    const under = built('under'), over = built('over');
-    const dev = f => f ? f.length - chordLen : Infinity;
-    const pick = under && over ? (dev(over) < dev(under) - 1 ? over : under) : (under || over);
+    const pick = built('under') || built('over');
     if (pick) return finishProfile(pick, xs, S, zA, zB, lift);
   }
 
   /* by search: the plan engine in the (chainage, z) plane, first keeping off
      the plan's bends, then allowing compound bends */
   const BIG = 1e7;
-  const modesFor = i => i.free ? [null] : [...(i.canUnder ? ['under'] : []), ...(i.canOver ? ['over'] : [])];
+  const modesFor = i => i.free ? [null] : (i.canUnder ? ['under'] : i.canOver ? ['over'] : []);
   const combos = info.reduce((acc, i) => acc.flatMap(c => modesFor(i).map(m => [...c, m])), [[]]).slice(0, 8);
   for (const compound of [false, true])
     for (const modes of combos){
@@ -1053,13 +1024,15 @@ function solveProfile(G, rt, xs){
       if (pf.ok) return finishProfile(profileWarn(pf, compound ? compoundBends(pf, zones) : []), xs, S, zA, zB, lift);
     }
   if (!todo.length) return {ok:false, msg:'no way to change level in section'};
-  const barred = todo.filter(i => !i.x.rules.over && !i.x.rules.under);
-  if (barred.length) return {ok:false, msg:`no way past ${barred.map(i => i.x.o.name).join(', ')} — neither crossing it nor going round is allowed`};
-  const ways = todo.map(i => (i.canUnder ? 'under' : '') + (i.canUnder && i.canOver ? ' or ' : '') + (i.canOver ? 'over' : ''));
-  if (ways.every(w => !w)) return {ok:false, msg:`no way past ${names} — over would break the ground cover`};
-  const deepest = Math.min(...todo.map(i => i.needUnder));
-  const tooDeep = todo.every(i => i.canUnder) && (deepest < floorA || deepest < floorB);
-  return {ok:false, msg:`no way ${ways[0] || 'past'} ${names} in section` +
+  const stuck = todo.filter(i => i.x.method === 'around');
+  if (stuck.length) return {ok:false, msg:`route meets ${stuck.map(i => i.x.o.name).join(', ')}, set to around — move it, or choose over or under`};
+  const capped = todo.filter(i => i.x.method === 'over' && !i.canOver);
+  if (capped.length) return {ok:false, msg:`no way over ${capped.map(i => i.x.o.name).join(', ')} — it would break the ground cover`};
+  const unders = todo.filter(i => i.x.method === 'under');
+  const deepest = unders.length ? Math.min(...unders.map(i => i.needUnder)) : Infinity;
+  const tooDeep = deepest < floorA || deepest < floorB;
+  const how = todo.every(i => i.x.method === 'under') ? 'under' : todo.every(i => i.x.method === 'over') ? 'over' : 'past';
+  return {ok:false, msg:`no way ${how} ${names} in section` +
     (tooDeep ? ` — no room to climb back, and entering ${deepest < floorB ? G.B.ref : G.A.ref} that low would be below its ${entryFloorKind(deepest < floorB ? G.B : G.A, deepest < floorB ? G.finish.face : G.start.face)}` : '')};
 }
 /** Lowest a conduit centreline may enter a chamber face: the bottom of the
@@ -1083,23 +1056,14 @@ function memberProfile(pf, shift){
           crossings: pf.crossings.map(x => ({...x, z: x.z - shift}))};
 }
 
-/** Plan first, going round everything it must. When nothing gets round, the
-    run is allowed through the around-obstacles that may be crossed, then
-    re-routed with every obstacle it did not need put back as a keep-out,
-    until the set it crosses stops shrinking. Then the section. */
+/** Plan first, round every obstacle its runs go round; then the section,
+    crossing the rest as chosen. */
 function solveBank(G, banks){
-  let rt = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks, null));
+  const rt = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks));
   if (!rt.ok){
-    let allow = new Set(state.obstacles.filter(o => { const r = passRules(G, o); return rulesBlock(r) && rulesCrossable(r); }).map(o => o.uid));
-    for (let i = 0; i < 4 && allow.size; i++){
-      const r2 = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks, allow));
-      if (!r2.ok) break;
-      rt = r2;
-      const crossed = new Set(routeCrossings(G, r2).map(x => x.o.uid).filter(u => allow.has(u)));
-      if (crossed.size === allow.size) break;
-      allow = crossed;
-    }
-    if (!rt.ok) return rt;
+    if (/blocked/.test(rt.msg || '') && state.obstacles.some(o => bankMethod(G, o) === 'around'))
+      return {ok:false, msg:'blocked — no way round; choose over or under for an obstacle in the run\'s Obstacles list'};
+    return rt;
   }
   const pf = solveProfile(G, rt, routeCrossings(G, rt));
   if (!pf.ok) return {ok:false, msg:pf.msg};
@@ -1174,6 +1138,10 @@ function deriveMembers(G){
     r.profile = pf;
     r.crossings = pf ? pf.crossings : [];
     r.leadLane = e === G.ends[0];        // the lane that carries the bank's crossing labels
+    for (const o of state.obstacles){
+      const want = runMethod(cn, o), got = bankMethod(G, o);
+      if (want !== got) r.warnings.push({kind:'method', text:`${o.name} — this run asks for ${want}, but the bank it shares these faces with goes ${got}`});
+    }
     r.length3d = pf ? r.length + (pf.length - pf.S) : r.length;
     if (pf) for (const w of pf.warnings) r.warnings.push({kind:'v' + w.kind, text:`in section, ${w.text}`});
     cn.route = r;
@@ -1350,12 +1318,8 @@ function draw(){
         out.push(`<text x="${m[0]-un[0]*11}" y="${m[1]-un[1]*11+3.4}" fill="${C.inkFaint}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${f}</text>`);
       }
       out.push(`<text x="${ctr[0]}" y="${ctr[1]-6}" fill="${stroke}" font-family="${C.mono}" font-size="12" text-anchor="middle" letter-spacing="1">${esc(c.ref)}</text>`);
-      if (state.showDims && ext*s > 96){
+      if (state.showDims && ext*s > 96)
         out.push(`<text x="${ctr[0]}" y="${ctr[1]+11}" fill="${C.inkDim}" font-family="${C.mono}" font-size="10" text-anchor="middle">${fmt(c.intX)}×${fmt(c.intY)}  w${fmt(c.wall)}</text>`);
-        const P = chamberPass(c);
-        if (!(P.around && P.over && P.under))
-          out.push(`<text x="${ctr[0]}" y="${ctr[1]+23}" fill="${C.inkDim}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">runs pass ${passShort(P)}</text>`);
-      }
     }
   }
 
@@ -1388,7 +1352,7 @@ function drawObstacle(o){
     const ctr = W2S([o.x, o.y]);
     out.push(`<text x="${ctr[0]}" y="${ctr[1]+4}" fill="${stroke}" font-family="${C.mono}" font-size="11" text-anchor="middle">${esc(o.name)}</text>`);
     if (state.showDims && Math.min(o.w,o.d)*s > 76)
-      out.push(`<text x="${ctr[0]}" y="${ctr[1]+17}" fill="${C.inkDim}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${esc(obsRules(o))}</text>`);
+      out.push(`<text x="${ctr[0]}" y="${ctr[1]+17}" fill="${C.inkDim}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${obsMethod(o)}</text>`);
   }
   return out.join('');
 }
@@ -1829,8 +1793,7 @@ function showCallout(f, sp){
     + `internal face   ${fmt(g.width)} wide\n`
     + `mid  X ${fmt(g.mid[0])}  Y ${fmt(g.mid[1])}\n`
     + `outward bearing ${g.bearing.toFixed(1)}°`
-    + (k ? `\nruns on face    ${k} at ${fmt(c.latSpace)} centres` : '')
-    + `\nruns may pass   ${passShort(chamberPass(c))}`;
+    + (k ? `\nruns on face    ${k} at ${fmt(c.latSpace)} centres` : '');
   el.style.display = 'block';
   el.style.left = Math.min(sp[0]+16, STAGE.clientWidth-210) + 'px';
   el.style.top  = Math.min(sp[1]+16, STAGE.clientHeight-90) + 'px';
@@ -2082,11 +2045,6 @@ function renderChamberProps(box, c){
       numRow('pZ0','Level 0 Z', chamberZ0(c), 50, 'mm') +
       numRow('pEC','Edge clearance', c.edgeClear ?? 150, 25, 'mm') +
       `<div class="derived"><span>Level 0 Z is the centreline of the top row of conduits; each level below sits one Z spacing lower.</span></div>`) +
-    cluster('chPass', 'Runs may pass obstacles', passShort(chamberPass(c)),
-      `<div class="row"><label class="chk"><input type="checkbox" id="cAround" ${chamberPass(c).around?'checked':''}> around them</label></div>
-       <div class="row"><label class="chk"><input type="checkbox" id="cOver" ${chamberPass(c).over?'checked':''}> over them</label></div>
-       <div class="row"><label class="chk"><input type="checkbox" id="cUnder" ${chamberPass(c).under?'checked':''}> under them</label></div>
-       <div class="derived"><span>The avoidance methods allowed to every run leaving this chamber, applied to whatever it meets — as the Revit family's obstacle parameters provide them. A run obeys both of its chambers; an obstacle's own rules can still forbid a method.</span></div>`) +
     facesBlock(c) +
     `<div class="btnrow"><button id="pDup">Duplicate</button><button id="pDel" class="warn">Delete</button></div>`;
   const bind = (id, key, cast = Number) => {
@@ -2107,8 +2065,6 @@ function renderChamberProps(box, c){
   bind('pRef','ref',String); bind('pIX','intX'); bind('pIY','intY');
   bind('pW','wall'); bind('pZL','zLid'); bind('pZB','zBase'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
   bind('pLat','latSpace'); bind('pZ','zSpace'); bind('pZ0','z0'); bind('pEC','edgeClear');
-  for (const [id, key] of [['cAround','around'], ['cOver','over'], ['cUnder','under']])
-    document.getElementById(id).onchange = ev => { c.pass = {...chamberPass(c), [key]: ev.target.checked}; renderSel(); renderConnections(); draw(); };
   wireFaceButtons(c);
   wireClusters(box, renderSel);
   document.getElementById('pSq').onchange = e => {
@@ -2133,14 +2089,12 @@ function renderObstacleProps(box, o){
       numRow('oY','Centre Y', o.y, state.snap||1, 'mm') +
       numRow('oR','Rotation', o.rot, 15, '°') +
       (o.src === 'revit' ? `<div class="derived">${revitLine(o).replace(/^<br>/, '')}</div>` : '')) +
-    cluster('obZ', 'Levels & crossing', `${fmt(Math.max(o.zTop, o.zBot))}…${fmt(Math.min(o.zTop, o.zBot))} · ${obsRulesShort(o)}`,
+    cluster('obZ', 'Levels & crossing', `${fmt(Math.max(o.zTop, o.zBot))}…${fmt(Math.min(o.zTop, o.zBot))} · ${obsMethod(o)}`,
       numRow('oZT','Top (Z)', o.zTop, 100, 'mm') +
       numRow('oZB','Bottom (Z)', o.zBot, 100, 'mm') +
-      `<div class="row" style="margin-top:6px"><label>Conduits may pass</label></div>
-       <div class="row"><label class="chk"><input type="checkbox" id="oAround" ${o.around?'checked':''}> around it — its footprint is a keep-out</label></div>
-       <div class="row"><label class="chk"><input type="checkbox" id="oOver" ${o.over?'checked':''}> over it</label></div>
-       <div class="row"><label class="chk"><input type="checkbox" id="oUnder" ${o.under?'checked':''}> under it</label></div>
-       <div class="derived"><span>This obstacle's own limits — a run may use a method only if its chambers allow it too. Around comes first: a run crosses only when nothing gets round. Where both crossings are allowed, the shorter deviation wins (under on a tie), and over never rises into the ground cover. Nothing ticked makes it impassable.</span></div>`) +
+      `<div class="row"><label for="oMethod">Runs pass it</label>
+         <select id="oMethod">${METHODS.map(m => `<option value="${m}" ${obsMethod(o) === m ? 'selected' : ''}>${m}</option>`).join('')}</select></div>
+       <div class="derived"><span>The default for every run — any run can choose differently for this obstacle in its own panel. Around makes the footprint a keep-out; over never rises into the ground cover; a dip under may enter the far chamber lower.</span></div>`) +
     cluster('obClr', 'Clearance', `${fmt(o.buffer)} mm`,
       numRow('oC','Clearance', o.buffer, 50, 'mm') +
       `<div class="derived"><b>Keep-out</b> ${fmt(o.w+2*o.buffer)} × ${fmt(o.d+2*o.buffer)} mm<br>
@@ -2156,8 +2110,7 @@ function renderObstacleProps(box, o){
   };
   bind('oName','name',String); bind('oW','w'); bind('oD','d');
   bind('oX','x'); bind('oY','y'); bind('oR','rot'); bind('oC','buffer'); bind('oZT','zTop'); bind('oZB','zBot');
-  for (const [id, key] of [['oAround','around'], ['oOver','over'], ['oUnder','under']])
-    document.getElementById(id).onchange = ev => { o[key] = ev.target.checked; renderSel(); renderObstacles(); renderConnections(); draw(); };
+  document.getElementById('oMethod').onchange = ev => { o.method = ev.target.value; renderSel(); renderObstacles(); renderConnections(); draw(); };
   wireClusters(box, renderSel);
   document.getElementById('oDup').onclick = () => {
     const n = makeObstacle({...o, uid:uid(), name:nextName(), x:o.x + o.w + 1000});
@@ -2182,6 +2135,19 @@ function renderRunProps(box, cn){
       numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
       numRow('qCols','Columns (wide)', runCols(cn), 1, '') +
       numRow('qRows','Rows (high)', runRows(cn), 1, '')) +
+    cluster('runObs', 'Obstacles', obsSummary(cn),
+      state.obstacles.length ? state.obstacles.map(o => {
+        const chosen = cn.cross && METHODS.includes(cn.cross[o.uid]) ? cn.cross[o.uid] : '';
+        const x = rt && rt.ok ? (rt.crossings || []).find(k => k.uid === o.uid) : null;
+        const status = !rt || !rt.ok ? '' : x ? `${x.mode} · Z ${fmt(x.z)}` : (runMethod(cn, o) === 'around' ? 'kept clear' : 'not met');
+        return `<div class="row"><label for="qObs-${o.uid}">${esc(o.name)}</label>
+          <select id="qObs-${o.uid}" data-obs="${o.uid}">
+            <option value=""${chosen ? '' : ' selected'}>default — ${obsMethod(o)}</option>
+            ${METHODS.map(m => `<option value="${m}"${chosen === m ? ' selected' : ''}>${m}</option>`).join('')}
+          </select></div>
+          <div class="row" style="margin-top:-4px"><label></label><span class="unit" style="width:auto;text-align:right;flex:1">${esc(status)}</span></div>`;
+      }).join('') + `<div class="derived"><span>How this run passes each obstacle. Runs sharing these two faces travel as one bank and follow the majority.</span></div>`
+      : `<div class="empty">No obstacles on the drawing.</div>`) +
     cluster('runRt', 'Route',
       rt && rt.ok ? metres(rt.length3d || rt.length) + (rt.turns.length ? ` · ${rt.turns.length} bend${rt.turns.length === 1 ? '' : 's'}` : ' · straight')
                     + (rt.profile && rt.profile.turns.length ? ` + ${rt.profile.turns.length} vertical` : '') : 'no route',
@@ -2227,6 +2193,11 @@ function renderRunProps(box, cn){
     cn.placed = true; renderSel(); renderConnections(); draw();
   };
   document.getElementById('qDrop').onclick = () => disconnect(cn.uid);
+  box.querySelectorAll('[data-obs]').forEach(el => el.onchange = () => {
+    cn.cross = cn.cross || {};
+    if (el.value) cn.cross[el.dataset.obs] = el.value; else delete cn.cross[el.dataset.obs];
+    renderSel(); renderConnections(); draw();
+  });
   document.getElementById('qEditSpec').onclick = () => {
     state.editSpec = cn.specId; renderSpecs(); renderSpecEdit();
     document.getElementById('left').scrollTop = 9999;
@@ -2339,6 +2310,10 @@ function renderFaceDialog(){
   });
 }
 
+function obsSummary(cn){
+  const ov = state.obstacles.filter(o => cn.cross && METHODS.includes(cn.cross[o.uid])).map(o => `${cn.cross[o.uid]} ${o.name}`);
+  return ov.length ? ov.join(' · ') : (state.obstacles.length ? 'defaults' : 'none');
+}
 function sectionSummary(rt){
   if (!rt || !rt.ok || !rt.profile) return '—';
   const pf = rt.profile, xs = rt.crossings || [];
@@ -2496,6 +2471,8 @@ document.getElementById('btnExport').onclick = () => {
               revitId: B?.revitId ?? undefined, revitUid: B?.revitUid ?? undefined},
         spec: sp ? sp.name : null,
         level: cn.level|0,
+        obstacleRules: (() => { const e = {}; for (const o of state.obstacles) if (cn.cross && METHODS.includes(cn.cross[o.uid])) e[o.name] = cn.cross[o.uid];
+                                return Object.keys(e).length ? e : undefined; })(),
         rows: runRows(cn), cols: runCols(cn),
         placed: cn.placed,
         route: rt && rt.ok ? {
@@ -2539,8 +2516,8 @@ document.getElementById('fileIn').onchange = e => {
       syncDrawingInputs();
       state.chambers  = (d.chambers ||[]).map(c => makeChamber({buffer:0, ...c, uid:uid()}));
       state.obstacles = (d.obstacles||[]).map(o => {
-        const m = makeObstacle({...o, buffer: o.buffer != null ? o.buffer : (o.clearance != null ? o.clearance : 250), uid:uid()});
-        delete m.clearance; return m;
+        const m = makeObstacle({...o, method: obsMethod(o), buffer: o.buffer != null ? o.buffer : (o.clearance != null ? o.clearance : 250), uid:uid()});
+        delete m.clearance; delete m.around; delete m.over; delete m.under; return m;
       });
       const byRef  = r => state.chambers.find(c => c.ref === r);
       const byName = n => state.specs.find(s => s.name === n) || state.specs[0];
@@ -2550,6 +2527,8 @@ document.getElementById('fileIn').onchange = e => {
         return {uid:uid(), a:{mh:A.uid, face:legacyFace(cn.from.face)}, b:{mh:B.uid, face:legacyFace(cn.to.face)},
                 placed: !!cn.placed, level: Math.max(0, cn.level|0),
                 rows: Math.max(1, cn.rows|0 || 1), cols: Math.max(1, cn.cols|0 || 1),
+                cross: Object.fromEntries(Object.entries(cn.obstacleRules || {}).map(([nm, m]) => {
+                  const ob = state.obstacles.find(x => x.name === nm); return ob && METHODS.includes(m) ? [ob.uid, m] : null; }).filter(Boolean)),
                 specId: byName(cn.spec).id, route:null};
       }).filter(Boolean);
       state.sel = null; state.editSpec = state.specs[0].id;
@@ -2628,7 +2607,6 @@ function importRevit(d){
       made.push(makeChamber({
         ref: inst.mark || null,
         revitId: inst.id != null ? inst.id : null, revitUid: inst.unique_id || null, revitDoc: d.document || d.source || null,
-        pass: passFlags(inst.params, passFlags(F.param_defaults, {around:true, over:true, under:true})),
         x: Math.round(wx), y: Math.round(wy), rot: Math.round(rot*100)/100,
         intX: Math.round(intX), intY: Math.round(intY), wall,
         z0: Math.round(o[2] + (wZ ? wZ.hi - 150 : -600)),       // top row a half pitch below the window top
@@ -2646,7 +2624,6 @@ function importRevit(d){
     if (!mn || !mx) continue;
     const bx = ob.family_x_axis || [1,0,0], by = ob.family_y_axis || [0,1,0], o = ob.origin_mm || [0,0,0];
     const cx = (mn[0]+mx[0])/2, cy = (mn[1]+mx[1])/2;
-    const flag = k => ob[k] == null ? true : !!ob[k];
     obstacles.push(makeObstacle({
       name: ob.mark || ob.name || null,
       revitId: ob.id != null ? ob.id : null, revitUid: ob.unique_id || null, revitDoc: d.document || d.source || null,
@@ -2654,7 +2631,7 @@ function importRevit(d){
       rot: Math.round((ob.rotation_deg != null ? ob.rotation_deg : Math.atan2(bx[1], bx[0])*R2D)*100)/100,
       w: Math.round(mx[0]-mn[0]), d: Math.round(mx[1]-mn[1]),
       zTop: Math.round(o[2] + mx[2]), zBot: Math.round(o[2] + mn[2]),
-      around: flag('around'), over: flag('over'), under: flag('under'),
+      method: obsMethod(ob),
       src: 'revit', family: ob.family || null, type: ob.type || null
     }));
   }
@@ -2674,7 +2651,7 @@ document.getElementById('revitIn').onchange = e => {
     try {
       const src = JSON.parse(rd.result);
       const {chambers: made, obstacles: obs} = importRevit(src);
-      if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) and no flagged obstacles found');
+      if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) found');
       const n = (k, w) => `${k} ${w}${k === 1 ? '' : 's'}`;
       const oldC = new Map(state.chambers.filter(revitKey).map(c => [revitKey(c), c]));
       const oldO = new Map(state.obstacles.filter(revitKey).map(o => [revitKey(o), o]));
@@ -2682,8 +2659,8 @@ document.getElementById('revitIn').onchange = e => {
       if (hits){
         /* a later export of a model already on the drawing: refresh what matches
            in place — every run stays attached — add what is new, keep the rest */
-        const CH = ['x','y','rot','intX','intY','wall','sides','win','lid','zd','z0','zLid','zBase','pass','family','type','revitId','revitUid','revitDoc'];
-        const OB = ['x','y','rot','w','d','zTop','zBot','around','over','under','family','type','revitId','revitUid','revitDoc'];
+        const CH = ['x','y','rot','intX','intY','wall','sides','win','lid','zd','z0','zLid','zBase','family','type','revitId','revitUid','revitDoc'];
+        const OB = ['x','y','rot','w','d','zTop','zBot','family','type','revitId','revitUid','revitDoc'];
         let added = 0;
         for (const c of made){
           const old = oldC.get(revitKey(c));

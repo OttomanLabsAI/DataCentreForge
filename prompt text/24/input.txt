@@ -1,0 +1,1 @@
+You know what, let’s forget about the obstable revit params. Let’s let the user decide in the dc forge itself. They can do under/over/around per obstable in a single run

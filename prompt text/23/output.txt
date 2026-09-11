@@ -1,9 +1,0 @@
-Version 23 — runs slide along the face before they bend.
-
-Each run now meets its faces where it lines up with the far face. For two faces that face each other, the lateral offset between them is split evenly between the two ends, each end held within its face's extent — the Revit conduit window (the a/b_conduit_boundary planes) where the family has one, otherwise the face width less the edge clearance — and a clamped end hands its shortfall to the other. A window sitting off the face centre is honoured as the extent's centre. Bends carry only what the extents cannot absorb, and a remainder within the two-degree skew tolerance still lays as one straight duct. Faces that do not face each other keep their entries centred as before.
-
-Runs sharing a face keep their order (no crossing at the wall) and their pitch: each starts where it would like to be, runs to the same far face are centred on their alignment as a block, then the pitch between neighbours and the extent are enforced. The face section, the entry offsets in the run panel and the width check all follow the new positions.
-
-In your screenshot's case — MH01 and MH03 a little out of line — the run now leaves MH01 150 mm up the face, arrives 150 mm down MH03's face, and runs straight at 12.20 m instead of taking two 22.5° bends.
-
-Verified in a driven browser: 300 and 500 mm offsets slid straight, in-line chambers left centred, a 3 m offset slid to the limits with bends for the rest, a narrow Revit window limiting one end, an off-centre window, two runs to different chambers on one face keeping order and pitch, the face dialog and run panel, and faces at right angles left centred — plus the batteries from versions 14 to 22 (the version 15 sweep updated for the new rule), all passing with no console errors.

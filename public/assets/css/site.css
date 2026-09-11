@@ -143,3 +143,6 @@
   .clushead.open{border-color:#39465a}
   .clusbody{padding:8px 2px 2px}
   .clusbody[hidden]{display:none}
+
+  /* ---------- per-obstacle choice on a run ---------- */
+  .row select{flex:1; min-width:0}

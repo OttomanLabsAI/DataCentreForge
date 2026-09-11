@@ -1,0 +1,9 @@
+Version 24 — every run decides how it passes each obstacle.
+
+The decision now lives in the drawing. Every obstacle carries one default method in its panel — around, over or under; around unless changed — and every run's panel has an Obstacles cluster listing each obstacle with a choice for that run alone: default, around, over or under, with what the run actually does beside it ("under · Z −1,876", "kept clear", "not met"). Runs sharing the same two faces travel as one bank and follow the majority choice; a run asking otherwise is told so in its warnings.
+
+Around makes the obstacle a keep-out in plan; if nothing gets round, the run says so and points to its Obstacles list rather than crossing on its own. Over and under take the run through, built in section as before — over never rising into the ground cover, a dip under allowed to enter the far chamber lower when it cannot climb back in time, and both refusing honestly with the reason when they cannot be done.
+
+The Revit obstacle parameters are gone: the exporter writes manholes only (planes, placement, ids and the document), the importer ignores any params it finds, and the chamber-level rules cluster has been removed. Older plan exports with the three allowed-flags still open, read as a default method. The per-run choices travel in the export by obstacle name and come back on import; a Revit refresh leaves a method chosen in the tool alone.
+
+Verified in a driven browser: the default going round, the run panel's choice crossing under for that run alone, the bank warning for the other run, the obstacle default changing every run and a per-run override back to around, the refusals for cover and for no way round, export and import of the choices, an older export's flags, a Revit refresh keeping the method — plus your DCBuild case and the batteries from versions 14 to 23, updated where they tested the old rules, all passing with no console errors.
