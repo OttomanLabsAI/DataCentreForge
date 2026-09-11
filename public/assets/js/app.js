@@ -548,29 +548,98 @@ function faceRuns(mhUid, face){
 const runCols = r => Math.max(1, r.cols|0 || 1);
 const runRows = r => Math.max(1, r.rows|0 || 1);
 
-/** Everything about how a face carries its conduits: one shared grid whose
-    pitch is the LARGEST array spacing among the types present (floored by
-    the manhole's lateral spacing), arrays tiling it in canonical order,
-    stacked by level (level 0 highest). Used by plan entries, the face
-    section view, and the width check — so they always agree. */
-function faceLayout(mhUid, face){
-  const c = byUid(mhUid);
-  if (!c) return null;
-  const g = faceGeom(c, face);
-  const runs = faceRuns(mhUid, face);
-  /* canonical world-direction tangent, matching the banks */
+const canonTangent = g => {
   let t = norm([g.p2[0]-g.p1[0], g.p2[1]-g.p1[1]]);
   if (t[1] < -1e-9 || (Math.abs(t[1]) <= 1e-9 && t[0] < 0)) t = [-t[0], -t[1]];
-  /* a conduit window imported from Revit replaces the face-width-less-edge rule:
-     its centre may sit off the face centre, measured along the face's local axis */
+  return t;
+};
+/** How far along a face a conduit centreline may sit: the Revit conduit
+    window where the family has one (its centre may sit off the face centre),
+    else the face width less the edge clearance. Offsets run along the face's
+    canonical tangent from the face centre. */
+function faceExtent(c, face){
+  const g = faceGeom(c, face), t = canonTangent(g);
   const win = c.win && c.win[face] ? c.win[face] : null;
   let shift = 0;
   if (win){
     const lax = (face === 'A' || face === 'C') ? rotv([1,0], c.rot) : rotv([0,1], c.rot);
     shift = win.off * (Math.sign(lax[0]*t[0] + lax[1]*t[1]) || 1);
   }
+  const half = win ? win.w/2 : g.width/2 - (c.edgeClear || 0);
+  return {g, t, win, shift, lo: shift - half, hi: shift + half,
+          centre: [g.mid[0] + t[0]*shift, g.mid[1] + t[1]*shift]};
+}
+const facePitch = (mhUid, face) => {
+  const c = byUid(mhUid), runs = faceRuns(mhUid, face);
+  return Math.max(c ? c.latSpace : 0, ...runs.map(r => specOf(r) ? (specOf(r).spacing || 0) : 0));
+};
+const runHalf = (cn, S) => (runCols(cn)-1)/2*S + (specOf(cn) ? specOf(cn).radius : 0);
+
+/** Where a run would like to meet this face: the offset that lines it up
+    with the far face so it can run straight, split evenly between the two
+    ends and held within each face's extent — the shortfall of a clamped end
+    passed to the other. Zero when the two faces are not facing each other. */
+function alignPref(cn, end){
+  const here = cn[end], there = cn[end === 'a' ? 'b' : 'a'];
+  const A = byUid(here.mh), B = byUid(there.mh);
+  if (!A || !B) return 0;
+  const eA = faceExtent(A, here.face), eB = faceExtent(B, there.face);
+  const d0 = eA.g.n, d2 = [-eB.g.n[0], -eB.g.n[1]];
+  if (d0[0]*d2[0] + d0[1]*d2[1] < Math.cos(15*D2R)) return 0;
+  const dir = norm([d0[0]+d2[0], d0[1]+d2[1]]), L = [-dir[1], dir[0]];
+  const sA = eA.t[0]*L[0] + eA.t[1]*L[1], sB = eB.t[0]*L[0] + eB.t[1]*L[1];
+  if (Math.abs(sA) < 0.5 || Math.abs(sB) < 0.5) return 0;
+  const m = (eB.centre[0]-eA.centre[0])*L[0] + (eB.centre[1]-eA.centre[1])*L[1];   // lateral misalignment
+  /* reach either side of each extent's centre, less the run's own half width */
+  const hwA = (eA.hi - eA.lo)/2 - runHalf(cn, facePitch(here.mh, here.face));
+  const hwB = (eB.hi - eB.lo)/2 - runHalf(cn, facePitch(there.mh, there.face));
+  const cl = (x, h) => h <= 0 ? 0 : Math.max(-h, Math.min(h, x));
+  const u = m/(2*sA), v = -m/(2*sB);
+  let u2 = cl(u, hwA), v2 = cl(v, hwB);
+  const rem = m - (u2*sA - v2*sB);
+  if (Math.abs(rem) > 1e-6){
+    if (Math.abs(u2 - u) < 1e-6) u2 = cl(u2 + rem/sA, hwA);
+    else if (Math.abs(v2 - v) < 1e-6) v2 = cl(v2 - rem/sB, hwB);
+  }
+  return u2;                 // relative to the extent's centre; the layout adds the window shift
+}
+
+/** Lay items along a face in their given order: each starts where it would
+    like to be (items sharing a preference centred on it as a block), then
+    the pitch between neighbours and the face's extent are enforced. */
+function packSlots(items, S){
+  const n = items.length;
+  if (!n) return;
+  const gap = k => (items[k].cols + items[k+1].cols)/2*S;
+  const x = new Array(n);
+  for (let i = 0; i < n;){
+    let j = i;
+    while (j+1 < n && Math.abs(items[j+1].pref - items[i].pref) < 1) j++;
+    let total = 0; for (let k = i; k < j; k++) total += gap(k);
+    let pos = items[i].pref - total/2;
+    for (let k = i; k <= j; k++){ x[k] = pos; if (k < j) pos += gap(k); }
+    i = j+1;
+  }
+  for (let pass = 0; pass < 4; pass++){
+    for (let k = 0; k < n; k++){ x[k] = Math.max(x[k], items[k].lo); if (k > 0) x[k] = Math.max(x[k], x[k-1] + gap(k-1)); }
+    for (let k = n-1; k >= 0; k--){ x[k] = Math.min(x[k], items[k].hi); if (k < n-1) x[k] = Math.min(x[k], x[k+1] - gap(k)); }
+  }
+  items.forEach((it, k) => { it.centreOff = x[k]; });
+}
+
+/** Everything about how a face carries its conduits: one shared grid whose
+    pitch is the LARGEST array spacing among the types present (floored by
+    the manhole's lateral spacing), arrays laid in canonical order — each
+    where it lines up with its far face, as far as the extent allows —
+    stacked by level (level 0 highest). Used by plan entries, the face
+    section view, and the width check — so they always agree. */
+function faceLayout(mhUid, face){
+  const c = byUid(mhUid);
+  if (!c) return null;
+  const ext = faceExtent(c, face), g = ext.g, t = ext.t, win = ext.win, shift = ext.shift;
+  const runs = faceRuns(mhUid, face);
   if (!runs.length) return {c, g, t, S:c.latSpace, groups:[], usedW:0, rowsTotal:0, fits:true, win, shift};
-  const S = Math.max(c.latSpace, ...runs.map(r => specOf(r) ? (specOf(r).spacing || 0) : 0));
+  const S = facePitch(mhUid, face);
   const order = rs => rs.map(r => {
     const far = (r.a.mh === mhUid && r.a.face === face) ? r.b : r.a;
     const oc = byUid(far.mh);
@@ -578,23 +647,26 @@ function faceLayout(mhUid, face){
   }).sort((x,y) => x.proj - y.proj || (x.r.uid < y.r.uid ? -1 : 1)).map(k => k.r);
   const levels = [...new Set(runs.map(r => r.level|0))].sort((a,b) => a-b);
   const groups = [];
-  let rowsTotal = 0, usedW = 0;
+  let rowsTotal = 0, usedW = 0, fits = true;
   for (const lv of levels){
     const rs = order(runs.filter(r => (r.level|0) === lv));
     let col = 0; const items = [];
     for (const r of rs){
-      items.push({cn:r, sp:specOf(r), cols:runCols(r), rows:runRows(r), colStart:col});
+      const end = (r.a.mh === mhUid && r.a.face === face) ? 'a' : 'b';
+      const half = runHalf(r, S);
+      items.push({cn:r, sp:specOf(r), cols:runCols(r), rows:runRows(r), colStart:col, half,
+                  lo: ext.lo + half, hi: ext.hi - half, pref: shift + alignPref(r, end)});
       col += runCols(r);
     }
     const totalCols = col;
     const rMax = Math.max(...items.map(i => i.sp ? i.sp.radius : 0));
     const rowsMax = Math.max(...items.map(i => i.rows));
-    for (const i of items) i.centreOff = (i.colStart + (i.cols-1)/2 - (totalCols-1)/2) * S + shift;
+    packSlots(items, S);
+    for (const i of items) if (i.centreOff < i.lo - 1 || i.centreOff > i.hi + 1) fits = false;
     groups.push({level:lv, items, totalCols, rMax, rowsMax});
     rowsTotal += rowsMax;
-    usedW = Math.max(usedW, (totalCols-1)*S + 2*rMax);
+    usedW = Math.max(usedW, Math.max(...items.map(i => i.centreOff + i.half)) - Math.min(...items.map(i => i.centreOff - i.half)));
   }
-  const fits = win ? usedW <= win.w + 1 : usedW + 2*(c.edgeClear || 0) <= g.width + 1;
   return {c, g, t, S, groups, usedW, rowsTotal, fits, win, shift};
 }
 

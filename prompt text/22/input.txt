@@ -1,5 +1,0 @@
-why is this going around and not under?
-
-ok, the revit family will not describe the other objects to avoid
-
- it needs to provide the allowed methods of avoidance and do that to whatever

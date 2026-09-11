@@ -73,6 +73,16 @@ elements in place — runs stay attached — adds what is new and keeps what the
 export no longer has; the tool's own JSON export carries those ids on every
 element and on both ends of every run, plus the list of source documents.
 
+## Where runs meet a face
+
+A run meets each of its faces where it lines up with the far face, so two
+chambers a little out of line still get a dead-straight duct: the offset is
+split between the two ends and held within each face's extent — the Revit
+conduit window where the family has one, otherwise the face width less the
+edge clearance. Bends carry only what the extents cannot absorb. Runs sharing
+a face keep their order and pitch, each as close to its own alignment as the
+others allow.
+
 ## Obstacles in three dimensions
 
 Every obstacle has a top and a bottom. How a run may pass what it meets —
