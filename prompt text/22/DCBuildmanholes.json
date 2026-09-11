@@ -1,0 +1,399 @@
+{
+  "units": "mm", 
+  "source": "C:\\Users\\cohiba\\Desktop\\DCBuilder\\DCBuild.rvt", 
+  "families": [
+    {
+      "param_defaults": {
+        "obstacle_around": true, 
+        "obstacle_over": true, 
+        "obstacle_under": true
+      }, 
+      "instances": [
+        {
+          "family_x_axis": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "params": {
+            "obstacle_around": false, 
+            "obstacle_over": false, 
+            "obstacle_under": true
+          }, 
+          "rotation_deg": 0.0, 
+          "mirrored": false, 
+          "id": 325714, 
+          "type": "Manhole", 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mark": null, 
+          "origin_mm": [
+            -2266.0100000000002, 
+            -696.51999999999998, 
+            0.0
+          ]
+        }, 
+        {
+          "family_x_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "params": {
+            "obstacle_around": false, 
+            "obstacle_over": false, 
+            "obstacle_under": true
+          }, 
+          "rotation_deg": 90.0, 
+          "mirrored": false, 
+          "id": 325717, 
+          "type": "Manhole", 
+          "family_y_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mark": null, 
+          "origin_mm": [
+            4920.5, 
+            9082.1299999999992, 
+            0.0
+          ]
+        }, 
+        {
+          "family_x_axis": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "params": {
+            "obstacle_around": false, 
+            "obstacle_over": false, 
+            "obstacle_under": true
+          }, 
+          "rotation_deg": 0.0, 
+          "mirrored": false, 
+          "id": 325720, 
+          "type": "Manhole", 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mark": null, 
+          "origin_mm": [
+            15536.070000000000, 
+            1438.2400000000000, 
+            0.0
+          ]
+        }
+      ], 
+      "family": "Manhole", 
+      "planes": [
+        {
+          "origin_mm": [
+            -1000.0, 
+            2000.0, 
+            1200.0
+          ], 
+          "name": "a1", 
+          "normal": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "offset_mm": -1000.0, 
+          "axis": "a"
+        }, 
+        {
+          "origin_mm": [
+            -900.0, 
+            2000.0, 
+            1200.0
+          ], 
+          "name": "a2", 
+          "normal": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "offset_mm": -900.0, 
+          "axis": "a"
+        }, 
+        {
+          "origin_mm": [
+            -400.0, 
+            2000.0, 
+            1200.0
+          ], 
+          "name": "a3", 
+          "normal": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "offset_mm": -400.0, 
+          "axis": "a"
+        }, 
+        {
+          "origin_mm": [
+            -300.0, 
+            2000.0, 
+            1200.0
+          ], 
+          "name": "a4", 
+          "normal": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "offset_mm": -300.0, 
+          "axis": "a"
+        }, 
+        {
+          "origin_mm": [
+            0.0, 
+            0.0, 
+            0.0
+          ], 
+          "name": "a5", 
+          "normal": [
+            1.0, 
+            0.0, 
+            -0.0
+          ], 
+          "offset_mm": 0.0, 
+          "axis": "a"
+        }, 
+        {
+          "origin_mm": [
+            900.0, 
+            2000.0, 
+            1200.0
+          ], 
+          "name": "a6", 
+          "normal": [
+            1.0, 
+            0.0, 
+            -0.0
+          ], 
+          "offset_mm": 900.0, 
+          "axis": "a"
+        }, 
+        {
+          "origin_mm": [
+            1000.0, 
+            2000.0, 
+            1200.0
+          ], 
+          "name": "a7", 
+          "normal": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "offset_mm": 1000.0, 
+          "axis": "a"
+        }, 
+        {
+          "origin_mm": [
+            2000.0, 
+            -1000.0, 
+            1200.0
+          ], 
+          "name": "b1", 
+          "normal": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "offset_mm": 1000.0, 
+          "axis": "b"
+        }, 
+        {
+          "origin_mm": [
+            2000.0, 
+            -900.0, 
+            1200.0
+          ], 
+          "name": "b2", 
+          "normal": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "offset_mm": 900.0, 
+          "axis": "b"
+        }, 
+        {
+          "origin_mm": [
+            0.0, 
+            0.0, 
+            0.0
+          ], 
+          "name": "b3", 
+          "normal": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "offset_mm": 0.0, 
+          "axis": "b"
+        }, 
+        {
+          "origin_mm": [
+            2000.0, 
+            300.0, 
+            1200.0
+          ], 
+          "name": "b4", 
+          "normal": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "offset_mm": -300.0, 
+          "axis": "b"
+        }, 
+        {
+          "origin_mm": [
+            2000.0, 
+            400.0, 
+            1200.0
+          ], 
+          "name": "b5", 
+          "normal": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "offset_mm": -400.0, 
+          "axis": "b"
+        }, 
+        {
+          "origin_mm": [
+            2000.0, 
+            900.0, 
+            1200.0
+          ], 
+          "name": "b6", 
+          "normal": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "offset_mm": -900.0, 
+          "axis": "b"
+        }, 
+        {
+          "origin_mm": [
+            2000.0, 
+            1000.0, 
+            1200.0
+          ], 
+          "name": "b7", 
+          "normal": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "offset_mm": -1000.0, 
+          "axis": "b"
+        }, 
+        {
+          "origin_mm": [
+            -1351.9900000000000, 
+            -1524.0, 
+            350.0
+          ], 
+          "name": "z1", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": 350.0, 
+          "axis": "z"
+        }, 
+        {
+          "origin_mm": [
+            -1351.9900000000000, 
+            -1524.0, 
+            150.0
+          ], 
+          "name": "z2", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": 150.0, 
+          "axis": "z"
+        }, 
+        {
+          "origin_mm": [
+            0.0, 
+            0.0, 
+            0.0
+          ], 
+          "name": "z3", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": 0.0, 
+          "axis": "z"
+        }, 
+        {
+          "origin_mm": [
+            -1351.9900000000000, 
+            -1524.0, 
+            -100.0
+          ], 
+          "name": "z4", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": -100.0, 
+          "axis": "z"
+        }, 
+        {
+          "origin_mm": [
+            -1351.9900000000000, 
+            -1524.0, 
+            -1000.0
+          ], 
+          "name": "z5", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": -1000.0, 
+          "axis": "z"
+        }, 
+        {
+          "origin_mm": [
+            -1351.9900000000000, 
+            -1524.0, 
+            -1100.0
+          ], 
+          "name": "z6", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": -1100.0, 
+          "axis": "z"
+        }
+      ]
+    }
+  ]
+}

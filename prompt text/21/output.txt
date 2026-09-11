@@ -1,7 +1,0 @@
-Version 21 — Revit elements keep their identity between exports.
-
-Every manhole and obstacle now remembers which Revit element it came from: the exporter writes each instance's element id and unique id and names the document, and the tool keeps all three on the element. Importing a later export of the same model no longer replaces the drawing: what matches is refreshed in place — position, rotation, sizes, walls, windows, lid, levels, rules — so every run stays attached to its manholes and re-routes to wherever they moved; what is new is added; what the export no longer has is kept, and the status line says how many of each. An export from a different model still asks before replacing, as before. The chamber and obstacle panels show the Revit id, family, type and document.
-
-The drawing's own JSON export now carries the Revit id, unique id and document on every chamber and obstacle, the Revit ids on both ends of every run, and the list of source documents; a plan imported back from that export keeps the identity, so the model can be refreshed on top of it at any time.
-
-Verified in a driven browser: a first import, runs drawn, a re-export with a manhole moved, one removed and one added and an obstacle moved — refreshed in place with the runs kept and re-routed, the new manhole added, the missing one kept, the status line and the panel text; the export fields; a plan round trip followed by another refresh; and a different model asking before replacing — plus the batteries from versions 14 to 20, all passing with no console errors.

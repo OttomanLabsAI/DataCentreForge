@@ -8,9 +8,11 @@ Run from pyRevit or RevitPythonShell:
   - inside the FAMILY document: writes the family's named planes
   - inside a PROJECT: writes every placed instance of any family that carries
     the a/b/z plane convention, with each instance's origin and rotation, plus
-    the family's planes in family coordinates — and every OBSTACLE: any
-    instance carrying the Yes/No parameters obstacle_around, obstacle_over,
-    obstacle_under (the "obstable_" spelling is accepted too), exported as its
+    the family's planes in family coordinates. The Yes/No parameters
+    obstacle_around, obstacle_over, obstacle_under (the "obstable_" spelling is
+    accepted too) on a manhole are written as its "params": the avoidance
+    methods allowed to the runs leaving it, applied to whatever they meet. Any
+    other instance carrying those parameters is exported as an OBSTACLE: its
     own bounding box in family coordinates with its placement and those flags
 
 Planes exported (by name):   a1..a7   b1..b7   z1..z6
@@ -170,12 +172,6 @@ def export():
     else:
         fams = {}
         for inst in FilteredElementCollector(doc).OfClass(FamilyInstance).WhereElementIsNotElementType():
-            flags = obstacle_flags(inst)
-            if flags:
-                rec = obstacle_record(inst, flags)
-                if rec:
-                    data['obstacles'].append(rec)
-                continue
             fam = inst.Symbol.Family
             key = eid(fam.Id)
             if key not in fams:
@@ -187,8 +183,19 @@ def export():
                     finally:
                         famdoc.Close(False)
                 fams[key] = {'family': fam.Name, 'planes': planes, 'instances': []} if planes else None
+            flags = obstacle_flags(inst)
             if fams[key] is not None:
-                fams[key]['instances'].append(instance_record(inst))
+                # a manhole: its flags are the avoidance methods allowed to the runs
+                # that leave it, applied to whatever those runs meet
+                rec = instance_record(inst)
+                if flags:
+                    rec['params'] = {'obstacle_' + k: v for k, v in flags.items()}
+                fams[key]['instances'].append(rec)
+            elif flags:
+                # anything else carrying the flags is an obstacle in its own right
+                rec = obstacle_record(inst, flags)
+                if rec:
+                    data['obstacles'].append(rec)
         data['families'] = [f for f in fams.values() if f]
     base = os.path.splitext(doc.PathName)[0] if doc.PathName else os.path.join(os.path.expanduser('~'), 'manhole-export')
     # coordinates are Revit internal-origin coordinates in mm (survey/shared coordinates are not applied)

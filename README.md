@@ -60,9 +60,11 @@ conduit-boundary planes bound the insertion window on the sides perpendicular
 to their letter, and the `z` pair gives its height. Coordinates are Revit
 internal-origin millimetres.
 
-Obstacles come across in the same file: any placed instance carrying the Yes/No
-parameters `obstacle_around`, `obstacle_over`, `obstacle_under` (the
-`obstable_` spelling is accepted) is exported as its own bounding box in family
+The Yes/No parameters `obstacle_around`, `obstacle_over`, `obstacle_under` (the
+`obstable_` spelling is accepted) on a manhole come across as its `params`:
+the avoidance methods its runs may use. A family's `param_defaults` fill in
+where an instance has none. Any other placed instance carrying those
+parameters is exported as an obstacle: its own bounding box in family
 coordinates, with its placement, top and bottom, and those three flags.
 
 Every manhole and obstacle keeps its Revit element id, unique id and source
@@ -73,16 +75,21 @@ element and on both ends of every run, plus the list of source documents.
 
 ## Obstacles in three dimensions
 
-Every obstacle has a top, a bottom, and rules for how a run may pass it:
-around, over or under. Around always comes first — a run crosses an
-around-obstacle only when nothing gets round it. Where both crossings are
-allowed, the one with the shorter deviation wins (under on a tie), and over
-never rises into the ground cover set in the Drawing panel; an obstacle
-allowing nothing is impassable. The plan is routed first; the long section is
-then built in the chainage–Z plane with the same fittings, straights and
-clearances, keeping its bends off the plan's bends where it can and flagging a
-compound bend where it cannot. Each run shows its section in its panel along
-with its laid length.
+Every obstacle has a top and a bottom. How a run may pass what it meets —
+around, over or under — is set on the chambers: each chamber carries the
+avoidance methods allowed to the runs leaving it (from the Revit instance
+parameters `obstacle_around`, `obstacle_over`, `obstacle_under`, or the
+chamber's own panel), and a run may use a method only if both of its chambers
+allow it. An obstacle's own rules can still forbid a method. Around always
+comes first — a run crosses only when nothing gets round. Where both crossings
+are allowed, the one with the shorter deviation wins (under on a tie), and over
+never rises into the ground cover set in the Drawing panel. The plan is routed
+first; the long section is then built in the chainage–Z plane with the same
+fittings, straights and clearances, keeping its bends off the plan's bends
+where it can and flagging a compound bend where it cannot. When a dip cannot
+climb back to the entry level before the chamber, the run enters lower — down
+to the conduit window or the chamber base — and says so. Each run shows its
+section in its panel along with its laid length.
 
 **3D view** in the header (or the `3` key) shows the whole drawing in three
 dimensions: chambers and obstacles as boxes between their top and bottom
