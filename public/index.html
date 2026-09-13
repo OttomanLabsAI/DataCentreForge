@@ -11,6 +11,10 @@
 
 <header>
   <div class="title"><b>Manhole plan</b><span>plan view · millimetres</span></div>
+  <div class="qat">
+    <button id="btnUndo" data-icon="undo" title="Undo (Ctrl+Z)" aria-label="Undo" disabled></button>
+    <button id="btnRedo" data-icon="redo" title="Redo (Ctrl+Y)" aria-label="Redo" disabled></button>
+  </div>
   <div class="ribbon">
     <div class="rgroup"><div class="rbtns">
       <button id="btnAdd" data-icon="chamber" title="Add a chamber at the centre of the view"><span>Chamber</span></button>
@@ -41,10 +45,10 @@
       <span class="mouse">drag empty space — select · middle or right drag — pan<br>
       scroll or pinch — zoom · drag chamber or obstacle — move<br>
       click a conduit — select · del — remove<br>
-      right-click — menu · right-click a face — connect</span>
+      double-click a face — connect · right-click — menu</span>
       <span class="touch">one finger — tap to select · drag empty space — window select<br>
       two fingers — pan and zoom · drag chamber or obstacle — move<br>
-      hold — menu · hold a face — connect</span>
+      double-tap a face — connect · hold — menu</span>
     </div>
     <div id="radial" hidden></div>
     <div class="hud" id="scalebar"><div class="bar"></div><span></span></div>

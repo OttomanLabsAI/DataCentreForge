@@ -16,6 +16,11 @@
   .title b{font-weight:600; letter-spacing:.02em}
   .title span{font-family:var(--mono); font-size:10.5px; color:var(--ink-faint);
               text-transform:uppercase; letter-spacing:.14em}
+  /* ---------- quick access beside the title: undo and redo ---------- */
+  .qat{display:flex; gap:4px; align-self:center; margin-left:2px}
+  .qat button{width:34px; height:34px; padding:0; display:flex; align-items:center; justify-content:center}
+  .qat button svg{width:20px; height:20px; display:block}
+  .qat button:disabled{opacity:.3}
   /* ---------- the ribbon: named groups of icon buttons ---------- */
   .ribbon{display:flex; margin-left:auto; flex-wrap:wrap; align-items:stretch}
   .rgroup{display:flex; flex-direction:column; align-items:center; padding:0 10px; border-left:1px solid var(--line)}
@@ -148,6 +153,9 @@
 
   @media (max-width:1200px){
     .title span{display:none}          /* an iPad on its side: the ribbon keeps the title's row */
+    header{gap:8px 12px}
+    .rgroup{padding:0 6px}
+    .ribbon button{min-width:56px; padding-left:7px; padding-right:7px}
   }
   @media (max-width:1000px){
     #hint{display:none}
@@ -157,8 +165,9 @@
   @media (hover: none), (pointer: coarse){
     #hint .mouse{display:none}
     #hint .touch{display:inline}
-    .ribbon button{padding:7px 9px 6px}
+    .ribbon button{padding-top:7px; padding-bottom:6px}
     .winhead button{padding:2px 12px; font-size:17px}
+    .qat button{width:40px; height:40px}
     .item{padding:9px 8px}
     .item .x{padding:0 8px; font-size:18px}
     input[type=number],input[type=text],select{padding:7px 8px}

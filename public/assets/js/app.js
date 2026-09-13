@@ -1772,6 +1772,7 @@ STAGE.addEventListener('pointerdown', e => {
     return;
   }
   const wp = S2W(sp);
+  if (performance.now() - lastConnect < 700 && hitFace(wp, coarse(e) ? 20 : 12)){ cancelHold(); return; }   // the second click of the double that just connected
   if (state.pending){                       // a connection begun from a face: a click on another face completes it
     const f = hitFace(wp, coarse(e) ? 20 : 12);
     if (f){ cancelHold(); pickFace(f); return; }
@@ -1851,6 +1852,14 @@ STAGE.addEventListener('pointerup', e => {
   if (endTouch(e)) return;
   if (state.view3d){ pointer3dUp(e, sp); return; }
   const d = drag; drag = null;
+  if ((!d || !d.moved) && !(d && d.kind === 'pan')){           // two clicks or taps on one spot: a double
+    const now = performance.now();
+    if (lastTap && now - lastTap.t < 400 && Math.hypot(sp[0]-lastTap.sp[0], sp[1]-lastTap.sp[1]) < 30){
+      lastTap = null;
+      const f = hitFace(S2W(sp), coarse(e) ? 20 : 12);
+      if (f){ ROUTE_QUICK = false; faceTwice(f); renderSel(); renderConnections(); draw(); return; }
+    } else lastTap = {t:now, sp};
+  }
   if (d && d.kind === 'pan'){
     if (!d.moved && (d.button === 2 || e.ctrlKey)) radialAt(sp);
     return;
@@ -1864,6 +1873,7 @@ STAGE.addEventListener('pointerup', e => {
     return;
   }
   if (ROUTE_QUICK){ ROUTE_QUICK = false; renderSel(); renderConnections(); draw(); }
+  historyMark();
 });
 STAGE.addEventListener('pointercancel', e => { endTouch(e); abandonDrag(); });
 STAGE.addEventListener('pointerleave', () => {
@@ -1984,20 +1994,30 @@ const movables = () => state.selSet.map(x => x.kind === 'chamber' ? byUid(x.id) 
 function setPendingStatus(){
   const el = document.getElementById('rmode');
   if (state.pending){ const c = byUid(state.pending.mh); el.textContent = `connecting from ${c ? c.ref : '?'}·${state.pending.face} — click another face, or right-click it · Esc cancels`; }
-  else if (/^connecting/.test(el.textContent)) el.textContent = '';
+  else if (/^connect/.test(el.textContent)) el.textContent = '';
 }
 function pickFace(f){
   if (!state.pending){ state.pending = f; setPendingStatus(); draw(); return; }
+  lastConnect = performance.now();          // the pick is done with: a second click of a double on this face changes nothing
   if (state.pending.mh === f.mh && state.pending.face === f.face){ state.pending = null; setPendingStatus(); draw(); return; }
   const same = (x,y) => x.mh === y.mh && x.face === y.face;
   const dup = state.connections.find(c =>
     (same(c.a, state.pending) && same(c.b, f)) || (same(c.b, state.pending) && same(c.a, f)));
   if (dup){ state.pending = null; setPendingStatus(); select('conn', dup.uid); return; }
-  const cn = {uid:uid(), a:state.pending, b:f, placed:false, level:0, rows:1, cols:1,
+  const cn = {uid:uid(), a:state.pending, b:f, placed:true, level:0, rows:1, cols:1,     // made and placed at once: nothing to approve
               specId:(state.editSpec || state.specs[0].id), route:null};
   state.connections.push(cn);
   state.pending = null; setPendingStatus();
   select('conn', cn.uid);
+  document.getElementById('rmode').textContent = `connected ${connLabel(cn)}`;
+}
+let lastConnect = -1e9, lastTwice = -1e9, lastTap = null;
+/** A face double-clicked or double-tapped (two still presses within a moment): begin a connection there, or complete one begun elsewhere. */
+function faceTwice(f){
+  const now = performance.now();
+  if (now - lastConnect < 700 || now - lastTwice < 500) return;   // the clicks that just completed a run, or a double already taken
+  lastTwice = now;
+  pickFace(f);
 }
 function disconnect(u){
   state.connections = state.connections.filter(c => c.uid !== u);
@@ -2011,10 +2031,11 @@ function connLabel(cn){
 
 function renderConnections(){
   recomputeRoutes();
+  historyMark();
   const box = document.getElementById('connList');
   document.getElementById('connCount').textContent = state.connections.length || '';
   if (!state.connections.length){
-    box.innerHTML = `<div class="empty">None yet. Hit <b>Connect faces</b>, then click an internal face on one chamber and an internal face on the next.</div>`;
+    box.innerHTML = `<div class="empty">None yet. Double-click a face, then double-click a face on another chamber — or right-click a face and choose <b>Connect from</b>.</div>`;
     return;
   }
   box.innerHTML = '<div class="list">' + state.connections.map(cn => {
@@ -2035,6 +2056,7 @@ function renderConnections(){
 }
 
 function renderObstacles(){
+  historyMark();
   const box = document.getElementById('obsList');
   document.getElementById('obsCount').textContent = state.obstacles.length || '';
   if (!state.obstacles.length){
@@ -2063,6 +2085,7 @@ function renderObstacles(){
 function specUse(id){ return state.connections.filter(c => c.specId === id).length; }
 
 function renderSpecs(){
+  historyMark();
   const box = document.getElementById('specList');
   box.innerHTML = '<div class="list">' + state.specs.map(s =>
     `<div class="item ${s.id === state.editSpec ? 'on':''}" data-spec="${s.id}">
@@ -2200,6 +2223,7 @@ function renderSel(){
   else if (selIs('conn')){ const cn = connBy(state.sel.id); if (cn){ renderRunProps(rE, cn); who('runWho', connLabel(cn)); } }
   renderChambers();
   updateRibbon();
+  historyMark();
 }
 function renderChambers(){
   const box = document.getElementById('chamberList');
@@ -2623,6 +2647,8 @@ document.getElementById('btnView3d').onclick = () => setView3d(!state.view3d);
    ========================================================================== */
 
 const ICONS = {
+  undo:     '<path d="M9 14L4 9l5-5"/><path d="M4 9h9.5a5.5 5.5 0 0 1 0 11H10"/>',
+  redo:     '<path d="M15 14l5-5-5-5"/><path d="M20 9h-9.5a5.5 5.5 0 0 0 0 11H14"/>',
   chamber:  '<rect x="4" y="4" width="16" height="16"/><rect x="8" y="8" width="8" height="8"/>',
   obstacle: '<rect x="4" y="5" width="16" height="14"/><path d="M4 12l7-7M4 18l13-13M9 19l11-11M15 19l5-5"/>',
   cube:     '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
@@ -3095,6 +3121,63 @@ document.getElementById('btnClear').onclick = () => {
   }
 };
 
+/* ==========================================================================
+   HISTORY — undo and redo
+   The document (chambers, obstacles, runs, specs and the routing settings) is
+   snapshotted after every change. A drag is one step; keystrokes into one
+   field in quick succession are one step. The view, the selection and the
+   open windows are not part of it, so undo never moves the drawing about.
+   ========================================================================== */
+const HIST = {stack:[], at:-1, max:200, timer:null, applying:false};
+let lastInput = {key:null, t:-1e9};
+document.addEventListener('input', e => { lastInput = {key: e.target.id || e.target.name || 'field', t: performance.now()}; }, true);
+function docSnapshot(){
+  return JSON.stringify({
+    ground: state.ground, cover: state.cover, avoidChambers: state.avoidChambers, avoidPipes: state.avoidPipes, square: state.square,
+    specs: state.specs, chambers: state.chambers, obstacles: state.obstacles,
+    connections: state.connections.map(({route, ...rest}) => rest)
+  });
+}
+/** Take a snapshot once the current change has settled (many renders, one mark). */
+function historyMark(){
+  if (HIST.applying || HIST.timer) return;
+  HIST.timer = setTimeout(() => {
+    HIST.timer = null;
+    if ((drag && drag.kind === 'move') || ROUTE_QUICK) return;       // mid-drag: the step is taken when the pointer lifts
+    const snap = docSnapshot(), now = performance.now(), top = HIST.stack[HIST.at];
+    if (top && top.s === snap) return;
+    const key = now - lastInput.t < 400 ? lastInput.key : null;   // typing into one field merges into one step
+    HIST.stack.length = HIST.at + 1;                               // a new change forgets the redo tail
+    if (key && top && top.key === key && now - top.t < 1500) HIST.stack[HIST.at] = {s:snap, key, t:now};
+    else { HIST.stack.push({s:snap, key, t:now}); if (HIST.stack.length > HIST.max) HIST.stack.shift(); HIST.at = HIST.stack.length - 1; }
+    updateHistoryButtons();
+  }, 0);
+}
+function updateHistoryButtons(){
+  document.getElementById('btnUndo').disabled = HIST.at <= 0;
+  document.getElementById('btnRedo').disabled = HIST.at >= HIST.stack.length - 1;
+}
+function applySnapshot(s){
+  const d = JSON.parse(s);
+  HIST.applying = true;
+  state.ground = d.ground; state.cover = d.cover; state.avoidChambers = d.avoidChambers; state.avoidPipes = d.avoidPipes; state.square = d.square;
+  state.specs = d.specs; state.chambers = d.chambers; state.obstacles = d.obstacles;
+  state.connections = d.connections.map(cn => ({...cn, route:null}));
+  const alive = new Set([...state.chambers, ...state.obstacles, ...state.connections].map(x => x.uid));
+  state.selSet = state.selSet.filter(x => alive.has(x.id));         // the selection survives where its things do
+  state.sel = state.sel && alive.has(state.sel.id) ? state.sel : (state.selSet[0] ? {kind:state.selSet[0].kind, id:state.selSet[0].id} : null);
+  if (!state.specs.some(x => x.id === state.editSpec)) state.editSpec = state.specs[0] ? state.specs[0].id : null;
+  state.pending = null; setPendingStatus(); closeRadial();
+  if (state.faceDialog) closeFaceDialog();
+  syncDrawingInputs(); renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); renderObstacles(); draw();
+  HIST.applying = false;
+  updateHistoryButtons();
+}
+function undo(){ if (HIST.at > 0){ HIST.at--; applySnapshot(HIST.stack[HIST.at].s); } }
+function redo(){ if (HIST.at < HIST.stack.length - 1){ HIST.at++; applySnapshot(HIST.stack[HIST.at].s); } }
+document.getElementById('btnUndo').onclick = undo;
+document.getElementById('btnRedo').onclick = redo;
+
 /** Everything selected goes: runs, obstacles, chambers and the runs that touch them. */
 function deleteSelection(){
   const set = state.selSet.slice();
@@ -3111,6 +3194,8 @@ document.addEventListener('keydown', e => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
   if (e.key === 'Escape' && !RADIAL.hidden){ closeRadial(); return; }
   if (state.faceDialog){ if (e.key === 'Escape') closeFaceDialog(); return; }
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'z'){ e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'y'){ e.preventDefault(); redo(); return; }
   if (e.key === 'Delete' || e.key === 'Backspace'){
     if (!state.selSet.length) return;
     e.preventDefault();

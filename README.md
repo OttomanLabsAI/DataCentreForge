@@ -104,6 +104,22 @@ empty space (a chamber or obstacle here, 3D, fit, runs). Right-click a face to
 connect from it; then right-click or click the other face to complete the
 run. Escape cancels.
 
+The quicker way to connect is a double-click: double-click a face and a
+connection begins there, double-click (or single-click) a face on another
+chamber and the run is made and placed on the spot, routed and selected. On a
+touch screen a double-tap begins it and a tap completes it. There is nothing
+to approve: the second face is the approval. Double-clicking the pending face
+again lets go, and a pair that already exists is selected rather than
+duplicated.
+
+Undo and redo sit beside the title and answer Ctrl+Z, Ctrl+Y and
+Ctrl+Shift+Z (Cmd on a Mac). Every change to the drawing is a step: runs made
+or disconnected, chambers and obstacles added, moved, edited or deleted, specs
+changed, a file or Revit export loaded, the example placed. A drag is one step
+however far it goes, and figures typed into one field in quick succession are
+one step. The view, the selection and the open windows are left alone, so undo
+never moves the drawing about.
+
 ## Where runs meet a face
 
 A run meets each of its faces where it lines up with the far face, so two
