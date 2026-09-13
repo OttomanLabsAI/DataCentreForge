@@ -1,0 +1,9 @@
+good, but name the catgories and give the logos, like revit
+
+keep the num,bers in the rruns/conduits etc
+
+connect faces should not be a button
+
+right click on elements should also give the needed options in a dropdown, but make it circular like autodesk inventor with little logos
+
+right click on the face should give the option for connecting faces

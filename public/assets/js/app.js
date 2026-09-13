@@ -1645,7 +1645,7 @@ function setView3d(on){
   state.view3d = on;
   document.getElementById('btnView3d').classList.toggle('on', on);
   state.hoverFace = null; showCallout(null);
-  if (on && state.mode === 'connect') btnConnect.onclick();       // connecting faces is a plan-view job
+  if (on){ state.pending = null; setPendingStatus(); closeRadial(); }   // connecting faces is a plan-view job
   document.getElementById('rmode').textContent = on ? '3D — drag to orbit · shift-drag to pan · scroll to zoom · click to select' : '';
   STAGE.style.cursor = on ? 'grab' : 'crosshair';
   if (on) fit3d(); else draw();
@@ -1701,6 +1701,8 @@ function hitConnection(w, tolPx = 8){
 let drag = null;
 
 STAGE.addEventListener('pointerdown', e => {
+  if (e.target.closest && e.target.closest('#radial')) return;     // the menu handles its own clicks
+  closeRadial();
   if (e.button === 2) return;
   e.preventDefault();                       // stop native text selection while dragging
   STAGE.setPointerCapture(e.pointerId);
@@ -1708,10 +1710,10 @@ STAGE.addEventListener('pointerdown', e => {
   const sp = [e.clientX-r.left, e.clientY-r.top], wp = S2W(sp);
   if (state.view3d){ pointer3dDown(e, sp); return; }
 
-  if (state.mode === 'connect'){
+  if (state.pending){                       // a connection begun from a face: a click on another face completes it
     const f = hitFace(wp, 12);
-    if (f) pickFace(f); else { state.pending = null; draw(); }
-    return;
+    if (f){ pickFace(f); return; }
+    state.pending = null; setPendingStatus();
   }
   const c = hitChamber(wp);
   if (c){ select('chamber', c.uid); drag = {kind:'move', obj:c, dx:wp[0]-c.x, dy:wp[1]-c.y}; ROUTE_QUICK = true; return; }
@@ -1747,7 +1749,7 @@ STAGE.addEventListener('pointermove', e => {
   const changed = JSON.stringify(f) !== JSON.stringify(state.hoverFace);
   state.hoverFace = f;
   showCallout(f, sp);
-  STAGE.style.cursor = state.mode === 'connect' ? (f ? 'pointer' : 'crosshair')
+  STAGE.style.cursor = state.pending ? (f ? 'pointer' : 'crosshair')
     : (hitChamber(wp) || hitObstacle(wp)) ? 'move' : hitConnection(wp) ? 'pointer' : 'crosshair';
   if (changed) draw();
 });
@@ -1763,9 +1765,31 @@ STAGE.addEventListener('pointerleave', () => {
   document.getElementById('rx').textContent = '—';
   document.getElementById('ry').textContent = '—';
 });
-STAGE.addEventListener('contextmenu', e => e.preventDefault());
+STAGE.addEventListener('contextmenu', e => {
+  e.preventDefault();
+  const r = STAGE.getBoundingClientRect(), sp = [e.clientX-r.left, e.clientY-r.top];
+  if (state.view3d){
+    const h = pick3d(sp);
+    if (h) select(h.kind, h.id);
+    const m = h ? (h.kind === 'chamber' ? chamberMenu(byUid(h.id)) : h.kind === 'obstacle' ? obstacleMenu(obsBy(h.id)) : runMenu(connBy(h.id)))
+                : ['3D view', [{icon:'fit', label:'Fit view', run:() => fit3d()}, {icon:'plan', label:'Plan view', run:() => setView3d(false)},
+                               {icon:'runs', label:'Runs', run:() => openWin('runs')}]];
+    return openRadial(sp, m[0], m[1]);
+  }
+  const wp = S2W(sp);
+  const f = hitFace(wp, 9);
+  if (f) return openRadial(sp, ...faceMenu(f));
+  const c = hitChamber(wp);
+  if (c){ select('chamber', c.uid); return openRadial(sp, ...chamberMenu(c)); }
+  const o = hitObstacle(wp);
+  if (o){ select('obstacle', o.uid); return openRadial(sp, ...obstacleMenu(o)); }
+  const cn = hitConnection(wp);
+  if (cn){ select('conn', cn.uid); return openRadial(sp, ...runMenu(cn)); }
+  openRadial(sp, ...spaceMenu(wp));
+});
 STAGE.addEventListener('wheel', e => {
   e.preventDefault();
+  closeRadial();
   const r = STAGE.getBoundingClientRect();
   const sp = [e.clientX-r.left, e.clientY-r.top], before = S2W(sp);
   if (state.view3d){
@@ -1807,17 +1831,23 @@ function select(kind, id){
   state.sel = kind ? {kind, id} : null;
   renderSel(); renderConnections(); renderObstacles(); draw();
 }
+/** The status line while a connection is being made from a face. */
+function setPendingStatus(){
+  const el = document.getElementById('rmode');
+  if (state.pending){ const c = byUid(state.pending.mh); el.textContent = `connecting from ${c ? c.ref : '?'}·${state.pending.face} — click another face, or right-click it · Esc cancels`; }
+  else if (/^connecting/.test(el.textContent)) el.textContent = '';
+}
 function pickFace(f){
-  if (!state.pending){ state.pending = f; draw(); return; }
-  if (state.pending.mh === f.mh && state.pending.face === f.face){ state.pending = null; draw(); return; }
+  if (!state.pending){ state.pending = f; setPendingStatus(); draw(); return; }
+  if (state.pending.mh === f.mh && state.pending.face === f.face){ state.pending = null; setPendingStatus(); draw(); return; }
   const same = (x,y) => x.mh === y.mh && x.face === y.face;
   const dup = state.connections.find(c =>
     (same(c.a, state.pending) && same(c.b, f)) || (same(c.b, state.pending) && same(c.a, f)));
-  if (dup){ state.pending = null; select('conn', dup.uid); return; }
+  if (dup){ state.pending = null; setPendingStatus(); select('conn', dup.uid); return; }
   const cn = {uid:uid(), a:state.pending, b:f, placed:false, level:0, rows:1, cols:1,
               specId:(state.editSpec || state.specs[0].id), route:null};
   state.connections.push(cn);
-  state.pending = null;
+  state.pending = null; setPendingStatus();
   select('conn', cn.uid);
 }
 function disconnect(u){
@@ -2435,18 +2465,128 @@ document.getElementById('btnObs').onclick = () => {
   const o = makeObstacle({x:snap(p[0]), y:snap(p[1])});
   state.obstacles.push(o); select('obstacle', o.uid);
 };
-const btnConnect = document.getElementById('btnConnect');
-btnConnect.onclick = () => {
-  if (state.view3d && state.mode !== 'connect') setView3d(false);
-  state.mode = state.mode === 'connect' ? 'select' : 'connect';
-  state.pending = null;
-  btnConnect.classList.toggle('on', state.mode === 'connect');
-  document.getElementById('rmode').textContent =
-    state.mode === 'connect' ? 'connect mode — click two internal faces' : '';
-  draw();
-};
 document.getElementById('btnFit').onclick = () => fitView();
 document.getElementById('btnView3d').onclick = () => setView3d(!state.view3d);
+
+/* ==========================================================================
+   ICONS
+   Small line icons for the ribbon and the radial menu, drawn once here.
+   ========================================================================== */
+
+const ICONS = {
+  chamber:  '<rect x="4" y="4" width="16" height="16"/><rect x="8" y="8" width="8" height="8"/>',
+  obstacle: '<rect x="4" y="5" width="16" height="14"/><path d="M4 12l7-7M4 18l13-13M9 19l11-11M15 19l5-5"/>',
+  cube:     '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
+  plan:     '<rect x="4" y="4" width="16" height="16"/><path d="M4 12h16M12 4v16"/>',
+  fit:      '<path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/><rect x="9" y="9" width="6" height="6"/>',
+  chambers: '<rect x="3" y="4" width="7" height="7"/><rect x="3" y="13" width="7" height="7"/><path d="M13 7.5h8M13 16.5h8"/>',
+  runs:     '<path d="M3 16h5l4-8h9"/><circle cx="3.5" cy="16" r="1.6"/><circle cx="20.5" cy="8" r="1.6"/>',
+  obstacles:'<rect x="3" y="6" width="18" height="12"/><path d="M3 13l7-7M6 18l12-12M13 18l8-8"/>',
+  specs:    '<path d="M4 12V4h8l8 8-8 8z"/><circle cx="8" cy="8" r="1.6"/>',
+  drawing:  '<rect x="4" y="4" width="16" height="16"/><path d="M4 10h16M4 16h16M10 4v16M16 4v16"/>',
+  file:     '<path d="M6 3h8l5 5v13H6z M14 3v5h5"/><path d="M9 13h6M9 17h6"/>',
+  edit:     '<path d="M4 20l4-1L19 8l-3-3L5 16z M13 7l3 3"/>',
+  duplicate:'<rect x="8" y="8" width="12" height="12"/><path d="M4 16V4h12"/>',
+  delete:   '<path d="M5 7h14M9 7V4h6v3M7 7l1 13h8l1-13M10 11v6M14 11v6"/>',
+  connect:  '<path d="M9 12h6M6 9a3 3 0 0 0 0 6h3M18 15a3 3 0 0 0 0-6h-3"/>',
+  place:    '<path d="M5 13l4 4L19 7"/>',
+  disconnect:'<path d="M3 12h5M16 12h5M10 8l4 8M14 8l-4 8"/>',
+  around:   '<rect x="8" y="11" width="8" height="8"/><path d="M3 19V9a4 4 0 0 1 4-4h10a4 4 0 0 1 4 4v10"/>',
+  over:     '<rect x="8" y="12" width="8" height="8"/><path d="M3 14a9 9 0 0 1 18 0"/>',
+  under:    '<rect x="8" y="4" width="8" height="8"/><path d="M3 10a9 9 0 0 0 18 0"/>',
+  sides:    '<rect x="5" y="5" width="14" height="14"/><path d="M19 5v14" stroke-width="3.2"/>',
+  cancel:   '<path d="M6 6l12 12M18 6L6 18"/>',
+  add:      '<path d="M12 5v14M5 12h14"/>'
+};
+const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k] || ''}</svg>`;
+document.querySelectorAll('[data-icon]').forEach(b => b.insertAdjacentHTML('afterbegin', icon(b.dataset.icon)));
+
+/* ==========================================================================
+   RADIAL MENU
+   Right-click anything on the drawing for a ring of what you can do to it —
+   a face offers to connect from it (or to it, once a connection is begun).
+   ========================================================================== */
+
+const RADIAL = document.getElementById('radial');
+function openRadial(sp, hub, items){
+  const r = STAGE.getBoundingClientRect();
+  const R = items.length > 6 ? 82 : items.length > 4 ? 70 : 62, pad = R + 32;
+  const cx = Math.max(pad, Math.min(r.width - pad, sp[0])), cy = Math.max(pad, Math.min(r.height - pad, sp[1]));
+  RADIAL.style.left = cx + 'px'; RADIAL.style.top = cy + 'px';
+  RADIAL.innerHTML = `<div class="ring" style="left:${-R}px;top:${-R}px;width:${2*R}px;height:${2*R}px"></div>` +
+    items.map((it, i) => {
+      const a = -Math.PI/2 + i*2*Math.PI/items.length;
+      return `<button class="ritem${it.warn ? ' warn' : ''}" data-ri="${i}" title="${esc(it.label)}"
+        style="left:${(R*Math.cos(a)).toFixed(1)}px;top:${(R*Math.sin(a)).toFixed(1)}px">${icon(it.icon)}<span>${esc(it.label)}</span></button>`;
+    }).join('') + `<div class="rhub" title="Esc closes">${esc(hub)}</div>`;
+  RADIAL.hidden = false;
+  RADIAL.querySelectorAll('[data-ri]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const it = items[+b.dataset.ri]; closeRadial(); it.run(); });
+  RADIAL.querySelector('.rhub').onclick = ev => { ev.stopPropagation(); closeRadial(); };
+}
+function closeRadial(){ if (!RADIAL.hidden){ RADIAL.hidden = true; RADIAL.innerHTML = ''; } }
+
+function faceMenu(f){
+  const c = byUid(f.mh), items = [];
+  const samePending = state.pending && state.pending.mh === f.mh && state.pending.face === f.face;
+  if (state.pending && !samePending)
+    items.push({icon:'connect', label:'Connect here', run:() => pickFace(f)},
+               {icon:'cancel', label:'Cancel', warn:true, run:() => { state.pending = null; setPendingStatus(); draw(); }});
+  else if (samePending)
+    items.push({icon:'cancel', label:'Cancel', warn:true, run:() => { state.pending = null; setPendingStatus(); draw(); }});
+  else
+    items.push({icon:'connect', label:'Connect from', run:() => { state.pending = f; setPendingStatus(); draw(); }});
+  if (faceRuns(f.mh, f.face).length)
+    items.push({icon:'sides', label:'Side settings', run:() => { select('chamber', c.uid); openWin('chambers'); openFaceDialog(f.mh, f.face); }});
+  items.push({icon:'edit', label:'Chamber', run:() => { select('chamber', c.uid); openWin('chambers'); }});
+  return [`${c ? c.ref : '?'} · ${f.face}`, items];
+}
+function chamberMenu(c){
+  return [c.ref, [
+    {icon:'edit', label:'Edit', run:() => { select('chamber', c.uid); openWin('chambers'); }},
+    {icon:'runs', label:'Runs', run:() => openWin('runs')},
+    {icon:'duplicate', label:'Duplicate', run:() => {
+      const n = makeChamber({...c, uid:uid(), ref:nextRef(), x:c.x + c.intX + 2*c.wall + 1000});
+      state.chambers.push(n); select('chamber', n.uid); }},
+    {icon:'fit', label:'Fit view', run:() => fitView()},
+    {icon:'delete', label:'Delete', warn:true, run:() => removeChamber(c.uid)}
+  ]];
+}
+function obstacleMenu(o){
+  const setM = m => () => { o.method = m; select('obstacle', o.uid); };
+  return [o.name, [
+    {icon:'edit', label:'Edit', run:() => { select('obstacle', o.uid); openWin('obstacles'); }},
+    {icon:'around', label:'Around', run:setM('around')},
+    {icon:'over', label:'Over', run:setM('over')},
+    {icon:'under', label:'Under', run:setM('under')},
+    {icon:'duplicate', label:'Duplicate', run:() => {
+      const n = makeObstacle({...o, uid:uid(), name:nextName(), x:o.x + o.w + 1000});
+      state.obstacles.push(n); select('obstacle', n.uid); }},
+    {icon:'delete', label:'Delete', warn:true, run:() => {
+      state.obstacles = state.obstacles.filter(x => x.uid !== o.uid);
+      state.sel = null; renderSel(); renderObstacles(); renderConnections(); draw(); }}
+  ]];
+}
+function runMenu(cn){
+  const rt = cn.route;
+  return [connLabel(cn), [
+    {icon:'edit', label:'Edit', run:() => { select('conn', cn.uid); openWin('runs'); }},
+    {icon:'place', label: cn.placed ? 'Update line' : 'Place line', run:() => { if (rt && rt.ok){ cn.placed = true; select('conn', cn.uid); } }},
+    {icon:'specs', label:'Spec', run:() => { state.editSpec = cn.specId; renderSpecs(); renderSpecEdit(); openWin('specs'); }},
+    {icon:'disconnect', label:'Disconnect', warn:true, run:() => disconnect(cn.uid)}
+  ]];
+}
+function spaceMenu(wp){
+  return ['drawing', [
+    {icon:'chamber', label:'Chamber here', run:() => {
+      const base = state.chambers[state.chambers.length-1];
+      const c = makeChamber({x:snap(wp[0]), y:snap(wp[1]), intX: base ? base.intX : 1200, intY: base ? base.intY : 1200, wall: base ? base.wall : 150});
+      state.chambers.push(c); select('chamber', c.uid); }},
+    {icon:'obstacle', label:'Obstacle here', run:() => { const o = makeObstacle({x:snap(wp[0]), y:snap(wp[1])}); state.obstacles.push(o); select('obstacle', o.uid); }},
+    {icon:'cube', label:'3D view', run:() => setView3d(true)},
+    {icon:'fit', label:'Fit view', run:() => fitView()},
+    {icon:'runs', label:'Runs', run:() => openWin('runs')}
+  ]];
+}
 
 /* ==========================================================================
    RIBBON WINDOWS
@@ -2784,6 +2924,7 @@ document.getElementById('btnClear').onclick = () => {
 
 document.addEventListener('keydown', e => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+  if (e.key === 'Escape' && !RADIAL.hidden){ closeRadial(); return; }
   if (state.faceDialog){ if (e.key === 'Escape') closeFaceDialog(); return; }
   if (e.key === 'Delete' || e.key === 'Backspace'){
     if (selIs('conn')){ e.preventDefault(); disconnect(state.sel.id); }
@@ -2793,7 +2934,7 @@ document.addEventListener('keydown', e => {
       state.obstacles = state.obstacles.filter(o => o.uid !== state.sel.id);
       state.sel = null; renderSel(); renderObstacles(); renderConnections(); draw();
     }
-  } else if (e.key === 'Escape'){ state.pending = null; select(null); }
+  } else if (e.key === 'Escape'){ state.pending = null; setPendingStatus(); select(null); }
   else if (e.key === 'f' || e.key === 'F'){ fitView(); }
   else if (e.key === '3'){ setView3d(!state.view3d); }
   else if (e.key.startsWith('Arrow') && (selIs('chamber') || selIs('obstacle'))){

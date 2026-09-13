@@ -1,0 +1,9 @@
+Version 26 — named groups, icons and a wheel of choices.
+
+The ribbon now reads like a proper toolbar. Its buttons sit in captioned groups — Create (Chamber, Obstacle), View (3D view, Fit view), Manage (Chambers, Runs, Obstacles, Specs) and Settings (Drawing, File) — each with a small line icon above its label, and the counts stay on Chambers, Runs and Obstacles. Connect faces is no longer a button or a mode.
+
+Right-click anything on the drawing and a ring of choices opens around the cursor, Inventor-style, each with its little icon and the item's name at the hub: a chamber offers Edit, Runs, Duplicate, Fit view and Delete; an obstacle Edit, Around, Over, Under (its default method), Duplicate and Delete; a run Edit, Place or Update line, Spec and Disconnect; empty space Chamber here, Obstacle here, 3D view, Fit view and Runs. In the 3D view the same rings appear on whatever you pick, and empty space offers Plan view.
+
+Right-click a face to connect: "Connect from" begins a connection there — the status line says so — and the other face is joined either with a plain click or by right-clicking it and choosing "Connect here"; Cancel or Escape lets go. A face that already carries runs also offers its Side settings, and every face offers its chamber's editor. Right-clicking a chamber, obstacle or run selects it as well, so the ribbon lights up accordingly.
+
+Verified in a driven browser: the group captions and icons, the counts, the absence of the old button, the chamber ring and its Edit, Escape and a click elsewhere closing the ring, a chamber added from empty space at the click, connecting by right-click from one face to another (an existing pair selected rather than duplicated, a new pair created), completing with a plain click, Escape cancelling, the obstacle ring setting a default, the run ring opening its spec, and the rings in 3D — plus the batteries from versions 14 to 25, all passing with no console errors.

@@ -1,9 +1,0 @@
-Version 25 — the side panels give way to a ribbon.
-
-Both side panels are gone and the drawing takes the whole width. Across the top, one ribbon holds everything: the actions (+ Chamber, + Obstacle, Connect faces, 3D view, Fit view) and six buttons — Chambers, Runs, Obstacles, Specs, Drawing, File — each opening a window. All six are always there and always openable; open as many as you like, drag them by their title bars, close them with ×. A window opens in the first free slot from the right so several sit side by side, and a window you have dragged keeps its place. The Chambers, Runs and Obstacles buttons carry their counts.
-
-Chambers, Runs and Obstacles windows each start with the list of that kind (click one to select it) and continue with the editor for the selected item — everything the old selection panel held, clusters and side buttons included. Specs holds the spec list and its editor, Drawing the snap, ground, cover and view switches, File the export, imports and clear.
-
-Select a chamber, obstacle or run on the plan and the buttons that concern it light up — Chambers for a chamber, Obstacles for an obstacle, Runs and Specs for a run — without anything opening by itself; open a lit button and its window shows that item's editor. "Edit spec" on a run opens the Specs window on that spec.
-
-Verified in a driven browser: the shell with no side panels, all six buttons and the five actions, windows closed at the start, counts, open and close from the ribbon and from ×, several windows open at once and the later on top, the highlights for each kind of selection and their clearing, the editors and names in the windows, dragging by the title bar, bring-to-front, the Specs shortcut, the Drawing inputs, the File buttons, the 3D view, a narrow layout with no sideways scroll, and the 404 page — plus the batteries from versions 14 to 24, adapted to open the windows they use, all passing with no console errors.

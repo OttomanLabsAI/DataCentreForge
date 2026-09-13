@@ -69,14 +69,22 @@ elements in place — runs stay attached — adds what is new and keeps what the
 export no longer has; the tool's own JSON export carries those ids on every
 element and on both ends of every run, plus the list of source documents.
 
-## The ribbon
+## The ribbon and the radial menu
 
-Every panel is a window opened from a button on the ribbon across the top —
-Chambers, Runs, Obstacles, Specs, Drawing, File — so the drawing takes the
-whole width. All buttons are always available; open as many windows as you
-like and drag them by their title bars. Selecting a chamber, obstacle or run
-on the plan lights the buttons that concern it, and their windows show its
-editor when opened.
+The ribbon across the top is grouped Revit-style — Create, View, Manage,
+Settings — with an icon on every button. Every panel is a window opened from
+its Manage or Settings button (Chambers, Runs, Obstacles, Specs, Drawing,
+File), so the drawing takes the whole width; open as many as you like and drag
+them by their title bars. Selecting a chamber, obstacle or run on the plan
+lights the buttons that concern it, and their windows show its editor when
+opened.
+
+Right-click anything on the drawing for a ring of choices around the cursor:
+a chamber (edit, runs, duplicate, fit, delete), an obstacle (edit, its default
+around/over/under, duplicate, delete), a run (edit, place, spec, disconnect),
+empty space (a chamber or obstacle here, 3D, fit, runs). Right-click a face to
+connect from it; then right-click or click the other face to complete the
+run. Escape cancels.
 
 ## Where runs meet a face
 

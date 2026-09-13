@@ -5,30 +5,31 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=2.8">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.9">
 </head>
 <body>
 
 <header>
   <div class="title"><b>Manhole plan</b><span>plan view · millimetres</span></div>
   <div class="ribbon">
-    <div class="rgroup">
-      <button id="btnAdd">+ Chamber</button>
-      <button id="btnObs">+ Obstacle</button>
-      <button id="btnConnect">Connect faces</button>
-      <button id="btnView3d">3D view</button>
-      <button id="btnFit" class="ghost">Fit view</button>
-    </div>
-    <div class="rgroup">
-      <button data-win="chambers">Chambers <em id="chamberCount"></em></button>
-      <button data-win="runs">Runs <em id="connCount"></em></button>
-      <button data-win="obstacles">Obstacles <em id="obsCount"></em></button>
-      <button data-win="specs">Specs</button>
-    </div>
-    <div class="rgroup">
-      <button data-win="drawing">Drawing</button>
-      <button data-win="file">File</button>
-    </div>
+    <div class="rgroup"><div class="rbtns">
+      <button id="btnAdd" data-icon="chamber" title="Add a chamber at the centre of the view"><span>Chamber</span></button>
+      <button id="btnObs" data-icon="obstacle" title="Add an obstacle at the centre of the view"><span>Obstacle</span></button>
+    </div><div class="rcap">Create</div></div>
+    <div class="rgroup"><div class="rbtns">
+      <button id="btnView3d" data-icon="cube" title="Show the drawing in 3D (key 3)"><span>3D view</span></button>
+      <button id="btnFit" data-icon="fit" title="Fit the drawing in the view (key F)"><span>Fit view</span></button>
+    </div><div class="rcap">View</div></div>
+    <div class="rgroup"><div class="rbtns">
+      <button data-win="chambers" data-icon="chambers"><span>Chambers <em id="chamberCount"></em></span></button>
+      <button data-win="runs" data-icon="runs"><span>Runs <em id="connCount"></em></span></button>
+      <button data-win="obstacles" data-icon="obstacles"><span>Obstacles <em id="obsCount"></em></span></button>
+      <button data-win="specs" data-icon="specs"><span>Specs</span></button>
+    </div><div class="rcap">Manage</div></div>
+    <div class="rgroup"><div class="rbtns">
+      <button data-win="drawing" data-icon="drawing"><span>Drawing</span></button>
+      <button data-win="file" data-icon="file"><span>File</span></button>
+    </div><div class="rcap">Settings</div></div>
   </div>
 </header>
 
@@ -38,8 +39,10 @@
     <div class="hud" id="hint">
       drag empty space — pan · scroll — zoom<br>
       drag chamber or obstacle — move<br>
-      click a conduit — select · del — remove
+      click a conduit — select · del — remove<br>
+      right-click — menu · right-click a face — connect
     </div>
+    <div id="radial" hidden></div>
     <div class="hud" id="scalebar"><div class="bar"></div><span></span></div>
     <div class="hud" id="callout"></div>
     <div class="hud" id="status">
@@ -114,6 +117,6 @@
 
 <div id="faceDlg" hidden></div>
 
-<script src="/assets/js/app.js?v=2.8"></script>
+<script src="/assets/js/app.js?v=2.9"></script>
 </body>
 </html>
