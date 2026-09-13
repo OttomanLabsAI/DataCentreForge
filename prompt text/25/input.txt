@@ -1,0 +1,5 @@
+theres too much information the sides
+
+change to a ribbon system up top for buttons that opens a window to edit the params
+
+all buttons are visible and openable, but when an item is selected, make it highlight the related buttons

@@ -5,38 +5,34 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=2.7">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.8">
 </head>
 <body>
 
 <header>
   <div class="title"><b>Manhole plan</b><span>plan view · millimetres</span></div>
-  <div class="tools">
-    <button id="btnAdd">+ Chamber</button>
-    <button id="btnObs">+ Obstacle</button>
-    <button id="btnConnect">Connect faces</button>
-    <button id="btnView3d">3D view</button>
-    <button id="btnFit" class="ghost">Fit view</button>
+  <div class="ribbon">
+    <div class="rgroup">
+      <button id="btnAdd">+ Chamber</button>
+      <button id="btnObs">+ Obstacle</button>
+      <button id="btnConnect">Connect faces</button>
+      <button id="btnView3d">3D view</button>
+      <button id="btnFit" class="ghost">Fit view</button>
+    </div>
+    <div class="rgroup">
+      <button data-win="chambers">Chambers <em id="chamberCount"></em></button>
+      <button data-win="runs">Runs <em id="connCount"></em></button>
+      <button data-win="obstacles">Obstacles <em id="obsCount"></em></button>
+      <button data-win="specs">Specs</button>
+    </div>
+    <div class="rgroup">
+      <button data-win="drawing">Drawing</button>
+      <button data-win="file">File</button>
+    </div>
   </div>
 </header>
 
 <main>
-  <aside id="left">
-    <div class="sec">
-      <h2>Conduit specs</h2>
-      <div id="specList"></div>
-      <div class="btnrow">
-        <button id="specNew" class="mini">New</button>
-        <button id="specDup" class="mini">Duplicate</button>
-        <button id="specDel" class="mini warn">Delete</button>
-      </div>
-    </div>
-    <div class="sec">
-      <h2>Edit spec <em id="specWho"></em></h2>
-      <div id="specEdit"></div>
-    </div>
-  </aside>
-
   <div id="stage">
     <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="hud" id="hint">
@@ -52,56 +48,72 @@
     </div>
   </div>
 
-  <aside id="right">
-    <div class="sec">
-      <h2 id="selTitle">Selection</h2>
-      <div id="sel"></div>
-    </div>
-    <div class="sec">
-      <h2>Conduit runs <em id="connCount"></em></h2>
-      <div id="connList"></div>
-    </div>
-    <div class="sec">
-      <h2>Obstacles <em id="obsCount"></em></h2>
-      <div id="obsList"></div>
-    </div>
-    <div class="sec">
-      <h2>Drawing</h2>
-      <div class="row">
-        <label for="snap">Snap increment</label>
-        <input type="number" id="snap" min="0" step="5" value="50"><span class="unit">mm</span>
+  <div id="windows">
+    <section class="win" id="win-chambers" hidden>
+      <div class="winhead"><b>Chambers</b><span id="chamberWho"></span><button data-close title="Close">×</button></div>
+      <div class="winbody"><div class="winlist" id="chamberList"></div><div id="chamberEdit"></div></div>
+    </section>
+    <section class="win" id="win-runs" hidden>
+      <div class="winhead"><b>Conduit runs</b><span id="runWho"></span><button data-close title="Close">×</button></div>
+      <div class="winbody"><div class="winlist" id="connList"></div><div id="runEdit"></div></div>
+    </section>
+    <section class="win" id="win-obstacles" hidden>
+      <div class="winhead"><b>Obstacles</b><span id="obsWho"></span><button data-close title="Close">×</button></div>
+      <div class="winbody"><div class="winlist" id="obsList"></div><div id="obsEdit"></div></div>
+    </section>
+    <section class="win" id="win-specs" hidden>
+      <div class="winhead"><b>Conduit specs</b><span id="specWho"></span><button data-close title="Close">×</button></div>
+      <div class="winbody">
+        <div class="winlist" id="specList"></div>
+        <div class="btnrow" style="margin:0 0 10px">
+          <button id="specNew" class="mini">New</button>
+          <button id="specDup" class="mini">Duplicate</button>
+          <button id="specDel" class="mini warn">Delete</button>
+        </div>
+        <div id="specEdit"></div>
       </div>
-      <div class="row">
-        <label for="ground">Ground level Z</label>
-        <input type="number" id="ground" step="50" value="0"><span class="unit">mm</span>
+    </section>
+    <section class="win" id="win-drawing" hidden>
+      <div class="winhead"><b>Drawing</b><span></span><button data-close title="Close">×</button></div>
+      <div class="winbody">
+        <div class="row">
+          <label for="snap">Snap increment</label>
+          <input type="number" id="snap" min="0" step="5" value="50"><span class="unit">mm</span>
+        </div>
+        <div class="row">
+          <label for="ground">Ground level Z</label>
+          <input type="number" id="ground" step="50" value="0"><span class="unit">mm</span>
+        </div>
+        <div class="row">
+          <label for="cover">Minimum cover</label>
+          <input type="number" id="cover" min="0" step="50" value="500"><span class="unit">mm</span>
+        </div>
+        <div class="row"><label class="chk"><input type="checkbox" id="avoidMH" checked> Conduits avoid other chambers</label></div>
+        <div class="row"><label class="chk"><input type="checkbox" id="avoidPipe" checked> Conduits avoid runs on the same level</label></div>
+        <div class="row"><label class="chk"><input type="checkbox" id="grid" checked> Show grid</label></div>
+        <div class="row"><label class="chk"><input type="checkbox" id="dims" checked> Show annotation</label></div>
       </div>
-      <div class="row">
-        <label for="cover">Minimum cover</label>
-        <input type="number" id="cover" min="0" step="50" value="500"><span class="unit">mm</span>
+    </section>
+    <section class="win" id="win-file" hidden>
+      <div class="winhead"><b>File</b><span></span><button data-close title="Close">×</button></div>
+      <div class="winbody">
+        <div class="btnrow" style="margin-top:0">
+          <button id="btnExport">Export JSON</button>
+          <label class="filebtn" for="fileIn" style="flex:1;text-align:center">Import JSON</label>
+          <input type="file" id="fileIn" accept="application/json,.json">
+        </div>
+        <div class="btnrow">
+          <label class="filebtn" for="revitIn" style="flex:1;text-align:center">Import Revit JSON</label>
+          <input type="file" id="revitIn" accept="application/json,.json">
+        </div>
+        <div class="btnrow"><button id="btnClear" class="warn ghost">Clear drawing</button></div>
       </div>
-      <div class="row"><label class="chk"><input type="checkbox" id="avoidMH" checked> Conduits avoid other chambers</label></div>
-      <div class="row"><label class="chk"><input type="checkbox" id="avoidPipe" checked> Conduits avoid runs on the same level</label></div>
-      <div class="row"><label class="chk"><input type="checkbox" id="grid" checked> Show grid</label></div>
-      <div class="row"><label class="chk"><input type="checkbox" id="dims" checked> Show annotation</label></div>
-    </div>
-    <div class="sec">
-      <h2>File</h2>
-      <div class="btnrow">
-        <button id="btnExport">Export JSON</button>
-        <label class="filebtn" for="fileIn" style="flex:1;text-align:center">Import JSON</label>
-        <input type="file" id="fileIn" accept="application/json,.json">
-      </div>
-      <div class="btnrow">
-        <label class="filebtn" for="revitIn" style="flex:1;text-align:center">Import Revit JSON</label>
-        <input type="file" id="revitIn" accept="application/json,.json">
-      </div>
-      <div class="btnrow"><button id="btnClear" class="warn ghost">Clear drawing</button></div>
-    </div>
-  </aside>
+    </section>
+  </div>
 </main>
 
 <div id="faceDlg" hidden></div>
 
-<script src="/assets/js/app.js?v=2.7"></script>
+<script src="/assets/js/app.js?v=2.8"></script>
 </body>
 </html>

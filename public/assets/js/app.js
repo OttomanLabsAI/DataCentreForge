@@ -2005,14 +2005,33 @@ function wireClusters(box, rerender){
   });
 }
 
+/** The selected item's editor goes into its own window — Chambers, Runs or
+    Obstacles — whether or not that window is open; the ribbon lights the
+    buttons that concern the selection. */
 function renderSel(){
   recomputeRoutes();
-  const box = document.getElementById('sel'), ttl = document.getElementById('selTitle');
-  if (selIs('chamber')) { ttl.textContent = 'Chamber';  return renderChamberProps(box, byUid(state.sel.id)); }
-  if (selIs('obstacle')){ ttl.textContent = 'Obstacle'; return renderObstacleProps(box, obsBy(state.sel.id)); }
-  if (selIs('conn'))    { ttl.textContent = 'Conduit run'; return renderRunProps(box, connBy(state.sel.id)); }
-  ttl.textContent = 'Selection';
-  box.innerHTML = `<div class="empty">Nothing selected. Click a chamber, an obstacle or a conduit run.</div>`;
+  const cE = document.getElementById('chamberEdit'), oE = document.getElementById('obsEdit'), rE = document.getElementById('runEdit');
+  const who = (id, text) => { document.getElementById(id).textContent = text; };
+  cE.innerHTML = `<div class="empty">Click a chamber on the drawing, or pick one above, to edit it.</div>`;
+  oE.innerHTML = `<div class="empty">Click an obstacle on the drawing, or pick one above, to edit it.</div>`;
+  rE.innerHTML = `<div class="empty">Click a conduit run on the drawing, or pick one above, to edit it.</div>`;
+  who('chamberWho', ''); who('obsWho', ''); who('runWho', '');
+  if (selIs('chamber')){ const c = byUid(state.sel.id); if (c){ renderChamberProps(cE, c); who('chamberWho', c.ref); } }
+  else if (selIs('obstacle')){ const o = obsBy(state.sel.id); if (o){ renderObstacleProps(oE, o); who('obsWho', o.name); } }
+  else if (selIs('conn')){ const cn = connBy(state.sel.id); if (cn){ renderRunProps(rE, cn); who('runWho', connLabel(cn)); } }
+  renderChambers();
+  updateRibbon();
+}
+function renderChambers(){
+  const box = document.getElementById('chamberList');
+  document.getElementById('chamberCount').textContent = state.chambers.length || '';
+  if (!state.chambers.length){ box.innerHTML = `<div class="empty">None yet. Add one with <b>+ Chamber</b>, or import a Revit export from File.</div>`; return; }
+  box.innerHTML = '<div class="list">' + state.chambers.map(c =>
+    `<div class="item ${selIs('chamber') && state.sel.id === c.uid ? 'on':''}" data-ch="${c.uid}">
+      <span class="dot" style="background:${C.ink}"></span>
+      <span class="nm">${esc(c.ref)}</span>
+      <span class="meta">${fmt(c.intX)}×${fmt(c.intY)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}</span></div>`).join('') + '</div>';
+  box.querySelectorAll('[data-ch]').forEach(el => el.onclick = () => select('chamber', el.dataset.ch));
 }
 
 const revitLine = e => e.src === 'revit'
@@ -2200,7 +2219,7 @@ function renderRunProps(box, cn){
   });
   document.getElementById('qEditSpec').onclick = () => {
     state.editSpec = cn.specId; renderSpecs(); renderSpecEdit();
-    document.getElementById('left').scrollTop = 9999;
+    openWin('specs');
   };
   wireClusters(box, renderSel);
 }
@@ -2428,6 +2447,60 @@ btnConnect.onclick = () => {
 };
 document.getElementById('btnFit').onclick = () => fitView();
 document.getElementById('btnView3d').onclick = () => setView3d(!state.view3d);
+
+/* ==========================================================================
+   RIBBON WINDOWS
+   Every panel is a window opened from its ribbon button — all of them
+   always available, several open at once, dragged by their title bar. The
+   ribbon lights the buttons that concern whatever is selected.
+   ========================================================================== */
+
+const WINS = ['chambers', 'runs', 'obstacles', 'specs', 'drawing', 'file'];
+let winZ = 30;
+const winEl = k => document.getElementById('win-' + k);
+/** A window opens in the first free slot from the right edge, so several
+    open side by side; once the row is full they cascade. */
+function placeWin(el){
+  const r = STAGE.getBoundingClientRect();
+  const taken = [...document.querySelectorAll('.win')].filter(w => w !== el && !w.hidden).map(w => w.offsetLeft);
+  for (let i = 0; ; i++){
+    const x = r.width - 328 - i*324;
+    if (x < 8){ const n = WINS.indexOf(el.id.slice(4)); el.style.left = Math.max(8, r.width - 328 - n*36) + 'px'; el.style.top = (12 + n*36) + 'px'; return; }
+    if (!taken.some(t => Math.abs(t - x) < 40)){ el.style.left = x + 'px'; el.style.top = '12px'; return; }
+  }
+}
+function openWin(k){
+  const el = winEl(k);
+  if (!el) return;
+  if (el.hidden){ el.hidden = false; if (!el.dataset.moved) placeWin(el); }     // a dragged window keeps its place
+  el.style.zIndex = ++winZ;
+  updateRibbon();
+}
+function closeWin(k){ const el = winEl(k); if (el) el.hidden = true; updateRibbon(); }
+function toggleWin(k){ const el = winEl(k); if (el){ if (el.hidden) openWin(k); else closeWin(k); } }
+function updateRibbon(){
+  const rel = ({chamber:['chambers'], obstacle:['obstacles'], conn:['runs', 'specs']})[state.sel ? state.sel.kind : ''] || [];
+  document.querySelectorAll('[data-win]').forEach(b => {
+    const el = winEl(b.dataset.win);
+    b.classList.toggle('on', !!el && !el.hidden);
+    b.classList.toggle('rel', rel.includes(b.dataset.win));
+  });
+}
+document.querySelectorAll('[data-win]').forEach(b => b.onclick = () => toggleWin(b.dataset.win));
+document.querySelectorAll('.win').forEach(el => {
+  el.querySelector('[data-close]').onclick = () => closeWin(el.id.slice(4));
+  el.addEventListener('pointerdown', () => { el.style.zIndex = ++winZ; });
+  const head = el.querySelector('.winhead');
+  head.addEventListener('pointerdown', e => {
+    if (e.target.closest('button')) return;
+    const sx = e.clientX, sy = e.clientY, ox = el.offsetLeft, oy = el.offsetTop;
+    const move = ev => { el.dataset.moved = '1'; el.style.left = Math.max(0, ox + ev.clientX - sx) + 'px'; el.style.top = Math.max(0, oy + ev.clientY - sy) + 'px'; };
+    const up = () => { head.removeEventListener('pointermove', move); head.removeEventListener('pointerup', up); };
+    head.setPointerCapture(e.pointerId);
+    head.addEventListener('pointermove', move);
+    head.addEventListener('pointerup', up);
+  });
+});
 document.getElementById('snap').oninput = e => { state.snap = Math.max(0, Number(e.target.value)||0); };
 document.getElementById('grid').onchange = e => { state.showGrid = e.target.checked; draw(); };
 document.getElementById('dims').onchange = e => { state.showDims = e.target.checked; draw(); };

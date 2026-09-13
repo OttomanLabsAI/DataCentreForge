@@ -69,6 +69,15 @@ elements in place — runs stay attached — adds what is new and keeps what the
 export no longer has; the tool's own JSON export carries those ids on every
 element and on both ends of every run, plus the list of source documents.
 
+## The ribbon
+
+Every panel is a window opened from a button on the ribbon across the top —
+Chambers, Runs, Obstacles, Specs, Drawing, File — so the drawing takes the
+whole width. All buttons are always available; open as many windows as you
+like and drag them by their title bars. Selecting a chamber, obstacle or run
+on the plan lights the buttons that concern it, and their windows show its
+editor when opened.
+
 ## Where runs meet a face
 
 A run meets each of its faces where it lines up with the far face, so two
