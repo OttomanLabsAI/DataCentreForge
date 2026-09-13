@@ -8,6 +8,8 @@
 
 const SVG = document.getElementById('svg');
 const STAGE = document.getElementById('stage');
+/* a finger-first device (an iPad in a browser): touch hints, bigger targets, no hover */
+const TOUCH_UI = matchMedia('(pointer: coarse)').matches || matchMedia('(hover: none)').matches;
 
 const C = {
   ink:'#dfe6ef', inkDim:'#8894a4', inkFaint:'#5b6675',
@@ -25,7 +27,9 @@ const SPEC_COLOURS  = ['#35c3e8','#6bd68a','#d8a0e0','#f0a35e','#e0655f','#9db4d
 const state = {
   chambers: [], obstacles: [], connections: [], specs: [],
   view: {tx:0, ty:0, s:0.04},
-  sel: null,            // {kind:'chamber'|'obstacle'|'conn', id}
+  sel: null,            // {kind:'chamber'|'obstacle'|'conn', id} — the primary selection
+  selSet: [],           // everything selected, primary included (window / crossing selection)
+  rubber: null,         // the selection rectangle being dragged, in screen px
   editSpec: null,
   hoverFace: null,
   mode: 'select',
@@ -45,6 +49,7 @@ const connBy = u => state.connections.find(c => c.uid === u);
 const specBy = i => state.specs.find(s => s.id === i);
 const specOf = cn => specBy(cn.specId) || state.specs[0];
 const selIs  = k => state.sel && state.sel.kind === k;
+const inSel  = (k, id) => state.selSet.some(x => x.kind === k && x.id === id);
 
 /* ---------- model --------------------------------------------------------- */
 
@@ -1297,7 +1302,7 @@ function draw(){
 
   for (const c of state.chambers){
     const inner = corners(c, 0), outer = corners(c, c.wall);
-    const on = selIs('chamber') && state.sel.id === c.uid;
+    const on = inSel('chamber', c.uid);
     const stroke = on ? C.sel : C.ink, ext = c.intX + 2*c.wall;
     if (c.lid)
       out.push(`<polygon points="${pts([[c.lid.x[0],c.lid.y[0]],[c.lid.x[1],c.lid.y[0]],[c.lid.x[1],c.lid.y[1]],[c.lid.x[0],c.lid.y[1]]].map(p => toWorld(c, p)))}" fill="none" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="4 3" opacity=".7"/>`);
@@ -1331,6 +1336,11 @@ function draw(){
     const c = byUid(state.hoverFace.mh);
     if (c) out.push(faceMarker(faceGeom(c, state.hoverFace.face), C.pick));
   }
+  if (state.rubber){
+    const b = state.rubber, crossing = b.x1 < b.x0;
+    out.push(`<rect x="${Math.min(b.x0, b.x1)}" y="${Math.min(b.y0, b.y1)}" width="${Math.abs(b.x1-b.x0)}" height="${Math.abs(b.y1-b.y0)}"
+      fill="${crossing ? 'rgba(107,214,138,.10)' : 'rgba(53,195,232,.10)'}" stroke="${crossing ? '#6bd68a' : C.pick}" stroke-width="1"${crossing ? ' stroke-dasharray="5 4"' : ''}/>`);
+  }
 
   SVG.setAttribute('viewBox', `0 0 ${W} ${H}`);
   SVG.innerHTML = out.join('');
@@ -1339,7 +1349,7 @@ function draw(){
 }
 
 function drawObstacle(o){
-  const on = selIs('obstacle') && state.sel.id === o.uid;
+  const on = inSel('obstacle', o.uid);
   const s = state.view.s, body = boxCorners(o, 0), clr = boxCorners(o, o.buffer);
   const stroke = on ? C.sel : C.obsLine;
   const out = [];
@@ -1361,7 +1371,7 @@ function drawConnection(cn){
   const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   if (!A || !B) return '';
   const s = state.view.s, sp = specOf(cn), rt = cn.route;
-  const on = selIs('conn') && state.sel.id === cn.uid;
+  const on = inSel('conn', cn.uid);
   const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
   const p = W2S(ea.point), q = W2S(eb.point);
   const out = [];
@@ -1520,7 +1530,7 @@ function draw3d(){
   const fp = q => q[0].toFixed(1) + ',' + q[1].toFixed(1);
   const polyStr = qs => qs.map(fp).join(' ');
   const line = (a, b, attrs) => `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" ${attrs}/>`;
-  const isOn = (kind, id) => !!state.sel && state.sel.kind === kind && state.sel.id === id;
+  const isOn = (kind, id) => inSel(kind, id);
 
   out.push(`<defs><pattern id="obs" patternUnits="userSpaceOnUse" width="9" height="9" patternTransform="rotate(-45)">
       <line x1="0" y1="0" x2="0" y2="9" stroke="${C.obsHatch}" stroke-width="1.4"/></pattern></defs>`);
@@ -1625,28 +1635,33 @@ function pick3d(sp){
 }
 function pointer3dDown(e, sp){
   drag3 = {sx:sp[0], sy:sp[1], az:state.cam.az, el:state.cam.el, px:state.cam.px, py:state.cam.py,
-           pan:e.shiftKey || e.button === 1, moved:false};
+           pan:e.shiftKey || e.button === 1 || e.button === 2, button:e.button, moved:false,
+           slop: e.pointerType === 'mouse' ? 3 : SLOP};
 }
 function pointer3dMove(e, sp){
   if (!drag3){ STAGE.style.cursor = pick3d(sp) ? 'pointer' : 'grab'; return; }
   const dx = sp[0]-drag3.sx, dy = sp[1]-drag3.sy;
-  if (Math.hypot(dx, dy) > 3) drag3.moved = true;
+  if (!drag3.moved){ if (Math.hypot(dx, dy) <= drag3.slop) return; drag3.moved = true; }
   if (drag3.pan){ state.cam.px = drag3.px + dx; state.cam.py = drag3.py + dy; }
   else { state.cam.az = drag3.az - dx*0.4; state.cam.el = Math.max(5, Math.min(89.5, drag3.el + dy*0.4)); }
   STAGE.style.cursor = drag3.pan ? 'move' : 'grabbing';
   draw();
 }
-function pointer3dUp(sp){
-  if (drag3 && !drag3.moved){ const h = pick3d(sp); select(h ? h.kind : null, h ? h.id : null); }
-  drag3 = null;
+function pointer3dUp(e, sp){
+  const d = drag3; drag3 = null;
   STAGE.style.cursor = 'grab';
+  if (!d || d.moved) return;
+  if (d.button === 2 || e.ctrlKey){ radialAt(sp); return; }
+  const h = pick3d(sp); select(h ? h.kind : null, h ? h.id : null);
 }
 function setView3d(on){
   state.view3d = on;
   document.getElementById('btnView3d').classList.toggle('on', on);
   state.hoverFace = null; showCallout(null);
   if (on){ state.pending = null; setPendingStatus(); closeRadial(); }   // connecting faces is a plan-view job
-  document.getElementById('rmode').textContent = on ? '3D — drag to orbit · shift-drag to pan · scroll to zoom · click to select' : '';
+  document.getElementById('rmode').textContent = !on ? '' : TOUCH_UI
+    ? '3D — one finger orbits · two fingers pan and zoom · tap to select · hold for the menu'
+    : '3D — drag to orbit · shift-drag to pan · scroll to zoom · click to select';
   STAGE.style.cursor = on ? 'grab' : 'crosshair';
   if (on) fit3d(); else draw();
 }
@@ -1699,35 +1714,92 @@ function hitConnection(w, tolPx = 8){
    ========================================================================== */
 
 let drag = null;
+const touches = new Map();          // active touch pointers → [x, y] on the stage
+let pinch = null;                   // two-finger pinch in progress
+let touchRest = false;              // a finger left over from a pinch or a long press rests until it lifts
+let hold = null;                    // long-press timer: a finger or pencil held still opens the ring, as a right-click does
+const SLOP = 8;                     // px a finger may wander before a tap becomes a drag
+
+const stagePt = e => { const r = STAGE.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+const isPan = e => e.button === 1 || e.button === 2;
+const coarse = e => e.pointerType === 'touch' || e.pointerType === 'pen';   // no buttons, no hover, a fatter point
+
+function cancelHold(){ if (hold){ clearTimeout(hold.t); hold = null; } }
+/** A drag overtaken by a pinch or a long press leaves nothing behind. */
+function abandonDrag(){
+  if (drag && drag.kind === 'move'){
+    if (drag.moved) for (const it of drag.items){ it.obj.x = it.x0; it.obj.y = it.y0; }
+    ROUTE_QUICK = false; renderSel(); renderConnections();
+  }
+  drag = null; drag3 = null; state.rubber = null;
+}
+function startPinch(){
+  cancelHold(); abandonDrag();
+  const [a, b] = [...touches.values()];
+  const r = STAGE.getBoundingClientRect();
+  pinch = {d0: Math.max(1, Math.hypot(b[0]-a[0], b[1]-a[1])), mid0: [(a[0]+b[0])/2, (a[1]+b[1])/2], W:r.width, H:r.height};
+  if (state.view3d){ const cam = state.cam; pinch.s0 = cam.s; pinch.X0 = (pinch.mid0[0] - r.width/2 - cam.px)/cam.s; pinch.U0 = (r.height/2 + cam.py - pinch.mid0[1])/cam.s; }
+  else { pinch.s0 = state.view.s; pinch.w0 = S2W(pinch.mid0); }
+}
+function movePinch(){
+  const [a, b] = [...touches.values()];
+  const d = Math.max(1, Math.hypot(b[0]-a[0], b[1]-a[1])), mid = [(a[0]+b[0])/2, (a[1]+b[1])/2];
+  const ns = Math.max(0.0004, Math.min(4, pinch.s0 * d/pinch.d0));
+  if (state.view3d){
+    const cam = state.cam;
+    cam.s = ns; cam.px = mid[0] - pinch.W/2 - pinch.X0*ns; cam.py = mid[1] - pinch.H/2 + pinch.U0*ns;
+  } else {
+    state.view.s = ns; state.view.tx = mid[0] - pinch.w0[0]*ns; state.view.ty = mid[1] + pinch.w0[1]*ns;
+  }
+  draw();
+}
 
 STAGE.addEventListener('pointerdown', e => {
-  if (e.target.closest && e.target.closest('#radial')) return;     // the menu handles its own clicks
+  if (e.target.closest && e.target.closest('#radial')){ ringArmed = true; return; }     // the menu handles its own clicks
   closeRadial();
-  if (e.button === 2) return;
-  e.preventDefault();                       // stop native text selection while dragging
+  const sp = stagePt(e);
+  if (e.pointerType === 'touch'){
+    touches.set(e.pointerId, sp);
+    if (touches.size >= 2){ e.preventDefault(); startPinch(); return; }
+  }
+  if (touchRest) return;
+  e.preventDefault();                       // stop native text selection and middle-button autoscroll
   STAGE.setPointerCapture(e.pointerId);
-  const r = STAGE.getBoundingClientRect();
-  const sp = [e.clientX-r.left, e.clientY-r.top], wp = S2W(sp);
+  if (coarse(e)) hold = {sp, t:setTimeout(() => { hold = null; abandonDrag(); touchRest = true; radialAt(sp, true); ringArmed = false; }, 500)};
   if (state.view3d){ pointer3dDown(e, sp); return; }
-
+  if (isPan(e)){                            // middle or right button drags the view; a still right-click opens the ring
+    drag = {kind:'pan', sx:sp[0], sy:sp[1], tx:state.view.tx, ty:state.view.ty, button:e.button, moved:false};
+    return;
+  }
+  const wp = S2W(sp);
   if (state.pending){                       // a connection begun from a face: a click on another face completes it
-    const f = hitFace(wp, 12);
-    if (f){ pickFace(f); return; }
+    const f = hitFace(wp, coarse(e) ? 20 : 12);
+    if (f){ cancelHold(); pickFace(f); return; }
     state.pending = null; setPendingStatus();
   }
+  const grab = (kind, obj) => {
+    if (!inSel(kind, obj.uid)) select(kind, obj.uid); else setPrimary(kind, obj.uid);
+    drag = {kind:'move', wp0:wp, sx:sp[0], sy:sp[1], slop: coarse(e) ? SLOP : 0,
+            items: movables().map(m => ({obj:m, x0:m.x, y0:m.y})), moved:false};
+    ROUTE_QUICK = true;
+  };
   const c = hitChamber(wp);
-  if (c){ select('chamber', c.uid); drag = {kind:'move', obj:c, dx:wp[0]-c.x, dy:wp[1]-c.y}; ROUTE_QUICK = true; return; }
+  if (c){ grab('chamber', c); return; }
   const o = hitObstacle(wp);
-  if (o){ select('obstacle', o.uid); drag = {kind:'move', obj:o, dx:wp[0]-o.x, dy:wp[1]-o.y}; ROUTE_QUICK = true; return; }
-  const cn = hitConnection(wp);
-  if (cn){ select('conn', cn.uid); return; }
-  select(null);
-  drag = {kind:'pan', sx:sp[0], sy:sp[1], tx:state.view.tx, ty:state.view.ty};
+  if (o){ grab('obstacle', o); return; }
+  const cn = hitConnection(wp, coarse(e) ? 14 : 8);
+  if (cn){ if (!inSel('conn', cn.uid)) select('conn', cn.uid); else setPrimary('conn', cn.uid); return; }
+  drag = {kind:'box', sx:sp[0], sy:sp[1], moved:false, ctrl:e.ctrlKey};       // empty space: a selection rectangle
 });
 
 STAGE.addEventListener('pointermove', e => {
-  const r = STAGE.getBoundingClientRect();
-  const sp = [e.clientX-r.left, e.clientY-r.top], wp = S2W(sp);
+  const sp = stagePt(e), wp = S2W(sp);
+  if (e.pointerType === 'touch' && touches.has(e.pointerId)){
+    touches.set(e.pointerId, sp);
+    if (pinch && touches.size >= 2){ movePinch(); return; }
+  }
+  if (touchRest) return;
+  if (hold && Math.hypot(sp[0]-hold.sp[0], sp[1]-hold.sp[1]) > SLOP) cancelHold();
   if (state.view3d){
     document.getElementById('rx').textContent = '—';
     document.getElementById('ry').textContent = '—';
@@ -1737,14 +1809,23 @@ STAGE.addEventListener('pointermove', e => {
   document.getElementById('ry').textContent = fmt(wp[1]);
 
   if (drag && drag.kind === 'pan'){
+    if (Math.hypot(sp[0]-drag.sx, sp[1]-drag.sy) > 3) drag.moved = true;
     state.view.tx = drag.tx + (sp[0]-drag.sx);
     state.view.ty = drag.ty + (sp[1]-drag.sy);
     return draw();
   }
   if (drag && drag.kind === 'move'){
-    drag.obj.x = snap(wp[0]-drag.dx); drag.obj.y = snap(wp[1]-drag.dy);
+    if (!drag.moved && Math.hypot(sp[0]-drag.sx, sp[1]-drag.sy) <= drag.slop) return;
+    drag.moved = true;
+    for (const it of drag.items){ it.obj.x = snap(it.x0 + wp[0]-drag.wp0[0]); it.obj.y = snap(it.y0 + wp[1]-drag.wp0[1]); }
     renderSel(); renderConnections(); return draw();
   }
+  if (drag && drag.kind === 'box'){
+    if (Math.hypot(sp[0]-drag.sx, sp[1]-drag.sy) > 3) drag.moved = true;
+    state.rubber = drag.moved ? {x0:drag.sx, y0:drag.sy, x1:sp[0], y1:sp[1]} : null;
+    return draw();
+  }
+  if (!RADIAL.hidden) return;               // the ring is up: no hover business underneath it
   const f = hitFace(wp);
   const changed = JSON.stringify(f) !== JSON.stringify(state.hoverFace);
   state.hoverFace = f;
@@ -1754,52 +1835,83 @@ STAGE.addEventListener('pointermove', e => {
   if (changed) draw();
 });
 
+/** A lifted finger: true when nothing more should come of it (it pinched, or rested). */
+function endTouch(e){
+  if (!coarse(e)) return false;
+  cancelHold();
+  if (e.pointerType === 'touch') touches.delete(e.pointerId);
+  const rest = touchRest || !!pinch;
+  if (pinch && touches.size < 2) pinch = null;
+  touchRest = touches.size > 0 && rest;     // a finger left behind rests; the last one lifting clears it
+  return rest;
+}
 STAGE.addEventListener('pointerup', e => {
-  if (state.view3d){ const r = STAGE.getBoundingClientRect(); pointer3dUp([e.clientX-r.left, e.clientY-r.top]); return; }
-  drag = null;
+  if (e.target.closest && e.target.closest('#radial')) return;
+  const sp = stagePt(e);
+  if (endTouch(e)) return;
+  if (state.view3d){ pointer3dUp(e, sp); return; }
+  const d = drag; drag = null;
+  if (d && d.kind === 'pan'){
+    if (!d.moved && (d.button === 2 || e.ctrlKey)) radialAt(sp);
+    return;
+  }
+  if (d && d.kind === 'box'){
+    state.rubber = null;
+    if (d.moved){
+      const a = S2W([d.sx, d.sy]), b = S2W(sp);
+      selectSet(rectSel(Math.min(a[0], b[0]), Math.min(a[1], b[1]), Math.max(a[0], b[0]), Math.max(a[1], b[1]), sp[0] < d.sx));
+    } else select(null);
+    return;
+  }
   if (ROUTE_QUICK){ ROUTE_QUICK = false; renderSel(); renderConnections(); draw(); }
 });
+STAGE.addEventListener('pointercancel', e => { endTouch(e); abandonDrag(); });
 STAGE.addEventListener('pointerleave', () => {
-  if (state.view3d){ drag3 = null; return; }
+  if (state.view3d){ return; }
   state.hoverFace = null; showCallout(null); draw();
   document.getElementById('rx').textContent = '—';
   document.getElementById('ry').textContent = '—';
 });
-STAGE.addEventListener('contextmenu', e => {
-  e.preventDefault();
-  const r = STAGE.getBoundingClientRect(), sp = [e.clientX-r.left, e.clientY-r.top];
+/** The ring for whatever sits under a still right-click (or ctrl-click, or a held finger — `big` widens the hit). */
+function radialAt(sp, big){
+  const keep = (kind, id) => { if (!inSel(kind, id)) select(kind, id); else setPrimary(kind, id); };   // a ring on a selected thing keeps the set
   if (state.view3d){
     const h = pick3d(sp);
-    if (h) select(h.kind, h.id);
+    if (h) keep(h.kind, h.id);
     const m = h ? (h.kind === 'chamber' ? chamberMenu(byUid(h.id)) : h.kind === 'obstacle' ? obstacleMenu(obsBy(h.id)) : runMenu(connBy(h.id)))
                 : ['3D view', [{icon:'fit', label:'Fit view', run:() => fit3d()}, {icon:'plan', label:'Plan view', run:() => setView3d(false)},
                                {icon:'runs', label:'Runs', run:() => openWin('runs')}]];
     return openRadial(sp, m[0], m[1]);
   }
   const wp = S2W(sp);
-  const f = hitFace(wp, 9);
+  const f = hitFace(wp, big ? 18 : 9);
   if (f) return openRadial(sp, ...faceMenu(f));
   const c = hitChamber(wp);
-  if (c){ select('chamber', c.uid); return openRadial(sp, ...chamberMenu(c)); }
+  if (c){ keep('chamber', c.uid); return openRadial(sp, ...chamberMenu(c)); }
   const o = hitObstacle(wp);
-  if (o){ select('obstacle', o.uid); return openRadial(sp, ...obstacleMenu(o)); }
-  const cn = hitConnection(wp);
-  if (cn){ select('conn', cn.uid); return openRadial(sp, ...runMenu(cn)); }
+  if (o){ keep('obstacle', o.uid); return openRadial(sp, ...obstacleMenu(o)); }
+  const cn = hitConnection(wp, big ? 14 : 8);
+  if (cn){ keep('conn', cn.uid); return openRadial(sp, ...runMenu(cn)); }
   openRadial(sp, ...spaceMenu(wp));
-});
+}
+STAGE.addEventListener('contextmenu', e => e.preventDefault());      // the ring is opened from pointerup instead
+STAGE.addEventListener('touchmove', e => e.preventDefault(), {passive:false});   // no page scroll or rubber-banding under a gesture
+STAGE.addEventListener('gesturestart', e => e.preventDefault());               // Safari's page pinch stays out of the drawing
 STAGE.addEventListener('wheel', e => {
   e.preventDefault();
   closeRadial();
   const r = STAGE.getBoundingClientRect();
   const sp = [e.clientX-r.left, e.clientY-r.top], before = S2W(sp);
+  /* a touchpad pinch arrives as a wheel with ctrl held and small deltas */
+  const k = e.ctrlKey && Math.abs(e.deltaY) < 50 ? 0.012 : 0.0016;
   if (state.view3d){
-    const cam = state.cam, ns = Math.max(0.0004, Math.min(4, cam.s*Math.exp(-e.deltaY*0.0016))), g = ns/cam.s;
+    const cam = state.cam, ns = Math.max(0.0004, Math.min(4, cam.s*Math.exp(-e.deltaY*k))), g = ns/cam.s;
     cam.px = sp[0] - r.width/2 - (sp[0] - r.width/2 - cam.px)*g;   // keep the point under the cursor still
     cam.py = sp[1] - r.height/2 - (sp[1] - r.height/2 - cam.py)*g;
     cam.s = ns;
     return draw();
   }
-  state.view.s = Math.max(0.0004, Math.min(4, state.view.s*Math.exp(-e.deltaY*0.0016)));
+  state.view.s = Math.max(0.0004, Math.min(4, state.view.s*Math.exp(-e.deltaY*k)));
   const after = S2W(sp);
   state.view.tx += (after[0]-before[0])*state.view.s;
   state.view.ty -= (after[1]-before[1])*state.view.s;
@@ -1829,8 +1941,45 @@ function showCallout(f, sp){
 
 function select(kind, id){
   state.sel = kind ? {kind, id} : null;
+  state.selSet = kind ? [{kind, id}] : [];
   renderSel(); renderConnections(); renderObstacles(); draw();
 }
+/** Select a whole set; the first chamber (else obstacle, else run) is primary. */
+function selectSet(set){
+  const prim = set.find(x => x.kind === 'chamber') || set.find(x => x.kind === 'obstacle') || set[0] || null;
+  state.sel = prim ? {kind:prim.kind, id:prim.id} : null;
+  state.selSet = set.slice();
+  renderSel(); renderConnections(); renderObstacles(); draw();
+}
+function setPrimary(kind, id){
+  state.sel = {kind, id};
+  if (!inSel(kind, id)) state.selSet.push({kind, id});
+  renderSel(); renderConnections(); renderObstacles(); draw();
+}
+/** What a selection rectangle (world coordinates) takes: a WINDOW (dragged
+    left to right) takes only what lies wholly inside; a CROSSING (dragged
+    right to left) takes anything it touches. */
+function rectSel(x0, y0, x1, y1, crossing){
+  const inside = p => p[0] >= x0 && p[0] <= x1 && p[1] >= y0 && p[1] <= y1;
+  const rp = [[x0,y0],[x1,y0],[x1,y1],[x0,y1]];
+  const edges = [[rp[0],rp[1]],[rp[1],rp[2]],[rp[2],rp[3]],[rp[3],rp[0]]];
+  const cuts = (a, b) => edges.some(([p, q]) => segSegDist(a, b, p, q) < 1);
+  const polyHit = pts => crossing
+    ? pts.some(inside) || rp.some(p => pointInPoly(p, pts)) || pts.some((p, i) => cuts(pts[i ? i-1 : pts.length-1], p))
+    : pts.every(inside);
+  const lineHit = pts => crossing ? pts.some(inside) || pts.some((p, i) => i > 0 && cuts(pts[i-1], p)) : pts.every(inside);
+  const set = [];
+  for (const c of state.chambers) if (polyHit(corners(c, c.wall))) set.push({kind:'chamber', id:c.uid});
+  for (const o of state.obstacles) if (polyHit(boxCorners(o, 0))) set.push({kind:'obstacle', id:o.uid});
+  for (const cn of state.connections){
+    const rt = cn.route; let pts;
+    if (cn.placed && rt && rt.ok) pts = rt.poly;
+    else { const ea = entryFor(cn,'a'), eb = entryFor(cn,'b'); if (!ea || !eb) continue; pts = [ea.point, eb.point]; }
+    if (lineHit(pts)) set.push({kind:'conn', id:cn.uid});
+  }
+  return set;
+}
+const movables = () => state.selSet.map(x => x.kind === 'chamber' ? byUid(x.id) : x.kind === 'obstacle' ? obsBy(x.id) : null).filter(Boolean);
 /** The status line while a connection is being made from a face. */
 function setPendingStatus(){
   const el = document.getElementById('rmode');
@@ -1875,7 +2024,7 @@ function renderConnections(){
     const meta = !rt || !rt.ok ? 'no route'
                : !cn.placed ? 'not placed'
                : (warn ? '⚠ ' : '') + metres(rt.length3d || rt.length);
-    return `<div class="item ${selIs('conn') && state.sel.id === cn.uid ? 'on':''}" data-conn="${cn.uid}">
+    return `<div class="item ${inSel('conn', cn.uid) ? 'on':''}" data-conn="${cn.uid}">
       <span class="dot" style="background:${sp ? sp.colour : C.inkFaint}"></span>
       <span class="nm">${esc(connLabel(cn))}</span>
       <span class="meta ${cls}">${meta}</span>
@@ -1893,7 +2042,7 @@ function renderObstacles(){
     return;
   }
   box.innerHTML = '<div class="list">' + state.obstacles.map(o =>
-    `<div class="item ${selIs('obstacle') && state.sel.id === o.uid ? 'on':''}" data-obs="${o.uid}">
+    `<div class="item ${inSel('obstacle', o.uid) ? 'on':''}" data-obs="${o.uid}">
       <span class="dot" style="background:${C.obsLine}"></span>
       <span class="nm">${esc(o.name)}</span>
       <span class="meta">${fmt(o.w)}×${fmt(o.d)}</span>
@@ -2057,7 +2206,7 @@ function renderChambers(){
   document.getElementById('chamberCount').textContent = state.chambers.length || '';
   if (!state.chambers.length){ box.innerHTML = `<div class="empty">None yet. Add one with <b>+ Chamber</b>, or import a Revit export from File.</div>`; return; }
   box.innerHTML = '<div class="list">' + state.chambers.map(c =>
-    `<div class="item ${selIs('chamber') && state.sel.id === c.uid ? 'on':''}" data-ch="${c.uid}">
+    `<div class="item ${inSel('chamber', c.uid) ? 'on':''}" data-ch="${c.uid}">
       <span class="dot" style="background:${C.ink}"></span>
       <span class="nm">${esc(c.ref)}</span>
       <span class="meta">${fmt(c.intX)}×${fmt(c.intY)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}</span></div>`).join('') + '</div>';
@@ -2496,7 +2645,8 @@ const ICONS = {
   under:    '<rect x="8" y="4" width="8" height="8"/><path d="M3 10a9 9 0 0 0 18 0"/>',
   sides:    '<rect x="5" y="5" width="14" height="14"/><path d="M19 5v14" stroke-width="3.2"/>',
   cancel:   '<path d="M6 6l12 12M18 6L6 18"/>',
-  add:      '<path d="M12 5v14M5 12h14"/>'
+  add:      '<path d="M12 5v14M5 12h14"/>',
+  example:  '<rect x="3" y="14" width="6" height="6"/><rect x="15" y="4" width="6" height="6"/><rect x="15" y="14" width="6" height="6"/><path d="M9 17h6M18 10v4"/>'
 };
 const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k] || ''}</svg>`;
 document.querySelectorAll('[data-icon]').forEach(b => b.insertAdjacentHTML('afterbegin', icon(b.dataset.icon)));
@@ -2508,6 +2658,10 @@ document.querySelectorAll('[data-icon]').forEach(b => b.insertAdjacentHTML('afte
    ========================================================================== */
 
 const RADIAL = document.getElementById('radial');
+/* A ring opened under a held finger is not armed until a fresh press lands inside it: the finger that opened
+   it lifts onto the hub, and the click the browser makes of that lift must not close it. */
+let ringArmed = true;
+RADIAL.addEventListener('keydown', () => { ringArmed = true; });
 function openRadial(sp, hub, items){
   const r = STAGE.getBoundingClientRect();
   const R = items.length > 6 ? 82 : items.length > 4 ? 70 : 62, pad = R + 32;
@@ -2519,9 +2673,10 @@ function openRadial(sp, hub, items){
       return `<button class="ritem${it.warn ? ' warn' : ''}" data-ri="${i}" title="${esc(it.label)}"
         style="left:${(R*Math.cos(a)).toFixed(1)}px;top:${(R*Math.sin(a)).toFixed(1)}px">${icon(it.icon)}<span>${esc(it.label)}</span></button>`;
     }).join('') + `<div class="rhub" title="Esc closes">${esc(hub)}</div>`;
-  RADIAL.hidden = false;
-  RADIAL.querySelectorAll('[data-ri]').forEach(b => b.onclick = ev => { ev.stopPropagation(); const it = items[+b.dataset.ri]; closeRadial(); it.run(); });
-  RADIAL.querySelector('.rhub').onclick = ev => { ev.stopPropagation(); closeRadial(); };
+  RADIAL.hidden = false; ringArmed = true;
+  state.hoverFace = null; showCallout(null);
+  RADIAL.querySelectorAll('[data-ri]').forEach(b => b.onclick = ev => { ev.stopPropagation(); if (!ringArmed) return; const it = items[+b.dataset.ri]; closeRadial(); it.run(); });
+  RADIAL.querySelector('.rhub').onclick = ev => { ev.stopPropagation(); if (ringArmed) closeRadial(); };
 }
 function closeRadial(){ if (!RADIAL.hidden){ RADIAL.hidden = true; RADIAL.innerHTML = ''; } }
 
@@ -2548,8 +2703,14 @@ function chamberMenu(c){
       const n = makeChamber({...c, uid:uid(), ref:nextRef(), x:c.x + c.intX + 2*c.wall + 1000});
       state.chambers.push(n); select('chamber', n.uid); }},
     {icon:'fit', label:'Fit view', run:() => fitView()},
-    {icon:'delete', label:'Delete', warn:true, run:() => removeChamber(c.uid)}
+    deleteItem(() => removeChamber(c.uid))
   ]];
+}
+/** The ring's delete entry: the whole selection when it holds several things, else just this one. */
+function deleteItem(one, icon = 'delete', label = 'Delete'){
+  const n = state.selSet.length;
+  return n > 1 ? {icon:'delete', label:`Delete ${n}`, warn:true, run:deleteSelection}
+               : {icon, label, warn:true, run:one};
 }
 function obstacleMenu(o){
   const setM = m => () => { o.method = m; select('obstacle', o.uid); };
@@ -2561,9 +2722,9 @@ function obstacleMenu(o){
     {icon:'duplicate', label:'Duplicate', run:() => {
       const n = makeObstacle({...o, uid:uid(), name:nextName(), x:o.x + o.w + 1000});
       state.obstacles.push(n); select('obstacle', n.uid); }},
-    {icon:'delete', label:'Delete', warn:true, run:() => {
+    deleteItem(() => {
       state.obstacles = state.obstacles.filter(x => x.uid !== o.uid);
-      state.sel = null; renderSel(); renderObstacles(); renderConnections(); draw(); }}
+      state.sel = null; renderSel(); renderObstacles(); renderConnections(); draw(); })
   ]];
 }
 function runMenu(cn){
@@ -2572,7 +2733,7 @@ function runMenu(cn){
     {icon:'edit', label:'Edit', run:() => { select('conn', cn.uid); openWin('runs'); }},
     {icon:'place', label: cn.placed ? 'Update line' : 'Place line', run:() => { if (rt && rt.ok){ cn.placed = true; select('conn', cn.uid); } }},
     {icon:'specs', label:'Spec', run:() => { state.editSpec = cn.specId; renderSpecs(); renderSpecEdit(); openWin('specs'); }},
-    {icon:'disconnect', label:'Disconnect', warn:true, run:() => disconnect(cn.uid)}
+    deleteItem(() => disconnect(cn.uid), 'disconnect', 'Disconnect')
   ]];
 }
 function spaceMenu(wp){
@@ -2862,7 +3023,16 @@ document.getElementById('revitIn').onchange = e => {
   const rd = new FileReader();
   rd.onload = () => {
     try {
-      const src = JSON.parse(rd.result);
+      applyRevitImport(JSON.parse(rd.result));
+    } catch(err){ alert('That file is not a Revit manhole export: ' + err.message); }
+    e.target.value = '';
+  };
+  rd.readAsText(f);
+};
+
+/** Bring a Revit export onto the drawing: refresh what is already here from
+    the same model, else ask whether to replace or add. */
+function applyRevitImport(src){
       const {chambers: made, obstacles: obs} = importRevit(src);
       if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) found');
       const n = (k, w) => `${k} ${w}${k === 1 ? '' : 's'}`;
@@ -2906,12 +3076,15 @@ document.getElementById('revitIn').onchange = e => {
         }
       }
       bankCache.clear();
-      state.sel = null; state.pending = null;
+      state.sel = null; state.selSet = []; state.pending = null;
       renderSel(); renderConnections(); renderObstacles(); fitView();
-    } catch(err){ alert('That file is not a Revit manhole export: ' + err.message); }
-    e.target.value = '';
-  };
-  rd.readAsText(f);
+}
+
+document.getElementById('btnExample').onclick = () => {
+  fetch('/examples/dcbuild-manholes.json', {cache:'no-cache'})
+    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+    .then(src => { applyRevitImport(src); document.getElementById('rmode').textContent = `example placed — ${state.chambers.length} manholes from DCBuild.rvt`; })
+    .catch(err => alert('The example could not be loaded: ' + err.message));
 };
 
 document.getElementById('btnClear').onclick = () => {
@@ -2922,29 +3095,38 @@ document.getElementById('btnClear').onclick = () => {
   }
 };
 
+/** Everything selected goes: runs, obstacles, chambers and the runs that touch them. */
+function deleteSelection(){
+  const set = state.selSet.slice();
+  if (!set.length) return;
+  const runs = new Set(set.filter(x => x.kind === 'conn').map(x => x.id));
+  const chs = new Set(set.filter(x => x.kind === 'chamber').map(x => x.id));
+  const obs = new Set(set.filter(x => x.kind === 'obstacle').map(x => x.id));
+  state.connections = state.connections.filter(c => !runs.has(c.uid) && !chs.has(c.a.mh) && !chs.has(c.b.mh));
+  state.chambers = state.chambers.filter(c => !chs.has(c.uid));
+  state.obstacles = state.obstacles.filter(o => !obs.has(o.uid));
+  state.pending = null; setPendingStatus(); select(null);
+}
 document.addEventListener('keydown', e => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
   if (e.key === 'Escape' && !RADIAL.hidden){ closeRadial(); return; }
   if (state.faceDialog){ if (e.key === 'Escape') closeFaceDialog(); return; }
   if (e.key === 'Delete' || e.key === 'Backspace'){
-    if (selIs('conn')){ e.preventDefault(); disconnect(state.sel.id); }
-    else if (selIs('chamber')){ e.preventDefault(); removeChamber(state.sel.id); }
-    else if (selIs('obstacle')){
-      e.preventDefault();
-      state.obstacles = state.obstacles.filter(o => o.uid !== state.sel.id);
-      state.sel = null; renderSel(); renderObstacles(); renderConnections(); draw();
-    }
+    if (!state.selSet.length) return;
+    e.preventDefault();
+    deleteSelection();
   } else if (e.key === 'Escape'){ state.pending = null; setPendingStatus(); select(null); }
   else if (e.key === 'f' || e.key === 'F'){ fitView(); }
   else if (e.key === '3'){ setView3d(!state.view3d); }
-  else if (e.key.startsWith('Arrow') && (selIs('chamber') || selIs('obstacle'))){
+  else if (e.key.startsWith('Arrow') && movables().length){
     e.preventDefault();
-    const o = selIs('chamber') ? byUid(state.sel.id) : obsBy(state.sel.id);
     const d = (state.snap || 10) * (e.shiftKey ? 10 : 1);
-    if (e.key === 'ArrowLeft')  o.x -= d;
-    if (e.key === 'ArrowRight') o.x += d;
-    if (e.key === 'ArrowUp')    o.y += d;
-    if (e.key === 'ArrowDown')  o.y -= d;
+    for (const o of movables()){
+      if (e.key === 'ArrowLeft')  o.x -= d;
+      if (e.key === 'ArrowRight') o.x += d;
+      if (e.key === 'ArrowUp')    o.y += d;
+      if (e.key === 'ArrowDown')  o.y -= d;
+    }
     renderSel(); renderConnections(); draw();
   }
 });

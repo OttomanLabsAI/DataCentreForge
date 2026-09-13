@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=2.9">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.10">
 </head>
 <body>
 
@@ -15,6 +15,7 @@
     <div class="rgroup"><div class="rbtns">
       <button id="btnAdd" data-icon="chamber" title="Add a chamber at the centre of the view"><span>Chamber</span></button>
       <button id="btnObs" data-icon="obstacle" title="Add an obstacle at the centre of the view"><span>Obstacle</span></button>
+      <button id="btnExample" data-icon="example" title="Place the example manholes from the DCBuild Revit export"><span>Example</span></button>
     </div><div class="rcap">Create</div></div>
     <div class="rgroup"><div class="rbtns">
       <button id="btnView3d" data-icon="cube" title="Show the drawing in 3D (key 3)"><span>3D view</span></button>
@@ -37,10 +38,13 @@
   <div id="stage">
     <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="hud" id="hint">
-      drag empty space — pan · scroll — zoom<br>
-      drag chamber or obstacle — move<br>
+      <span class="mouse">drag empty space — select · middle or right drag — pan<br>
+      scroll or pinch — zoom · drag chamber or obstacle — move<br>
       click a conduit — select · del — remove<br>
-      right-click — menu · right-click a face — connect
+      right-click — menu · right-click a face — connect</span>
+      <span class="touch">one finger — tap to select · drag empty space — window select<br>
+      two fingers — pan and zoom · drag chamber or obstacle — move<br>
+      hold — menu · hold a face — connect</span>
     </div>
     <div id="radial" hidden></div>
     <div class="hud" id="scalebar"><div class="bar"></div><span></span></div>
@@ -117,6 +121,6 @@
 
 <div id="faceDlg" hidden></div>
 
-<script src="/assets/js/app.js?v=2.9"></script>
+<script src="/assets/js/app.js?v=2.10"></script>
 </body>
 </html>

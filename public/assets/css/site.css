@@ -6,7 +6,7 @@
     --sans: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
   *{box-sizing:border-box}
-  html,body{height:100%;margin:0}
+  html,body{height:100%;margin:0; overscroll-behavior:none; touch-action:manipulation}   /* no double-tap zoom, no rubber-banding */
   body{background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:13px;
        display:flex; flex-direction:column; overflow:hidden}
 
@@ -65,7 +65,7 @@
   button:disabled{opacity:.35; cursor:default}
   button.mini{padding:4px 8px; font-size:11px}
 
-  header, .winhead, #stage{user-select:none; -webkit-user-select:none}
+  header, .winhead, #stage{user-select:none; -webkit-user-select:none; -webkit-touch-callout:none}
   input, select, textarea, .derived{user-select:text; -webkit-user-select:text}
   main{flex:1; display:flex; min-height:0; position:relative}
   #stage{position:relative; flex:1; min-width:0; cursor:crosshair; touch-action:none}
@@ -83,6 +83,7 @@
   #callout u{color:var(--pick); text-decoration:none; letter-spacing:.1em}
   #hint{left:12px; top:12px; color:var(--ink-faint); line-height:1.7; text-transform:uppercase;
         letter-spacing:.1em; font-size:10px}
+  #hint .touch{display:none}
 
   /* ---------- windows opened from the ribbon ---------- */
   #windows{position:absolute; inset:0; pointer-events:none; overflow:hidden}
@@ -91,7 +92,7 @@
        box-shadow:0 12px 40px rgba(0,0,0,.5); pointer-events:auto}
   .win[hidden]{display:none}
   .winhead{display:flex; align-items:center; gap:8px; padding:8px 10px; border-bottom:1px solid var(--line);
-           cursor:move; flex:0 0 auto}
+           cursor:move; flex:0 0 auto; touch-action:none}
   .winhead b{font-size:10px; font-weight:600; color:var(--ink-faint); text-transform:uppercase; letter-spacing:.16em}
   .winhead span{flex:1; font-family:var(--mono); font-size:11px; color:var(--ink-dim);
                 overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
@@ -145,9 +146,24 @@
   .btnrow button{flex:1}
   input[type=file]{display:none}
 
+  @media (max-width:1200px){
+    .title span{display:none}          /* an iPad on its side: the ribbon keeps the title's row */
+  }
   @media (max-width:1000px){
     #hint{display:none}
     .win{width:calc(100% - 16px); left:8px !important}
+  }
+  /* ---------- a finger-first device: an iPad in a browser ---------- */
+  @media (hover: none), (pointer: coarse){
+    #hint .mouse{display:none}
+    #hint .touch{display:inline}
+    .ribbon button{padding:7px 9px 6px}
+    .winhead button{padding:2px 12px; font-size:17px}
+    .item{padding:9px 8px}
+    .item .x{padding:0 8px; font-size:18px}
+    input[type=number],input[type=text],select{padding:7px 8px}
+    .chip{padding:6px 10px}
+    button.mini{padding:6px 10px}
   }
   @media (prefers-reduced-motion: reduce){*{transition:none !important}}
 

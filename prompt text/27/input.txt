@@ -1,0 +1,9 @@
+i want the revit left click drag window with the two selection style depending on which side you drag to
+
+middle mouse button drag and right click drag to pan
+
+allow for double touch zoom with a touchpad
+
+add an example data button that'll place fro mthe json i gave you earlier
+
+make these features ipad friendly too when opening in a browser

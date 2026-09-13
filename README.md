@@ -79,6 +79,24 @@ them by their title bars. Selecting a chamber, obstacle or run on the plan
 lights the buttons that concern it, and their windows show its editor when
 opened.
 
+Drag on empty space to select: left to right is a window (only what lies
+wholly inside), right to left a crossing (anything the box touches), and the
+selected set moves, nudges and deletes together. Pan with a middle- or
+right-button drag; zoom with the wheel, a touchpad pinch or two fingers.
+The Example button places the manholes of the DCBuild export kept in
+`public/examples/`.
+
+On an iPad, or any touch screen, the same tool works by hand. A tap selects; a
+one-finger drag on empty space draws the selection box (left to right a window,
+right to left a crossing); a one-finger drag on a chamber or obstacle moves it;
+two fingers pan, and pinch to zoom. A finger held still for half a second opens
+the ring wherever it rests — a face, a chamber, an obstacle, a run or empty
+space — standing in for the right-click, and the ring's delete entry removes the
+whole selection when several things are selected. The 3D view follows the same
+rules: one finger orbits, two fingers pan and zoom. Windows are dragged by their
+title bars with a finger too. With a trackpad or mouse attached, the desktop
+gestures apply as they are.
+
 Right-click anything on the drawing for a ring of choices around the cursor:
 a chamber (edit, runs, duplicate, fit, delete), an obstacle (edit, its default
 around/over/under, duplicate, delete), a run (edit, place, spec, disconnect),
