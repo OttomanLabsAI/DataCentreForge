@@ -21,6 +21,7 @@ public/            everything served
   examples/        the example Revit export placed by the Example button
 prompt text/       provenance for the version in service, replaced each release
 tools/revit/       Revit-side exporter script (not served)
+.claude/skills/    the prompt-archive skill: how the provenance archive is kept
 wrangler.jsonc     assets-only config, no Worker script
 package.json       wrangler devDependency + dev/deploy scripts
 ```
@@ -144,3 +145,4 @@ files themselves are owner-supplied records — never edit, reformat, trim, or
 | v2.15 | The LV site, with room for its sub-models | The example site is now the LV site, built from sub-models: the LV model is the first, the MV model can join it later, and each can be added to the drawing on its own or the whole site placed at once. |
 | v2.16 | Orbit the Revit way, about what is selected | In the 3D window, shift with the middle button now orbits and the middle button alone pans, as in Revit, and whatever is selected becomes the pivot, so the view turns about that chamber, obstacle or run. The elevation shows the whole face from lid to base at true scale, with each level's depth marked, rather than stopping at the conduits. |
 | v2.17 | Runs never lean, they bend or say why | A run between square faces no longer tilts to swallow a small offset: it bends, and where the offset is too small for the gentlest dogleg the entries slide apart along their faces to make room for one. When the faces cannot give that much, or the run is too short to carry a dogleg, the run says exactly what is missing instead of leaning. |
+| v2.18 | The archive habit becomes a skill | The way every version's prompt, reply, model attribution and input files are kept with its release is now written down as a skill and saved with the repository, so any future session, here or in another project, keeps the archive the same way. |
