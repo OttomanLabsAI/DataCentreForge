@@ -2999,7 +2999,7 @@ function importRevit(d){
       const bx = inst.family_x_axis || [1,0,0], by = inst.family_y_axis || [0,1,0], o = inst.origin_mm || [0,0,0];
       const wx = o[0] + bx[0]*fx + by[0]*fy, wy = o[1] + bx[1]*fx + by[1]*fy;
       const rot = inst.rotation_deg != null ? inst.rotation_deg : Math.atan2(bx[1], bx[0])*R2D;
-      const mirrored = (bx[0]*by[1] - bx[1]*by[0]) < 0;     // handedness flipped: family +Y is local -Y
+      const mirrored = inst.mirrored === true || (bx[0]*by[1] - bx[1]*by[0]) < 0;   // Revit's flag, or a left-handed basis: family +Y is local -Y
       const flipW = w => w ? {...w, off:-w.off} : w;
       const sides = mirrored ? {A:sidesBase.C, C:sidesBase.A, B:sidesBase.B, D:sidesBase.D} : {...sidesBase};
       const win = mirrored ? {A:winBase.C, C:winBase.A, B:flipW(winBase.B), D:flipW(winBase.D)} : {...winBase};
@@ -3058,6 +3058,13 @@ document.getElementById('revitIn').onchange = e => {
 
 /** Bring a Revit export onto the drawing: refresh what is already here from
     the same model, else ask whether to replace or add. */
+/** A reference not yet on the drawing: the mark as it came, a numbered copy when the mark is taken, a fresh one when there is none. */
+function uniqueRef(ref){
+  if (!ref) return nextRef();
+  const taken = r => state.chambers.some(x => x.ref === r);
+  if (!taken(ref)) return ref;
+  for (let i = 2; ; i++) if (!taken(`${ref} (${i})`)) return `${ref} (${i})`;
+}
 function applyRevitImport(src){
       const {chambers: made, obstacles: obs} = importRevit(src);
       if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) found');
@@ -3073,7 +3080,7 @@ function applyRevitImport(src){
         let added = 0;
         for (const c of made){
           const old = oldC.get(revitKey(c));
-          if (!old){ if (!c.ref || state.chambers.some(x => x.ref === c.ref)) c.ref = nextRef(); state.chambers.push(c); added++; continue; }
+          if (!old){ c.ref = uniqueRef(c.ref); state.chambers.push(c); added++; continue; }
           for (const k of CH) old[k] = c[k];
           if (c.ref && c.ref !== old.ref && !state.chambers.some(x => x !== old && x.ref === c.ref)) old.ref = c.ref;
         }
@@ -3093,7 +3100,7 @@ function applyRevitImport(src){
           confirm(`Import ${n(made.length, 'manhole')} and ${n(obs.length, 'obstacle')} from Revit — replace the current drawing? (Cancel adds them alongside.)`);
         if (replace){ state.chambers = []; state.obstacles = []; state.connections = []; }
         for (const c of made){
-          if (!c.ref || state.chambers.some(x => x.ref === c.ref)) c.ref = nextRef();
+          c.ref = uniqueRef(c.ref);
           state.chambers.push(c);
         }
         for (const o of obs){
@@ -3107,9 +3114,10 @@ function applyRevitImport(src){
 }
 
 document.getElementById('btnExample').onclick = () => {
-  fetch('/examples/dcbuild-manholes.json', {cache:'no-cache'})
+  fetch('/examples/ams01-manholes.json', {cache:'no-cache'})
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(src => { applyRevitImport(src); document.getElementById('rmode').textContent = `example placed — ${state.chambers.length} manholes from DCBuild.rvt`; })
+    .then(src => { applyRevitImport(src); const from = String(src.source || 'the example').split(/[\\/]/).pop();
+                   document.getElementById('rmode').textContent = `example placed — ${state.chambers.length} manholes from ${from}`; })
     .catch(err => alert('The example could not be loaded: ' + err.message));
 };
 

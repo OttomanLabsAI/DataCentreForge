@@ -83,8 +83,11 @@ Drag on empty space to select: left to right is a window (only what lies
 wholly inside), right to left a crossing (anything the box touches), and the
 selected set moves, nudges and deletes together. Pan with a middle- or
 right-button drag; zoom with the wheel, a touchpad pinch or two fingers.
-The Example button places the manholes of the DCBuild export kept in
-`public/examples/`.
+The Example button places the manholes of the export kept in `public/examples/`:
+the 105 manholes of a live data-centre model at their true positions and
+rotations, carrying their Revit marks, types and element ids. That model's
+family exposes only its depth planes, so the example borrows the DCBuild
+family's side planes for wall and size.
 
 On an iPad, or any touch screen, the same tool works by hand. A tap selects; a
 one-finger drag on empty space draws the selection box (left to right a window,

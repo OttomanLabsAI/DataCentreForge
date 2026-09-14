@@ -1,0 +1,1 @@
+get the manhole locations and rotations from here and re-create the example with similar data

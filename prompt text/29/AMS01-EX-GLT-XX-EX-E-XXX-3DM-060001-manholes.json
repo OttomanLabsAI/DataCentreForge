@@ -1,0 +1,2943 @@
+{
+  "families": [
+    {
+      "family": "MV Chamber", 
+      "instances": [
+        {
+          "id": 2756201, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "MV-FA4", 
+          "origin_mm": [
+            -1552.0699999999999, 
+            1970.0, 
+            -441.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756245, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "MV-FB12", 
+          "origin_mm": [
+            56019.410000000003, 
+            9555.9699999999993, 
+            -369.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756277, 
+          "family_y_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "rotation_deg": -90.0, 
+          "mark": "LV25/Z1", 
+          "origin_mm": [
+            4150.8500000000004, 
+            14571.049999999999, 
+            -385.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756282, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV2/Z2", 
+          "origin_mm": [
+            17786.689999999999, 
+            -4278.0600000000004, 
+            -273.92000000000002
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756283, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV3/Z1", 
+          "origin_mm": [
+            90764.330000000002, 
+            -4278.0600000000004, 
+            -360.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756285, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV5/Z1", 
+          "origin_mm": [
+            177187.0, 
+            -4278.0600000000004, 
+            -360.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756286, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV6/Z1", 
+          "origin_mm": [
+            218627.0, 
+            -4278.0600000000004, 
+            -415.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756413, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "MV-FB11", 
+          "origin_mm": [
+            7628.4099999999999, 
+            9555.8899999999994, 
+            -417.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756567, 
+          "family_y_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "LV20/Z1", 
+          "origin_mm": [
+            89969.199999999997, 
+            13398.549999999999, 
+            -339.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756568, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "MV-FA3", 
+          "origin_mm": [
+            -20261.669999999998, 
+            18730.060000000001, 
+            -397.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756621, 
+          "family_y_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            -0.0
+          ], 
+          "rotation_deg": -57.122, 
+          "mark": "LV11/Z3", 
+          "origin_mm": [
+            -15610.1, 
+            30717.209999999999, 
+            -525.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.54285600000000001, 
+            -0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756623, 
+          "family_y_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            -0.0
+          ], 
+          "rotation_deg": -57.122, 
+          "mark": "LV10/Z3", 
+          "origin_mm": [
+            -31352.939999999999, 
+            55072.150000000001, 
+            -390.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.54285600000000001, 
+            -0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756624, 
+          "family_y_axis": [
+            -0.83982599999999996, 
+            -0.54285600000000001, 
+            0.0
+          ], 
+          "rotation_deg": 122.878, 
+          "mark": "LV8/Z3", 
+          "origin_mm": [
+            -11793.02, 
+            44502.769999999997, 
+            -345.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756627, 
+          "family_y_axis": [
+            0.54285600000000001, 
+            -0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": -147.12200000000001, 
+          "mark": "LV9/Z3", 
+          "origin_mm": [
+            -22105.380000000001, 
+            60765.839999999997, 
+            -545.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.83982599999999996, 
+            -0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756634, 
+          "family_y_axis": [
+            -0.00066399999999999999, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 179.96199999999999, 
+          "mark": "LV5/Z3", 
+          "origin_mm": [
+            -1009.92, 
+            73472.639999999999, 
+            -345.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.00066399999999999999, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756641, 
+          "family_y_axis": [
+            -0.83982599999999996, 
+            -0.54285600000000001, 
+            0.0
+          ], 
+          "rotation_deg": 122.878, 
+          "mark": "LV19/Z3", 
+          "origin_mm": [
+            -18337.07, 
+            90496.240000000005, 
+            -548.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756644, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV15/Z1", 
+          "origin_mm": [
+            129279.28999999999, 
+            8336.0799999999999, 
+            -340.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756646, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV11/Z1", 
+          "origin_mm": [
+            177187.0, 
+            8342.5400000000009, 
+            -355.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756651, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV5/Z2", 
+          "origin_mm": [
+            201283.39000000001, 
+            163629.45999999999, 
+            -298.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756652, 
+          "family_y_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "rotation_deg": -90.0, 
+          "mark": "LV8/Z2", 
+          "origin_mm": [
+            104885.83, 
+            163443.60999999999, 
+            -310.0
+          ], 
+          "type": "LV Vault 2x2 x 2", 
+          "family_x_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756653, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV14/Z2", 
+          "origin_mm": [
+            104879.02, 
+            145797.26999999999, 
+            -463.99000000000001
+          ], 
+          "type": "LV Vault 2x2 x 2", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756657, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV12/Z2", 
+          "origin_mm": [
+            129483.39, 
+            148297.94, 
+            -436.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756658, 
+          "family_y_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "LV15/Z2", 
+          "origin_mm": [
+            105199.53, 
+            130047.81, 
+            -1179.6099999999999
+          ], 
+          "type": "LV Vault 1,5x1,5", 
+          "family_x_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756661, 
+          "family_y_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "LV18/Z2", 
+          "origin_mm": [
+            47541.989999999998, 
+            148079.04000000001, 
+            -435.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756664, 
+          "family_y_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "LV20/Z2", 
+          "origin_mm": [
+            22153.139999999999, 
+            148079.04000000001, 
+            -311.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756668, 
+          "family_y_axis": [
+            -0.0, 
+            1.0, 
+            0.0
+          ], 
+          "rotation_deg": 0.0, 
+          "mark": "LV25/Z3", 
+          "origin_mm": [
+            -17881.27, 
+            148079.04000000001, 
+            -292.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756669, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV24/Z3", 
+          "origin_mm": [
+            -28625.66, 
+            149745.47, 
+            -418.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756671, 
+          "family_y_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "rotation_deg": -90.0, 
+          "mark": "LV34/Z3", 
+          "origin_mm": [
+            -108771.45, 
+            163312.22, 
+            -298.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756679, 
+          "family_y_axis": [
+            0.84798700000000005, 
+            0.53001699999999996, 
+            -0.0
+          ], 
+          "rotation_deg": -57.993000000000002, 
+          "mark": "LV30/Z3", 
+          "origin_mm": [
+            -77514.059999999998, 
+            157157.85000000001, 
+            -379.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.53001699999999996, 
+            -0.84798700000000005, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756682, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "LV22/Z3", 
+          "origin_mm": [
+            -18080.830000000002, 
+            131156.95000000001, 
+            -424.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756699, 
+          "family_y_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            -0.0
+          ], 
+          "rotation_deg": -57.122, 
+          "mark": "LV13/Z3", 
+          "origin_mm": [
+            -31965.34, 
+            89708.550000000003, 
+            -446.75999999999999
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.54285600000000001, 
+            -0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756701, 
+          "family_y_axis": [
+            -0.54463899999999998, 
+            0.83867100000000006, 
+            0.0
+          ], 
+          "rotation_deg": 33.0, 
+          "mark": "MV-FB1", 
+          "origin_mm": [
+            -49831.830000000002, 
+            75726.649999999994, 
+            -490.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            0.83867100000000006, 
+            0.54463899999999998, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756722, 
+          "family_y_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            -0.0
+          ], 
+          "rotation_deg": -57.122, 
+          "mark": "LV12/Z3", 
+          "origin_mm": [
+            -46358.360000000001, 
+            79903.75, 
+            -532.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.54285600000000001, 
+            -0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756728, 
+          "family_y_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            -0.0
+          ], 
+          "rotation_deg": -57.122, 
+          "mark": "LV29/Z3", 
+          "origin_mm": [
+            -67276.899999999994, 
+            140990.26000000001, 
+            -359.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.54285600000000001, 
+            -0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2756790, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "LV18/Z3", 
+          "origin_mm": [
+            -36927.43, 
+            119256.23, 
+            -564.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2757008, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV16/Z1", 
+          "origin_mm": [
+            109313.84, 
+            8546.0499999999993, 
+            -351.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2757054, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV7/Z2", 
+          "origin_mm": [
+            153783.39000000001, 
+            163629.45999999999, 
+            -337.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2895876, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "LV10/Z2", 
+          "origin_mm": [
+            153783.39000000001, 
+            151375.88, 
+            -260.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2899874, 
+          "family_y_axis": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "rotation_deg": -90.0, 
+          "mark": "LV19/Z2", 
+          "origin_mm": [
+            47541.989999999998, 
+            150961.70000000001, 
+            -365.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2900244, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "rotation_deg": 0.0, 
+          "mark": "LV13/Z1", 
+          "origin_mm": [
+            146879.29000000001, 
+            8348.8999999999996, 
+            -229.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2900297, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "rotation_deg": 0.0, 
+          "mark": "LV14/Z1", 
+          "origin_mm": [
+            146879.29000000001, 
+            14842.219999999999, 
+            -389.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2903964, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "rotation_deg": 0.0, 
+          "mark": "LV23/Z1", 
+          "origin_mm": [
+            39969.199999999997, 
+            15033.549999999999, 
+            -345.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2930864, 
+          "family_y_axis": [
+            -1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "LV4/Z3", 
+          "origin_mm": [
+            -1009.92, 
+            86408.779999999999, 
+            -345.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2932864, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "LV17/Z3", 
+          "origin_mm": [
+            -44969.760000000002, 
+            131698.32000000001, 
+            -564.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 2933273, 
+          "family_y_axis": [
+            -0.54287600000000003, 
+            0.83981300000000003, 
+            0.0
+          ], 
+          "rotation_deg": 32.880000000000003, 
+          "mark": "LV26/Z3", 
+          "origin_mm": [
+            -40416.18, 
+            149460.07000000001, 
+            -417.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.83981300000000003, 
+            0.54287600000000003, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3180427, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "MV-FA1", 
+          "origin_mm": [
+            -55531.199999999997, 
+            73341.110000000001, 
+            -423.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3280105, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "MV-FA5", 
+          "origin_mm": [
+            52514.410000000003, 
+            1970.0, 
+            -444.39999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3280138, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "MV-FB5", 
+          "origin_mm": [
+            52514.410000000003, 
+            7253.4700000000003, 
+            -344.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3280301, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "MV-FB3", 
+          "origin_mm": [
+            -12354.6, 
+            17932.919999999998, 
+            -409.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3280325, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "MV-FA12", 
+          "origin_mm": [
+            -12737.65, 
+            35614.150000000001, 
+            -420.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3280497, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "MV-FA7", 
+          "origin_mm": [
+            132760.0, 
+            6280.5, 
+            -368.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3288877, 
+          "family_y_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            -0.0
+          ], 
+          "rotation_deg": -57.122, 
+          "mark": "LV15/Z3", 
+          "origin_mm": [
+            -57012.419999999998, 
+            123914.03999999999, 
+            -406.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.54285600000000001, 
+            -0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3355995, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV6/Z2", 
+          "origin_mm": [
+            176783.39000000001, 
+            163629.45999999999, 
+            -298.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3360009, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "LV21/Z1", 
+          "origin_mm": [
+            64969.199999999997, 
+            13398.549999999999, 
+            -339.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3377793, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV4/Z1", 
+          "origin_mm": [
+            104587.0, 
+            -4278.0600000000004, 
+            -317.5
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3383587, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "LV27/Z3", 
+          "origin_mm": [
+            -55634.330000000002, 
+            148196.94, 
+            -501.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3390058, 
+          "family_y_axis": [
+            -0.83982599999999996, 
+            -0.54285600000000001, 
+            0.0
+          ], 
+          "rotation_deg": 122.878, 
+          "mark": "MV-FA11", 
+          "origin_mm": [
+            -38891.279999999999, 
+            52536.18, 
+            -438.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3390059, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "MV-FB2", 
+          "origin_mm": [
+            -35374.5, 
+            53551.379999999997, 
+            -485.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3390060, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "MV-FA2", 
+          "origin_mm": [
+            -37910.82, 
+            46031.099999999999, 
+            -402.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3390061, 
+          "family_y_axis": [
+            0.54463899999999998, 
+            -0.83867100000000006, 
+            0.0
+          ], 
+          "rotation_deg": -147.0, 
+          "mark": "MV-FB9", 
+          "origin_mm": [
+            -29826.599999999999, 
+            49951.139999999999, 
+            -524.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -0.83867100000000006, 
+            -0.54463899999999998, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3403867, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV3/Z2", 
+          "origin_mm": [
+            230615.01999999999, 
+            138629.45999999999, 
+            -415.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3403949, 
+          "family_y_axis": [
+            0.99640300000000004, 
+            -0.084741999999999998, 
+            0.0
+          ], 
+          "rotation_deg": -94.861000000000004, 
+          "mark": "LV2/Z2", 
+          "origin_mm": [
+            228380.64000000001, 
+            110720.49000000001, 
+            -415.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.084741999999999998, 
+            -0.99640300000000004, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3404055, 
+          "family_y_axis": [
+            -0.084741999999999998, 
+            -0.99640300000000004, 
+            0.0
+          ], 
+          "rotation_deg": 175.13900000000001, 
+          "mark": "LV1/Z2", 
+          "origin_mm": [
+            226286.64000000001, 
+            86098.919999999998, 
+            -415.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.99640300000000004, 
+            0.084741999999999998, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3404448, 
+          "family_y_axis": [
+            -0.084741999999999998, 
+            -0.99640300000000004, 
+            0.0
+          ], 
+          "rotation_deg": 175.13900000000001, 
+          "mark": "LV9/Z1", 
+          "origin_mm": [
+            223747.60999999999, 
+            56223.540000000001, 
+            -415.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.99640300000000004, 
+            0.084741999999999998, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3404480, 
+          "family_y_axis": [
+            0.084741999999999998, 
+            0.99640300000000004, 
+            -0.0
+          ], 
+          "rotation_deg": -4.8609999999999998, 
+          "mark": "LV8/Z1", 
+          "origin_mm": [
+            220961.26000000001, 
+            23482.509999999998, 
+            -415.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.99640300000000004, 
+            -0.084741999999999998, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3410509, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "rotation_deg": 0.0, 
+          "mark": "LV22/Z1", 
+          "origin_mm": [
+            39969.199999999997, 
+            13398.549999999999, 
+            -345.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3419413, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV6/Z3", 
+          "origin_mm": [
+            -1009.92, 
+            53718.580000000002, 
+            -350.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3424506, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV23/Z3", 
+          "origin_mm": [
+            -6372.1800000000003, 
+            115973.92999999999, 
+            -440.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3426499, 
+          "family_y_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            -0.0
+          ], 
+          "rotation_deg": -57.122, 
+          "mark": "LV28/Z3", 
+          "origin_mm": [
+            -59749.480000000003, 
+            145536.94, 
+            -530.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.54285600000000001, 
+            -0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3427039, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "LV16/Z3", 
+          "origin_mm": [
+            -49085.809999999998, 
+            129037.74000000001, 
+            -530.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3427738, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "LV21/Z3", 
+          "origin_mm": [
+            -11220.190000000001, 
+            71749.229999999996, 
+            -530.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3427801, 
+          "family_y_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "rotation_deg": 32.878, 
+          "mark": "LV20/Z3", 
+          "origin_mm": [
+            -21864.34, 
+            88216.240000000005, 
+            -552.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.83982599999999996, 
+            0.54285600000000001, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3428913, 
+          "family_y_axis": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": -180.0, 
+          "mark": "LV1/Z3", 
+          "origin_mm": [
+            -1130.55, 
+            148079.04000000001, 
+            -350.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3429241, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV13/Z2", 
+          "origin_mm": [
+            112996.03999999999, 
+            145797.26999999999, 
+            -400.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3429977, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV16/Z2", 
+          "origin_mm": [
+            91245.479999999996, 
+            148297.94, 
+            -330.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3431417, 
+          "family_y_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "LV17/Z2", 
+          "origin_mm": [
+            75654.169999999998, 
+            148297.94, 
+            -436.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3474975, 
+          "family_y_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "MV-FA8", 
+          "origin_mm": [
+            186151.20000000001, 
+            6280.5, 
+            -319.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3482917, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "MV-FB13", 
+          "origin_mm": [
+            94327.470000000001, 
+            9558.3099999999995, 
+            -362.73000000000002
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3483028, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "MV-FB6", 
+          "origin_mm": [
+            97832.470000000001, 
+            7253.4700000000003, 
+            -345.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3495350, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "MV-FB4", 
+          "origin_mm": [
+            11133.41, 
+            7255.5, 
+            -361.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3496258, 
+          "family_y_axis": [
+            0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": -180.0, 
+          "mark": "LV10/Z1", 
+          "origin_mm": [
+            188517.57999999999, 
+            8397.0300000000007, 
+            -300.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3496775, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV24/Z1", 
+          "origin_mm": [
+            14650.85, 
+            14571.049999999999, 
+            -345.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3499292, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV7/Z1", 
+          "origin_mm": [
+            219865.75, 
+            8315.9500000000007, 
+            -395.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3499527, 
+          "family_y_axis": [
+            0.54286199999999996, 
+            -0.83982199999999996, 
+            0.0
+          ], 
+          "rotation_deg": -147.12100000000001, 
+          "mark": "MV-FA10", 
+          "origin_mm": [
+            -53393.860000000001, 
+            74722.679999999993, 
+            -469.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -0.83982199999999996, 
+            -0.54286199999999996, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3501284, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "LV7/Z3", 
+          "origin_mm": [
+            -1009.92, 
+            45873.93, 
+            -350.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3501644, 
+          "family_y_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "rotation_deg": -90.0, 
+          "mark": "LV3/Z3", 
+          "origin_mm": [
+            -1009.92, 
+            115973.92999999999, 
+            -345.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3501663, 
+          "family_y_axis": [
+            -1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "LV2/Z3", 
+          "origin_mm": [
+            -1130.55, 
+            136086.47, 
+            -365.06
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3502442, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV12/Z1", 
+          "origin_mm": [
+            164159.29000000001, 
+            8342.5400000000009, 
+            -355.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3506282, 
+          "family_y_axis": [
+            -0.54463899999999998, 
+            0.83867100000000006, 
+            0.0
+          ], 
+          "rotation_deg": 33.0, 
+          "mark": "LV33/Z3", 
+          "origin_mm": [
+            -100801.48, 
+            142656.82000000001, 
+            -395.07999999999998
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.83867100000000006, 
+            0.54463899999999998, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3508033, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "LV4/Z2", 
+          "origin_mm": [
+            230615.29999999999, 
+            163629.45999999999, 
+            -395.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3524777, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV18/Z1", 
+          "origin_mm": [
+            103175.73, 
+            31433.639999999999, 
+            -1195.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3524806, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "LV19/Z1", 
+          "origin_mm": [
+            103175.73, 
+            47453.040000000001, 
+            -1850.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3526414, 
+          "family_y_axis": [
+            -1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "LV17/Z1", 
+          "origin_mm": [
+            103175.73, 
+            13691.049999999999, 
+            -390.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3526533, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "MV-FA6", 
+          "origin_mm": [
+            113014.41, 
+            1970.0, 
+            -444.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3526557, 
+          "family_y_axis": [
+            0.0, 
+            1.0, 
+            -0.0
+          ], 
+          "rotation_deg": -0.0, 
+          "mark": "MV-FB14", 
+          "origin_mm": [
+            98930.110000000001, 
+            16999.57, 
+            -434.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3526574, 
+          "family_y_axis": [
+            1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "rotation_deg": -90.0, 
+          "mark": "MV-FB7", 
+          "origin_mm": [
+            105170.73, 
+            16999.599999999999, 
+            -451.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3531028, 
+          "family_y_axis": [
+            -1.0, 
+            -0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "LV9/Z2", 
+          "origin_mm": [
+            42993.370000000003, 
+            163629.45999999999, 
+            -323.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3531623, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "LV11/Z2", 
+          "origin_mm": [
+            153783.39000000001, 
+            148297.94, 
+            -365.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3533661, 
+          "family_y_axis": [
+            -0.83982599999999996, 
+            -0.54285600000000001, 
+            0.0
+          ], 
+          "rotation_deg": 122.878, 
+          "mark": "LV14/Z3", 
+          "origin_mm": [
+            -47880.18, 
+            109786.00999999999, 
+            -413.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -0.54285600000000001, 
+            0.83982599999999996, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3534922, 
+          "family_y_axis": [
+            0.83867100000000006, 
+            0.54463899999999998, 
+            -0.0
+          ], 
+          "rotation_deg": -57.0, 
+          "mark": "LV32/Z3", 
+          "origin_mm": [
+            -98268.889999999999, 
+            144301.5, 
+            -394.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.54463899999999998, 
+            -0.83867100000000006, 
+            0.0
+          ], 
+          "mirrored": false, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3536529, 
+          "family_y_axis": [
+            0.84798700000000005, 
+            0.53001699999999996, 
+            -0.0
+          ], 
+          "rotation_deg": -57.993000000000002, 
+          "mark": "LV31/Z3", 
+          "origin_mm": [
+            -81919.539999999994, 
+            152992.37, 
+            -379.99000000000001
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            0.53001699999999996, 
+            -0.84798700000000005, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3539291, 
+          "family_y_axis": [
+            -0.0, 
+            -1.0, 
+            0.0
+          ], 
+          "rotation_deg": 180.0, 
+          "mark": "LV1/Z1", 
+          "origin_mm": [
+            4150.8500000000004, 
+            -4278.0600000000004, 
+            -285.0
+          ], 
+          "type": "GLT LV Typical", 
+          "family_x_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3557581, 
+          "family_y_axis": [
+            0.54463899999999998, 
+            -0.83867100000000006, 
+            0.0
+          ], 
+          "rotation_deg": -147.0, 
+          "mark": "MV-FB10", 
+          "origin_mm": [
+            -11966.27, 
+            22384.369999999999, 
+            -521.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -0.83867100000000006, 
+            -0.54463899999999998, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3566453, 
+          "family_y_axis": [
+            -1.0, 
+            0.0, 
+            0.0
+          ], 
+          "rotation_deg": 90.0, 
+          "mark": "MV-FA9", 
+          "origin_mm": [
+            195148.70000000001, 
+            14245.5, 
+            -358.89999999999998
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            0.0, 
+            1.0, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }, 
+        {
+          "id": 3571833, 
+          "family_y_axis": [
+            0.54463899999999998, 
+            -0.83867100000000006, 
+            0.0
+          ], 
+          "rotation_deg": -147.0, 
+          "mark": "MV-FB15", 
+          "origin_mm": [
+            -47697.410000000003, 
+            77112.75, 
+            -562.0
+          ], 
+          "type": "Glent Typical", 
+          "family_x_axis": [
+            -0.83867100000000006, 
+            -0.54463899999999998, 
+            0.0
+          ], 
+          "mirrored": true, 
+          "params": {
+            "obstacle_around": null, 
+            "obstacle_under": null, 
+            "obstacle_over": null
+          }
+        }
+      ], 
+      "param_defaults": {
+        "obstacle_around": null, 
+        "obstacle_under": null, 
+        "obstacle_over": null
+      }, 
+      "planes": [
+        {
+          "origin_mm": [
+            -792.5, 
+            -1524.0, 
+            350.0
+          ], 
+          "name": "z1", 
+          "axis": "z", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": 350.0
+        }, 
+        {
+          "origin_mm": [
+            -792.5, 
+            -1524.0, 
+            150.0
+          ], 
+          "name": "z2", 
+          "axis": "z", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": 150.0
+        }, 
+        {
+          "origin_mm": [
+            -792.5, 
+            -1524.0, 
+            0.0
+          ], 
+          "name": "z3", 
+          "axis": "z", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": 0.0
+        }, 
+        {
+          "origin_mm": [
+            -792.5, 
+            -1524.0, 
+            -150.0
+          ], 
+          "name": "z4", 
+          "axis": "z", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": -150.0
+        }, 
+        {
+          "origin_mm": [
+            -792.5, 
+            -1524.0, 
+            -1850.0
+          ], 
+          "name": "z5", 
+          "axis": "z", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": -1850.0
+        }, 
+        {
+          "origin_mm": [
+            -792.5, 
+            -1524.0, 
+            -2000.0
+          ], 
+          "name": "z6", 
+          "axis": "z", 
+          "normal": [
+            0.0, 
+            0.0, 
+            1.0
+          ], 
+          "offset_mm": -2000.0
+        }
+      ]
+    }
+  ], 
+  "units": "mm", 
+  "source": "Autodesk Docs://DC-NL032-AMS01-ZZ-R4_R6 De Nieuwe Liede\u200b/AMS01-EX-GLT-XX-EX-E-XXX-3DM-060001.rvt"
+}

@@ -1,7 +1,0 @@
-good. also double clikcing a face will let me start the connection process by selecting another face by doubl click
-
-after that, how do i approve the connection? there is no option do do that right now
-
-just let it do the connection when the second one is selected
-
-add undo and redo buttons too
