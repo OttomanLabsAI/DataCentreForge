@@ -1,0 +1,6686 @@
+{
+ "units": "mm",
+ "source": "AMS01-EX-GLT-XX-EX-I-XXX-3DM-073001.ifc",
+ "document": "AMS01-EX-GLT-XX-EX-I-XXX-3DM-073001.ifc",
+ "note": "The fibre containment model of the same site, read from its IFC: 23 manholes, 44 vaults and 8 pull boxes at their true positions, sizes and depths, and the 77 conduit banks that join two of them, each with the number of conduits in every row. 442 conduit runs leave the model with one end in the open and are not listed.",
+ "families": [
+  {
+   "family": "MAN_MAnhole Vault",
+   "type": "MV_Fibre_Typical_Glent",
+   "spacing_mm": {
+    "lateral": 250,
+    "vertical": 250
+   },
+   "planes": [
+    {
+     "name": "a1",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": -1500.0
+    },
+    {
+     "name": "a2",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": -1300.0
+    },
+    {
+     "name": "a6",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": 1300.0
+    },
+    {
+     "name": "a7",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": 1500.0
+    },
+    {
+     "name": "b1",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": -1100.0
+    },
+    {
+     "name": "b2",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": -900.0
+    },
+    {
+     "name": "b6",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": 900.0
+    },
+    {
+     "name": "b7",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": 1100.0
+    },
+    {
+     "name": "z1",
+     "axis": "z",
+     "normal": [
+      0,
+      0,
+      1
+     ],
+     "offset_mm": -2000.0
+    },
+    {
+     "name": "z2",
+     "axis": "z",
+     "normal": [
+      0,
+      0,
+      1
+     ],
+     "offset_mm": 355.0
+    }
+   ],
+   "instances": [
+    {
+     "id": 3068373,
+     "unique_id": "1l9_PzmML4WxwkDvRUWrgF",
+     "mark": "MVF-01",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      -68412.64,
+      146994.56,
+      -426.56
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -72,
+     "base_mm": -2927,
+     "z0_mm": -1650
+    },
+    {
+     "id": 3074114,
+     "unique_id": "0R8OHHJMf23xIsten2p_VC",
+     "mark": "MVF-02",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      -33634.68,
+      152508.53,
+      -421.56
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -67,
+     "base_mm": -3222,
+     "z0_mm": -1400
+    },
+    {
+     "id": 2863071,
+     "unique_id": "0$CHvWnAT6ZOGJyC9h_lrI",
+     "mark": "MVF-03",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      -3634.68,
+      27235.21,
+      -422.06
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -67,
+     "base_mm": -2972,
+     "z0_mm": -1049
+    },
+    {
+     "id": 2863090,
+     "unique_id": "0$CHvWnAT6ZOGJyC9h_lr$",
+     "mark": "MVF-04",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      -3634.68,
+      57235.21,
+      -419.06
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -64,
+     "base_mm": -2319,
+     "z0_mm": -1049
+    },
+    {
+     "id": 2863105,
+     "unique_id": "0$CHvWnAT6ZOGJyC9h_kAC",
+     "mark": "MVF-05",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      -3634.68,
+      102762.12,
+      -410.06
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -55,
+     "base_mm": -2310,
+     "z0_mm": -1049
+    },
+    {
+     "id": 3300150,
+     "unique_id": "2IE9vYCujEGQEbu2TwXDGF",
+     "mark": "MVF-06",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      -3634.68,
+      151988.53,
+      -240.06
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 115,
+     "base_mm": -2690,
+     "z0_mm": -900
+    },
+    {
+     "id": 2863123,
+     "unique_id": "0$CHvWnAT6ZOGJyC9h_kAU",
+     "mark": "MVF-07",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      -3264.68,
+      125532.61,
+      -456.06
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -101,
+     "base_mm": -3956,
+     "z0_mm": -1051
+    },
+    {
+     "id": 3292609,
+     "unique_id": "2cxKOG26r03hYWvNXkd9Y_",
+     "mark": "MVF-08",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      2129.43,
+      4600.88,
+      -427.06
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -72,
+     "base_mm": -2977,
+     "z0_mm": -1115
+    },
+    {
+     "id": 3299200,
+     "unique_id": "0vUp52XpP2nuQbLcL0SgC4",
+     "mark": "MVF-09",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      41647.2,
+      151988.53,
+      -228.56
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 126,
+     "base_mm": -2179,
+     "z0_mm": -900
+    },
+    {
+     "id": 2863037,
+     "unique_id": "0$CHvWnAT6ZOGJyC9h_lqm",
+     "mark": "MVF-10",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      56129.43,
+      4600.88,
+      -366.56
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -12,
+     "base_mm": -2367,
+     "z0_mm": -1115
+    },
+    {
+     "id": 3221206,
+     "unique_id": "0KjU1jO419FO6FIH9tI1_Q",
+     "mark": "MVF-11",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      100169.35,
+      124120.71,
+      -1320.56
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -966,
+     "base_mm": -3921,
+     "z0_mm": -2398
+    },
+    {
+     "id": 2907185,
+     "unique_id": "01bJ_I5T14rgGf6nTmFNwT",
+     "mark": "MVF-12",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      101023.97,
+      57502.87,
+      -1577.66
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -1223,
+     "base_mm": -3628,
+     "z0_mm": -2210
+    },
+    {
+     "id": 3217313,
+     "unique_id": "0KjU1jO419FO6FIH9tI2xj",
+     "mark": "MVF-13",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      100689.35,
+      152988.49,
+      -339.56
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 15,
+     "base_mm": -2190,
+     "z0_mm": -900
+    },
+    {
+     "id": 3272648,
+     "unique_id": "02_gzpl0X4CxTc8PpqElbv",
+     "mark": "MVF-14",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      101543.97,
+      4600.88,
+      -367.8
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -13,
+     "base_mm": -3568,
+     "z0_mm": -1070
+    },
+    {
+     "id": 2863512,
+     "unique_id": "0$CHvWnAT6ZOGJyC9h_kCL",
+     "mark": "MVF-15",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      156485.99,
+      4040.31,
+      -382.56
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -28,
+     "base_mm": -2333,
+     "z0_mm": -1070
+    },
+    {
+     "id": 3299533,
+     "unique_id": "0zztUOwQD5kBKEILyxEuI6",
+     "mark": "MVF-16",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      157816.09,
+      153002.24,
+      -358.56
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -4,
+     "base_mm": -3309,
+     "z0_mm": -899
+    },
+    {
+     "id": 3202886,
+     "unique_id": "06eYrJ5Hv88e75PYEdBgD7",
+     "mark": "MVF-17",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      168605.65,
+      158945.09,
+      -335.56
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 19,
+     "base_mm": -2186,
+     "z0_mm": -900
+    },
+    {
+     "id": 2863495,
+     "unique_id": "0$CHvWnAT6ZOGJyC9h_kCA",
+     "mark": "MVF-18",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      197368.99,
+      4025.31,
+      -335.56
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 19,
+     "base_mm": -2986,
+     "z0_mm": -1450
+    },
+    {
+     "id": 2863467,
+     "unique_id": "0$CHvWnAT6ZOGJyC9h_kFc",
+     "mark": "MVF-19",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      215728.4,
+      3505.31,
+      -568.56
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -214,
+     "base_mm": -2619,
+     "z0_mm": -1200
+    },
+    {
+     "id": 3094273,
+     "unique_id": "3q0cZOiWjAvPW5DGqLAont",
+     "mark": "MVF-20",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      217287.03,
+      24242.46,
+      -260.56
+     ],
+     "rotation_deg": -5.0,
+     "family_x_axis": [
+      0.996195,
+      -0.087156,
+      0.0
+     ],
+     "family_y_axis": [
+      0.087156,
+      0.996195,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 94,
+     "base_mm": -2361,
+     "z0_mm": -900
+    },
+    {
+     "id": 3094395,
+     "unique_id": "3q0cZOiWjAvPW5DGqLAomD",
+     "mark": "MVF-21",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      222080.59,
+      79033.17,
+      -253.56
+     ],
+     "rotation_deg": -5.0,
+     "family_x_axis": [
+      0.996195,
+      -0.087156,
+      0.0
+     ],
+     "family_y_axis": [
+      0.087156,
+      0.996195,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 101,
+     "base_mm": -2204,
+     "z0_mm": -900
+    },
+    {
+     "id": 3202523,
+     "unique_id": "06eYrJ5Hv88e75PYEdBg7Q",
+     "mark": "MVF-22",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      226105.65,
+      158945.09,
+      -341.56
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 13,
+     "base_mm": -2192,
+     "z0_mm": -900
+    },
+    {
+     "id": 3094428,
+     "unique_id": "3q0cZOiWjAvPW5DGqLAopg",
+     "mark": "MVF-23",
+     "type": "MV_Fibre_Typical_Glent",
+     "origin_mm": [
+      226625.65,
+      128945.09,
+      -292.56
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 62,
+     "base_mm": -2193,
+     "z0_mm": -900
+    }
+   ]
+  },
+  {
+   "family": "GEM_vault1",
+   "type": "LV Typical 1.5x1.5",
+   "spacing_mm": {
+    "lateral": 210,
+    "vertical": 250
+   },
+   "planes": [
+    {
+     "name": "a1",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": -842.5
+    },
+    {
+     "name": "a2",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": -592.5
+    },
+    {
+     "name": "a6",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": 592.5
+    },
+    {
+     "name": "a7",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": 842.5
+    },
+    {
+     "name": "b1",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": -842.5
+    },
+    {
+     "name": "b2",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": -592.5
+    },
+    {
+     "name": "b6",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": 592.5
+    },
+    {
+     "name": "b7",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": 842.5
+    },
+    {
+     "name": "z1",
+     "axis": "z",
+     "normal": [
+      0,
+      0,
+      1
+     ],
+     "offset_mm": -1485.0
+    },
+    {
+     "name": "z2",
+     "axis": "z",
+     "normal": [
+      0,
+      0,
+      1
+     ],
+     "offset_mm": 355.0
+    }
+   ],
+   "instances": [
+    {
+     "id": 3357105,
+     "unique_id": "2ewC_ZvwL3DvWKkGSQPEHD",
+     "mark": "LVV-01",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -89575.07,
+      142773.57,
+      -470.5
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -116,
+     "base_mm": -2470,
+     "z0_mm": -915
+    },
+    {
+     "id": 3229783,
+     "unique_id": "3J$kY2JXLByBuEVitS0Dgv",
+     "mark": "LVV-02",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -83593.53,
+      146639.98,
+      -470.5
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -116,
+     "base_mm": -2470,
+     "z0_mm": -915
+    },
+    {
+     "id": 3298282,
+     "unique_id": "0vUp52XpP2nuQbLcL0SgTk",
+     "mark": "LVV-03",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -70547.44,
+      155072.87,
+      -490.5
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -136,
+     "base_mm": -2290,
+     "z0_mm": -1337
+    },
+    {
+     "id": 3298808,
+     "unique_id": "0vUp52XpP2nuQbLcL0Sg5y",
+     "mark": "LVV-04",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -64149.46,
+      145174.89,
+      -426.5
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -72,
+     "base_mm": -2076,
+     "z0_mm": -914
+    },
+    {
+     "id": 3298024,
+     "unique_id": "0hGuKVoz17ERhrSrhc880j",
+     "mark": "LVV-05",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -57782.01,
+      149290.75,
+      -471.5
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -116,
+     "base_mm": -2022,
+     "z0_mm": -900
+    },
+    {
+     "id": 3296120,
+     "unique_id": "0hGuKVoz17ERhrSrhc89cz",
+     "mark": "LVV-06",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -55706.53,
+      127300.35,
+      -438.5
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -84,
+     "base_mm": -2038,
+     "z0_mm": -916
+    },
+    {
+     "id": 3297316,
+     "unique_id": "0hGuKVoz17ERhrSrhc88BX",
+     "mark": "LVV-07",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -43799.01,
+      78420.54,
+      -459.5
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -104,
+     "base_mm": -2060,
+     "z0_mm": -917
+    },
+    {
+     "id": 3297864,
+     "unique_id": "0hGuKVoz17ERhrSrhc882D",
+     "mark": "LVV-08",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -42605.72,
+      107032.75,
+      -439.5
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -84,
+     "base_mm": -1890,
+     "z0_mm": -913
+    },
+    {
+     "id": 3227333,
+     "unique_id": "3dMBTKFVX4wRtYLFy4TK3O",
+     "mark": "LVV-09",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -40790.9,
+      157903.68,
+      -434.5
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -80,
+     "base_mm": -2034,
+     "z0_mm": -916
+    },
+    {
+     "id": 3378301,
+     "unique_id": "1k0p_kMiH58u_ibj$tV7h$",
+     "mark": "LVV-10",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -30760.66,
+      148110.47,
+      -439.18
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -84,
+     "base_mm": -2239,
+     "z0_mm": -836
+    },
+    {
+     "id": 3227272,
+     "unique_id": "3dMBTKFVX4wRtYLFy4TK2L",
+     "mark": "LVV-11",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -30760.66,
+      157903.68,
+      -485.18
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -130,
+     "base_mm": -1935,
+     "z0_mm": -836
+    },
+    {
+     "id": 3297460,
+     "unique_id": "0hGuKVoz17ERhrSrhc889n",
+     "mark": "LVV-12",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -29749.59,
+      88002.9,
+      -420.5
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -66,
+     "base_mm": -2020,
+     "z0_mm": -915
+    },
+    {
+     "id": 3295899,
+     "unique_id": "0hGuKVoz17ERhrSrhc89XU",
+     "mark": "LVV-13",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -28326.53,
+      54486.21,
+      -459.5
+     ],
+     "rotation_deg": -147.122,
+     "family_x_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -104,
+     "base_mm": -2260,
+     "z0_mm": -917
+    },
+    {
+     "id": 3379268,
+     "unique_id": "0O7r$L5szCI8SvZAR56SfA",
+     "mark": "LVV-14",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -21581.16,
+      44057.35,
+      -459.5
+     ],
+     "rotation_deg": -57.121,
+     "family_x_axis": [
+      0.54287,
+      -0.839817,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839817,
+      0.54287,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -104,
+     "base_mm": -2060,
+     "z0_mm": -915
+    },
+    {
+     "id": 3276405,
+     "unique_id": "3VxcLygUrBJREWcLrh9$wN",
+     "mark": "LVV-15",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -18882.89,
+      157903.68,
+      -468.18
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -113,
+     "base_mm": -1918,
+     "z0_mm": -915
+    },
+    {
+     "id": 3378355,
+     "unique_id": "1k0p_kMiH58u_ibj$tV7en",
+     "mark": "LVV-16",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -18105.28,
+      128003.6,
+      -452.18
+     ],
+     "rotation_deg": -147.122,
+     "family_x_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -97,
+     "base_mm": -1937,
+     "z0_mm": -865
+    },
+    {
+     "id": 3295811,
+     "unique_id": "0hGuKVoz17ERhrSrhc89Y6",
+     "mark": "LVV-17",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -12580.49,
+      30133.34,
+      -459.5
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -104,
+     "base_mm": -2460,
+     "z0_mm": -917
+    },
+    {
+     "id": 3378655,
+     "unique_id": "1k0p_kMiH58u_ibj$tV7jT",
+     "mark": "LVV-18",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -6422.18,
+      50854.62,
+      -485.18
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -130,
+     "base_mm": -1970,
+     "z0_mm": -915
+    },
+    {
+     "id": 3378590,
+     "unique_id": "1k0p_kMiH58u_ibj$tV7iS",
+     "mark": "LVV-19",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -6422.18,
+      75854.62,
+      -485.18
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -130,
+     "base_mm": -1970,
+     "z0_mm": -915
+    },
+    {
+     "id": 3378509,
+     "unique_id": "1k0p_kMiH58u_ibj$tV7lF",
+     "mark": "LVV-20",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      -6422.18,
+      105854.62,
+      -485.18
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -130,
+     "base_mm": -1970,
+     "z0_mm": -865
+    },
+    {
+     "id": 3294352,
+     "unique_id": "1kpAodWbjCy8Tlk8dfXxpI",
+     "mark": "LVV-21",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      5886.23,
+      -27.65,
+      -358.5
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -4,
+     "base_mm": -2458,
+     "z0_mm": -917
+    },
+    {
+     "id": 3294414,
+     "unique_id": "1kpAodWbjCy8Tlk8dfXxoC",
+     "mark": "LVV-22",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      5886.23,
+      15764.92,
+      -432.5
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -78,
+     "base_mm": -2432,
+     "z0_mm": -917
+    },
+    {
+     "id": 3571357,
+     "unique_id": "0oPIP2YVbAw8h$SFzhXcsq",
+     "mark": "LVV-23",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      18006.65,
+      -27.65,
+      -362.5
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -8,
+     "base_mm": -2262,
+     "z0_mm": -917
+    },
+    {
+     "id": 3189169,
+     "unique_id": "3B8nGWd0HBh8ZeGKJwImzx",
+     "mark": "LVV-24",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      44964.49,
+      157903.68,
+      -482.5
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -128,
+     "base_mm": -1932,
+     "z0_mm": -812
+    },
+    {
+     "id": 3286373,
+     "unique_id": "06FNt9xOn8b8xWkmNpIoyo",
+     "mark": "LVV-25",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      93406.44,
+      -27.65,
+      -362.5
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -8,
+     "base_mm": -2262,
+     "z0_mm": -917
+    },
+    {
+     "id": 3189443,
+     "unique_id": "3B8nGWd0HBh8ZeGKJwImm9",
+     "mark": "LVV-26",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      103096.6,
+      126119.22,
+      -1279.5
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -924,
+     "base_mm": -2880,
+     "z0_mm": -1752
+    },
+    {
+     "id": 3189101,
+     "unique_id": "3B8nGWd0HBh8ZeGKJwIm_d",
+     "mark": "LVV-27",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      103009.1,
+      157903.68,
+      -482.5
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -128,
+     "base_mm": -2032,
+     "z0_mm": -887
+    },
+    {
+     "id": 3275135,
+     "unique_id": "1ZEjY6P2z3yentU9ezlG$Q",
+     "mark": "LVV-28",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      106955.6,
+      -27.65,
+      -398.5
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -44,
+     "base_mm": -2298,
+     "z0_mm": -913
+    },
+    {
+     "id": 3189093,
+     "unique_id": "3B8nGWd0HBh8ZeGKJwIm_l",
+     "mark": "LVV-29",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      122404.64,
+      157903.68,
+      -482.5
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -128,
+     "base_mm": -1982,
+     "z0_mm": -852
+    },
+    {
+     "id": 3275097,
+     "unique_id": "1ZEjY6P2z3yentU9ezlG$y",
+     "mark": "LVV-30",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      130733.4,
+      1835.61,
+      -486.5
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -132,
+     "base_mm": -1936,
+     "z0_mm": -914
+    },
+    {
+     "id": 3355879,
+     "unique_id": "0yH5AigWP6qRfyY1_QbdY6",
+     "mark": "LVV-31",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      149206.57,
+      1835.61,
+      -459.5
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -104,
+     "base_mm": -1944,
+     "z0_mm": -880
+    },
+    {
+     "id": 3189070,
+     "unique_id": "3B8nGWd0HBh8ZeGKJwIm_4",
+     "mark": "LVV-32",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      155822.9,
+      157903.68,
+      -307.5
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 48,
+     "base_mm": -1858,
+     "z0_mm": -659
+    },
+    {
+     "id": 3261266,
+     "unique_id": "02_gzpl0X4CxTc8PpqEjNZ",
+     "mark": "LVV-33",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      166196.09,
+      1835.61,
+      -459.5
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -104,
+     "base_mm": -1944,
+     "z0_mm": -874
+    },
+    {
+     "id": 3189294,
+     "unique_id": "3B8nGWd0HBh8ZeGKJwImpa",
+     "mark": "LVV-34",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      174053.54,
+      162562.72,
+      -321.56
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 33,
+     "base_mm": -1807,
+     "z0_mm": -915
+    },
+    {
+     "id": 3294210,
+     "unique_id": "1zypAOAgLB$uxxMLHVB1uu",
+     "mark": "LVV-35",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      186215.35,
+      1835.61,
+      -325.5
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 30,
+     "base_mm": -2076,
+     "z0_mm": -917
+    },
+    {
+     "id": 3261136,
+     "unique_id": "02_gzpl0X4CxTc8PpqEjHX",
+     "mark": "LVV-36",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      201932.06,
+      1835.61,
+      -407.38
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -52,
+     "base_mm": -1892,
+     "z0_mm": -917
+    },
+    {
+     "id": 3528368,
+     "unique_id": "2oy$7iOdT5HwjaLG1tSPYO",
+     "mark": "LVV-37",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      204053.54,
+      162562.72,
+      -223.5
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 132,
+     "base_mm": -1824,
+     "z0_mm": -915
+    },
+    {
+     "id": 3154336,
+     "unique_id": "24G3w7xzD8GOXhXi_uHQf6",
+     "mark": "LVV-38",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      218305.9,
+      1835.61,
+      -698.26
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -343,
+     "base_mm": -2898,
+     "z0_mm": -1127
+    },
+    {
+     "id": 3151838,
+     "unique_id": "24G3w7xzD8GOXhXi_uHPmu",
+     "mark": "LVV-39",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      219957.09,
+      26532.45,
+      -379.5
+     ],
+     "rotation_deg": 175.139,
+     "family_x_axis": [
+      -0.996403,
+      0.084742,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.084742,
+      -0.996403,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -24,
+     "base_mm": -2080,
+     "z0_mm": -917
+    },
+    {
+     "id": 3151603,
+     "unique_id": "24G3w7xzD8GOXhXi_uHPqL",
+     "mark": "LVV-40",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      222266.65,
+      53705.98,
+      -349.5
+     ],
+     "rotation_deg": -5.0,
+     "family_x_axis": [
+      0.996195,
+      -0.087156,
+      0.0
+     ],
+     "family_y_axis": [
+      0.087156,
+      0.996195,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 6,
+     "base_mm": -1850,
+     "z0_mm": -917
+    },
+    {
+     "id": 3151478,
+     "unique_id": "24G3w7xzD8GOXhXi_uHPsG",
+     "mark": "LVV-41",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      224812.28,
+      83579.8,
+      -365.5
+     ],
+     "rotation_deg": 175.139,
+     "family_x_axis": [
+      -0.996403,
+      0.084742,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.084742,
+      -0.996403,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -10,
+     "base_mm": -1816,
+     "z0_mm": -917
+    },
+    {
+     "id": 3150742,
+     "unique_id": "24G3w7xzD8GOXhXi_uHPXm",
+     "mark": "LVV-42",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      227354.75,
+      113452.25,
+      -360.5
+     ],
+     "rotation_deg": -94.861,
+     "family_x_axis": [
+      -0.084742,
+      -0.996403,
+      0.0
+     ],
+     "family_y_axis": [
+      0.996403,
+      -0.084742,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -6,
+     "base_mm": -1846,
+     "z0_mm": -917
+    },
+    {
+     "id": 3149448,
+     "unique_id": "24G3w7xzD8GOXhXi_uHOLk",
+     "mark": "LVV-43",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      228460.3,
+      138412.22,
+      -308.5
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 46,
+     "base_mm": -1794,
+     "z0_mm": -917
+    },
+    {
+     "id": 3324731,
+     "unique_id": "1BymAJLofEzPF9y3FU$s80",
+     "mark": "LVV-44",
+     "type": "LV Typical 1.5x1.5",
+     "origin_mm": [
+      228460.3,
+      162562.72,
+      -356.5
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -2,
+     "base_mm": -2556,
+     "z0_mm": -891
+    }
+   ]
+  },
+  {
+   "family": "PEC",
+   "type": "DPB_01",
+   "spacing_mm": {
+    "lateral": 250,
+    "vertical": 250
+   },
+   "planes": [
+    {
+     "name": "a1",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": -605.0
+    },
+    {
+     "name": "a2",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": -600.0
+    },
+    {
+     "name": "a6",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": 600.0
+    },
+    {
+     "name": "a7",
+     "axis": "a",
+     "normal": [
+      1,
+      0,
+      0
+     ],
+     "offset_mm": 605.0
+    },
+    {
+     "name": "b1",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": -150.6
+    },
+    {
+     "name": "b2",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": -145.6
+    },
+    {
+     "name": "b6",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": 304.4
+    },
+    {
+     "name": "b7",
+     "axis": "b",
+     "normal": [
+      0,
+      1,
+      0
+     ],
+     "offset_mm": 309.4
+    },
+    {
+     "name": "z1",
+     "axis": "z",
+     "normal": [
+      0,
+      0,
+      1
+     ],
+     "offset_mm": 0.0
+    },
+    {
+     "name": "z2",
+     "axis": "z",
+     "normal": [
+      0,
+      0,
+      1
+     ],
+     "offset_mm": 1300.0
+    }
+   ],
+   "instances": [
+    {
+     "id": 3325088,
+     "unique_id": "1s6SqWI_jA2Bub95DURll2",
+     "mark": "DPB-01",
+     "type": "DPB_01",
+     "origin_mm": [
+      -84909.65,
+      148669.69,
+      -12.5
+     ],
+     "rotation_deg": 32.96,
+     "family_x_axis": [
+      0.839049,
+      0.544055,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.544055,
+      0.839049,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 1287,
+     "base_mm": -1213,
+     "z0_mm": -813
+    },
+    {
+     "id": 3590870,
+     "unique_id": "30xCV$r4rFlAa4u_zhkShp",
+     "mark": "DPB-02",
+     "type": "DPB_01",
+     "origin_mm": [
+      -35864.66,
+      92788.76,
+      -12.5
+     ],
+     "rotation_deg": 122.885,
+     "family_x_axis": [
+      -0.542959,
+      0.839759,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839759,
+      -0.542959,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 1287,
+     "base_mm": -1213,
+     "z0_mm": -813
+    },
+    {
+     "id": 3325056,
+     "unique_id": "1s6SqWI_jA2Bub95DURllY",
+     "mark": "DPB-03",
+     "type": "DPB_01",
+     "origin_mm": [
+      -21713.49,
+      36870.44,
+      -12.5
+     ],
+     "rotation_deg": 32.96,
+     "family_x_axis": [
+      0.839049,
+      0.544055,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.544055,
+      0.839049,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 1287,
+     "base_mm": -1213,
+     "z0_mm": -813
+    },
+    {
+     "id": 3590736,
+     "unique_id": "30xCV$r4rFlAa4u_zhkSfr",
+     "mark": "DPB-04",
+     "type": "DPB_01",
+     "origin_mm": [
+      -10028.52,
+      105781.04,
+      -12.5
+     ],
+     "rotation_deg": 122.885,
+     "family_x_axis": [
+      -0.542959,
+      0.839759,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839759,
+      -0.542959,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 1287,
+     "base_mm": -1213,
+     "z0_mm": -813
+    },
+    {
+     "id": 3324992,
+     "unique_id": "1s6SqWI_jA2Bub95DURliY",
+     "mark": "DPB-05",
+     "type": "DPB_01",
+     "origin_mm": [
+      98707.37,
+      -385.25,
+      -12.5
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 1287,
+     "base_mm": -1213,
+     "z0_mm": -813
+    },
+    {
+     "id": 3324926,
+     "unique_id": "1BymAJLofEzPF9y3FU$sB5",
+     "mark": "DPB-06",
+     "type": "DPB_01",
+     "origin_mm": [
+      103163.8,
+      161336.91,
+      0.26
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 1300,
+     "base_mm": -1200,
+     "z0_mm": -800
+    },
+    {
+     "id": 3324968,
+     "unique_id": "1s6SqWI_jA2Bub95DURljA",
+     "mark": "DPB-07",
+     "type": "DPB_01",
+     "origin_mm": [
+      214568.79,
+      -894.88,
+      -12.5
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 1287,
+     "base_mm": -1213,
+     "z0_mm": -813
+    },
+    {
+     "id": 3261308,
+     "unique_id": "02_gzpl0X4CxTc8PpqEjND",
+     "mark": "DPB-08",
+     "type": "DPB_01",
+     "origin_mm": [
+      228175.86,
+      158045.09,
+      -12.5
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 1287,
+     "base_mm": -1213,
+     "z0_mm": -813
+    }
+   ]
+  }
+ ],
+ "runs": [
+  {
+   "from": {
+    "id": 3590870,
+    "face": "A"
+   },
+   "to": {
+    "id": 3590870,
+    "face": "A"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 51,
+   "pitch_mm": 250,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 838,
+   "bends": 0,
+   "ifc_ids": [
+    3476013,
+    3476015
+   ]
+  },
+  {
+   "from": {
+    "id": 3261308,
+    "face": "D"
+   },
+   "to": {
+    "id": 3324731,
+    "face": "C"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 51,
+   "pitch_mm": 250,
+   "top_mm": [
+    -60,
+    -900
+   ],
+   "length_mm": 3594,
+   "bends": 1,
+   "ifc_ids": [
+    3354785,
+    3354788,
+    3354789,
+    3530522,
+    3530560,
+    3530585
+   ]
+  },
+  {
+   "from": {
+    "id": 3229783,
+    "face": "A"
+   },
+   "to": {
+    "id": 3325088,
+    "face": "C"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 51,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    0
+   ],
+   "length_mm": 1820,
+   "bends": 1,
+   "ifc_ids": [
+    3325279,
+    3325280,
+    3325386,
+    3325399,
+    3325412,
+    3325419
+   ]
+  },
+  {
+   "from": {
+    "id": 3229783,
+    "face": "B"
+   },
+   "to": {
+    "id": 3298282,
+    "face": "C"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 3,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1560,
+    -1560
+   ],
+   "length_mm": 14349,
+   "bends": 0,
+   "ifc_ids": [
+    3232237,
+    3232268,
+    3232289,
+    3232324
+   ]
+  },
+  {
+   "from": {
+    "id": 3229783,
+    "face": "D"
+   },
+   "to": {
+    "id": 3357105,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 3,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1560,
+    -1560
+   ],
+   "length_mm": 5937,
+   "bends": 0,
+   "ifc_ids": [
+    3357164,
+    3357165,
+    3357166,
+    3357167
+   ]
+  },
+  {
+   "from": {
+    "id": 3298282,
+    "face": "B"
+   },
+   "to": {
+    "id": 3298808,
+    "face": "B"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1320,
+    -1320
+   ],
+   "length_mm": 10601,
+   "bends": 0,
+   "ifc_ids": [
+    3298420,
+    3298422,
+    3298504,
+    3298505
+   ]
+  },
+  {
+   "from": {
+    "id": 3298024,
+    "face": "A"
+   },
+   "to": {
+    "id": 3298808,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 6397,
+   "bends": 0,
+   "ifc_ids": [
+    3297923,
+    3297924,
+    3297925,
+    3297926
+   ]
+  },
+  {
+   "from": {
+    "id": 3296120,
+    "face": "B"
+   },
+   "to": {
+    "id": 3297864,
+    "face": "B"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 22190,
+   "bends": 4,
+   "ifc_ids": [
+    3546814,
+    3546816,
+    3546818,
+    3546820,
+    3546822,
+    3546824,
+    3546826,
+    3546828,
+    3546830,
+    3546832,
+    3546834,
+    3546836,
+    3546838,
+    3546840,
+    3546842,
+    3546844,
+    3546916,
+    3546918,
+    3546920,
+    3546922,
+    3546926,
+    3546928,
+    3546930,
+    3546932,
+    3546934,
+    3546936,
+    3546938,
+    3546940,
+    3546942,
+    3546944,
+    3546946,
+    3546948,
+    3546950,
+    3546952,
+    3546954,
+    3546956
+   ]
+  },
+  {
+   "from": {
+    "id": 3296120,
+    "face": "D"
+   },
+   "to": {
+    "id": 3298808,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 18102,
+   "bends": 2,
+   "ifc_ids": [
+    3297885,
+    3297886,
+    3297887,
+    3297888,
+    3299153,
+    3299155,
+    3299158,
+    3299160,
+    3299162,
+    3299164,
+    3299166,
+    3299168,
+    3299170,
+    3299172,
+    3299174,
+    3299176,
+    3299178,
+    3299180,
+    3299182,
+    3299184
+   ]
+  },
+  {
+   "from": {
+    "id": 3297316,
+    "face": "A"
+   },
+   "to": {
+    "id": 3297460,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 15816,
+   "bends": 0,
+   "ifc_ids": [
+    3297391,
+    3297392,
+    3297393,
+    3297394
+   ]
+  },
+  {
+   "from": {
+    "id": 3227333,
+    "face": "B"
+   },
+   "to": {
+    "id": 3298024,
+    "face": "C"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 17278,
+   "bends": 5,
+   "ifc_ids": [
+    3541717,
+    3541722,
+    3541726,
+    3541731,
+    3541736,
+    3541740,
+    3541744,
+    3541748,
+    3542015,
+    3542020,
+    3542024,
+    3542029,
+    3542034,
+    3542036,
+    3542038,
+    3542040,
+    3542042,
+    3542044,
+    3542046,
+    3542048,
+    3542063,
+    3542065,
+    3542067,
+    3542069,
+    3542073,
+    3542075,
+    3542077,
+    3542079,
+    3542217,
+    3542219,
+    3542238,
+    3542240,
+    3542268,
+    3542270,
+    3542293,
+    3542296,
+    3542307,
+    3542309,
+    3542311,
+    3542313,
+    3542315,
+    3542317,
+    3542319,
+    3542321
+   ]
+  },
+  {
+   "from": {
+    "id": 3378301,
+    "face": "C"
+   },
+   "to": {
+    "id": 3378355,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 2,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1320,
+    -900
+   ],
+   "length_mm": 21718,
+   "bends": 3,
+   "ifc_ids": [
+    3378914,
+    3378944,
+    3380265,
+    3380266,
+    3380304,
+    3380305,
+    3380308,
+    3380309,
+    3492124,
+    3492128,
+    3492130,
+    3492352,
+    3492392,
+    3492411,
+    3610206,
+    3610676,
+    3610790,
+    3610818,
+    3610961,
+    3610963,
+    3611039,
+    3611062,
+    3611128,
+    3611258,
+    3611260,
+    3611262,
+    3611264,
+    3611395
+   ]
+  },
+  {
+   "from": {
+    "id": 3227272,
+    "face": "A"
+   },
+   "to": {
+    "id": 3276405,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 10693,
+   "bends": 0,
+   "ifc_ids": [
+    3542643,
+    3542645,
+    3605730,
+    3605798
+   ]
+  },
+  {
+   "from": {
+    "id": 3227272,
+    "face": "B"
+   },
+   "to": {
+    "id": 3378301,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 8608,
+   "bends": 0,
+   "ifc_ids": [
+    3378737,
+    3380639,
+    3380684,
+    3380685
+   ]
+  },
+  {
+   "from": {
+    "id": 3227272,
+    "face": "C"
+   },
+   "to": {
+    "id": 3227333,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -1140
+   ],
+   "length_mm": 8472,
+   "bends": 2,
+   "ifc_ids": [
+    3543233,
+    3543235,
+    3543237,
+    3543239,
+    3543243,
+    3543245,
+    3543247,
+    3543249,
+    3543251,
+    3543253,
+    3543255,
+    3543257,
+    3543259,
+    3543263,
+    3543267,
+    3543271,
+    3543359,
+    3543381,
+    3543399,
+    3543417
+   ]
+  },
+  {
+   "from": {
+    "id": 3297460,
+    "face": "B"
+   },
+   "to": {
+    "id": 3590870,
+    "face": "C"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 2,
+   "od_mm": 51,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1320,
+    -840
+   ],
+   "length_mm": 7837,
+   "bends": 4,
+   "ifc_ids": [
+    3545981,
+    3545983,
+    3546028,
+    3546030,
+    3546032,
+    3546034,
+    3546036,
+    3546040,
+    3618282,
+    3618283,
+    3618317,
+    3618318,
+    3618327,
+    3618329,
+    3618333,
+    3618335
+   ]
+  },
+  {
+   "from": {
+    "id": 3297460,
+    "face": "B"
+   },
+   "to": {
+    "id": 3297864,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 19820,
+   "bends": 6,
+   "ifc_ids": [
+    3297495,
+    3297496,
+    3297601,
+    3297603,
+    3297606,
+    3297608,
+    3297610,
+    3297612,
+    3297614,
+    3297616,
+    3297618,
+    3297620,
+    3297622,
+    3297624,
+    3297626,
+    3297628,
+    3297630,
+    3297632,
+    3545904,
+    3545906,
+    3545910,
+    3545912,
+    3545914,
+    3545916,
+    3545918,
+    3545920,
+    3545922,
+    3545924,
+    3545926,
+    3545928,
+    3545930,
+    3545932,
+    3545934,
+    3545936,
+    3545938,
+    3545940,
+    3546660,
+    3546662,
+    3546664,
+    3546666,
+    3546668,
+    3546670,
+    3546672,
+    3546674,
+    3546676,
+    3546678,
+    3546680,
+    3546682,
+    3546684,
+    3546686,
+    3546688,
+    3546690
+   ]
+  },
+  {
+   "from": {
+    "id": 3295899,
+    "face": "A"
+   },
+   "to": {
+    "id": 3379268,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 11235,
+   "bends": 0,
+   "ifc_ids": [
+    3380603,
+    3380605,
+    3380607,
+    3380609
+   ]
+  },
+  {
+   "from": {
+    "id": 3295899,
+    "face": "C"
+   },
+   "to": {
+    "id": 3297316,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 2,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1320,
+    -1140
+   ],
+   "length_mm": 26942,
+   "bends": 2,
+   "ifc_ids": [
+    3297285,
+    3297286,
+    3297287,
+    3297288,
+    3550062,
+    3550064,
+    3550066,
+    3550068,
+    3550070,
+    3550072,
+    3550074,
+    3550076,
+    3550078,
+    3550080,
+    3550082,
+    3550084,
+    3550086,
+    3550088,
+    3550090,
+    3550092
+   ]
+  },
+  {
+   "from": {
+    "id": 3378355,
+    "face": "A"
+   },
+   "to": {
+    "id": 3378509,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 23821,
+   "bends": 1,
+   "ifc_ids": [
+    3379710,
+    3380234,
+    3380244,
+    3380371,
+    3380372,
+    3380373,
+    3380407,
+    3380408,
+    3380409,
+    3380411,
+    3380412,
+    3380413
+   ]
+  },
+  {
+   "from": {
+    "id": 3295811,
+    "face": "D"
+   },
+   "to": {
+    "id": 3325056,
+    "face": "B"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 51,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    480
+   ],
+   "length_mm": 13387,
+   "bends": 2,
+   "ifc_ids": [
+    3475652,
+    3475653,
+    3475658,
+    3475659,
+    3475660,
+    3475661,
+    3551382,
+    3551384,
+    3551495,
+    3551500
+   ]
+  },
+  {
+   "from": {
+    "id": 3295811,
+    "face": "D"
+   },
+   "to": {
+    "id": 3379268,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 15395,
+   "bends": 0,
+   "ifc_ids": [
+    3297026,
+    3297027,
+    3297028,
+    3297029
+   ]
+  },
+  {
+   "from": {
+    "id": 3378655,
+    "face": "C"
+   },
+   "to": {
+    "id": 3379268,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 15199,
+   "bends": 1,
+   "ifc_ids": [
+    3379368,
+    3379658,
+    3379668,
+    3380543,
+    3380544,
+    3380545,
+    3380585,
+    3380586,
+    3380587,
+    3380589,
+    3380590,
+    3380591
+   ]
+  },
+  {
+   "from": {
+    "id": 3378590,
+    "face": "B"
+   },
+   "to": {
+    "id": 3378655,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 23815,
+   "bends": 0,
+   "ifc_ids": [
+    3379308,
+    3380481,
+    3380502,
+    3380503
+   ]
+  },
+  {
+   "from": {
+    "id": 3378509,
+    "face": "B"
+   },
+   "to": {
+    "id": 3378590,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 28815,
+   "bends": 0,
+   "ifc_ids": [
+    3379143,
+    3380437,
+    3380458,
+    3380459
+   ]
+  },
+  {
+   "from": {
+    "id": 3378509,
+    "face": "C"
+   },
+   "to": {
+    "id": 3590736,
+    "face": "C"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 51,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    480
+   ],
+   "length_mm": 3456,
+   "bends": 1,
+   "ifc_ids": [
+    3475792,
+    3475793,
+    3475794,
+    3475795,
+    3479361,
+    3479384
+   ]
+  },
+  {
+   "from": {
+    "id": 3294352,
+    "face": "A"
+   },
+   "to": {
+    "id": 3571357,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 10833,
+   "bends": 4,
+   "ifc_ids": [
+    3578566,
+    3578674,
+    3578948,
+    3578976,
+    3594445,
+    3594491,
+    3594537,
+    3594589,
+    3594651,
+    3594679,
+    3594689,
+    3594726,
+    3594754,
+    3594755,
+    3594788,
+    3594789,
+    3594807,
+    3594808,
+    3594809,
+    3594810,
+    3594860,
+    3594862,
+    3594864,
+    3594868,
+    3594872,
+    3594878,
+    3594882,
+    3594884,
+    3594888,
+    3594890,
+    3594892,
+    3594894,
+    3594896,
+    3594898,
+    3594900,
+    3594902
+   ]
+  },
+  {
+   "from": {
+    "id": 3294352,
+    "face": "D"
+   },
+   "to": {
+    "id": 3294414,
+    "face": "B"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 3,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1740,
+    -1740
+   ],
+   "length_mm": 14608,
+   "bends": 0,
+   "ifc_ids": [
+    3294293,
+    3294294,
+    3294295,
+    3294296
+   ]
+  },
+  {
+   "from": {
+    "id": 3294414,
+    "face": "C"
+   },
+   "to": {
+    "id": 3295811,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 24050,
+   "bends": 1,
+   "ifc_ids": [
+    3296720,
+    3296721,
+    3296722,
+    3296723,
+    3296791,
+    3296792,
+    3296793,
+    3296794,
+    3296897,
+    3296938,
+    3296988,
+    3297008
+   ]
+  },
+  {
+   "from": {
+    "id": 3189169,
+    "face": "D"
+   },
+   "to": {
+    "id": 3276405,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 61965,
+   "bends": 4,
+   "ifc_ids": [
+    3227233,
+    3542639,
+    3542641,
+    3542649,
+    3542651,
+    3542653,
+    3542655,
+    3542657,
+    3542659,
+    3542661,
+    3542663,
+    3542665,
+    3542667,
+    3542669,
+    3542671,
+    3542673,
+    3542675,
+    3542677,
+    3542679,
+    3542681,
+    3542683,
+    3542685,
+    3542687,
+    3542689,
+    3542691,
+    3542693,
+    3542695,
+    3542697,
+    3542701,
+    3542705,
+    3542912,
+    3605456,
+    3605593,
+    3605595,
+    3605750,
+    3605782
+   ]
+  },
+  {
+   "from": {
+    "id": 3286373,
+    "face": "C"
+   },
+   "to": {
+    "id": 3571357,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 74000,
+   "bends": 4,
+   "ifc_ids": [
+    3292431,
+    3292432,
+    3292433,
+    3292434,
+    3595285,
+    3595473,
+    3595538,
+    3595655,
+    3595673,
+    3595704,
+    3595705,
+    3595706,
+    3595707,
+    3595775,
+    3595779,
+    3595785,
+    3595810,
+    3595811,
+    3595812,
+    3595813,
+    3595898,
+    3595899,
+    3595900,
+    3595901,
+    3595975,
+    3596216,
+    3596218,
+    3596220,
+    3596224,
+    3596226,
+    3596228,
+    3596242,
+    3596244,
+    3596246,
+    3596250,
+    3596252
+   ]
+  },
+  {
+   "from": {
+    "id": 3189101,
+    "face": "A"
+   },
+   "to": {
+    "id": 3189443,
+    "face": "A"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1140,
+    -1980
+   ],
+   "length_mm": 29919,
+   "bends": 4,
+   "ifc_ids": [
+    3189999,
+    3190000,
+    3190001,
+    3190002,
+    3207971,
+    3207972,
+    3207973,
+    3207974,
+    3211838,
+    3211889,
+    3211965,
+    3212015,
+    3212434,
+    3212485,
+    3212524,
+    3212570,
+    3483350,
+    3483359,
+    3483361,
+    3483363,
+    3483365,
+    3602844,
+    3602846,
+    3602848,
+    3602919,
+    3602937,
+    3602948,
+    3602958,
+    3602962,
+    3602966,
+    3602968,
+    3602970,
+    3602972,
+    3602974,
+    3602976,
+    3602978
+   ]
+  },
+  {
+   "from": {
+    "id": 3189101,
+    "face": "B"
+   },
+   "to": {
+    "id": 3189169,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 56860,
+   "bends": 0,
+   "ifc_ids": [
+    3535035,
+    3535037,
+    3535039,
+    3535041
+   ]
+  },
+  {
+   "from": {
+    "id": 3189101,
+    "face": "C"
+   },
+   "to": {
+    "id": 3324926,
+    "face": "A"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 51,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    480
+   ],
+   "length_mm": 3552,
+   "bends": 1,
+   "ifc_ids": [
+    3326349,
+    3345589,
+    3475633,
+    3475663,
+    3602463,
+    3602465
+   ]
+  },
+  {
+   "from": {
+    "id": 3275135,
+    "face": "B"
+   },
+   "to": {
+    "id": 3324992,
+    "face": "B"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 51,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    480
+   ],
+   "length_mm": 6968,
+   "bends": 2,
+   "ifc_ids": [
+    3475648,
+    3475649,
+    3475651,
+    3475899,
+    3475900,
+    3488418,
+    3488614,
+    3488812,
+    3567331,
+    3567350
+   ]
+  },
+  {
+   "from": {
+    "id": 3275135,
+    "face": "B"
+   },
+   "to": {
+    "id": 3286373,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 12364,
+   "bends": 0,
+   "ifc_ids": [
+    3353340,
+    3353344,
+    3353348,
+    3353352
+   ]
+  },
+  {
+   "from": {
+    "id": 3189093,
+    "face": "A"
+   },
+   "to": {
+    "id": 3189101,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -1140
+   ],
+   "length_mm": 17838,
+   "bends": 2,
+   "ifc_ids": [
+    3226598,
+    3226668,
+    3227025,
+    3227068,
+    3534423,
+    3534425,
+    3534428,
+    3534430,
+    3534432,
+    3534434,
+    3534436,
+    3534438,
+    3534440,
+    3534442,
+    3534444,
+    3534446,
+    3534448,
+    3534450,
+    3534452,
+    3534454
+   ]
+  },
+  {
+   "from": {
+    "id": 3275097,
+    "face": "B"
+   },
+   "to": {
+    "id": 3275135,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 22168,
+   "bends": 2,
+   "ifc_ids": [
+    3275302,
+    3275303,
+    3275304,
+    3275305,
+    3293198,
+    3293200,
+    3293202,
+    3293204,
+    3293206,
+    3293208,
+    3293210,
+    3293212,
+    3293214,
+    3293216,
+    3293218,
+    3293220,
+    3293222,
+    3293224,
+    3293226,
+    3293228
+   ]
+  },
+  {
+   "from": {
+    "id": 3275097,
+    "face": "D"
+   },
+   "to": {
+    "id": 3355879,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 17288,
+   "bends": 0,
+   "ifc_ids": [
+    3275196,
+    3275197,
+    3275198,
+    3275199
+   ]
+  },
+  {
+   "from": {
+    "id": 3189070,
+    "face": "A"
+   },
+   "to": {
+    "id": 3189093,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 32233,
+   "bends": 0,
+   "ifc_ids": [
+    3189329,
+    3189330,
+    3225335,
+    3225384
+   ]
+  },
+  {
+   "from": {
+    "id": 3189070,
+    "face": "B"
+   },
+   "to": {
+    "id": 3189294,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 18944,
+   "bends": 2,
+   "ifc_ids": [
+    3249260,
+    3249294,
+    3249337,
+    3249353,
+    3400523,
+    3400525,
+    3400528,
+    3400530,
+    3400532,
+    3400534,
+    3400536,
+    3400538,
+    3400540,
+    3400542,
+    3400544,
+    3400546,
+    3400548,
+    3400550,
+    3400552,
+    3400554
+   ]
+  },
+  {
+   "from": {
+    "id": 3261266,
+    "face": "B"
+   },
+   "to": {
+    "id": 3355879,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 15805,
+   "bends": 0,
+   "ifc_ids": [
+    3355892,
+    3355894,
+    3355896,
+    3355898
+   ]
+  },
+  {
+   "from": {
+    "id": 3261266,
+    "face": "D"
+   },
+   "to": {
+    "id": 3294210,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 18834,
+   "bends": 0,
+   "ifc_ids": [
+    3294232,
+    3294233,
+    3294234,
+    3294235
+   ]
+  },
+  {
+   "from": {
+    "id": 3189294,
+    "face": "B"
+   },
+   "to": {
+    "id": 3528368,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 28815,
+   "bends": 0,
+   "ifc_ids": [
+    3223847,
+    3224041,
+    3224334,
+    3224504
+   ]
+  },
+  {
+   "from": {
+    "id": 3261136,
+    "face": "B"
+   },
+   "to": {
+    "id": 3294210,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 14532,
+   "bends": 0,
+   "ifc_ids": [
+    3362171,
+    3362173,
+    3362175,
+    3362177
+   ]
+  },
+  {
+   "from": {
+    "id": 3261136,
+    "face": "D"
+   },
+   "to": {
+    "id": 3324968,
+    "face": "C"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 51,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    0
+   ],
+   "length_mm": 12996,
+   "bends": 2,
+   "ifc_ids": [
+    3475909,
+    3475910,
+    3475911,
+    3475912,
+    3475913,
+    3475914,
+    3593401,
+    3593403,
+    3593480,
+    3593488
+   ]
+  },
+  {
+   "from": {
+    "id": 3154336,
+    "face": "A"
+   },
+   "to": {
+    "id": 3261136,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 3,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1980,
+    -900
+   ],
+   "length_mm": 14556,
+   "bends": 2,
+   "ifc_ids": [
+    3260762,
+    3260763,
+    3260764,
+    3260765,
+    3378206,
+    3378208,
+    3378211,
+    3378213,
+    3378215,
+    3378217,
+    3378219,
+    3378221,
+    3378223,
+    3378225,
+    3378227,
+    3378229,
+    3378231,
+    3378233,
+    3378235,
+    3378237
+   ]
+  },
+  {
+   "from": {
+    "id": 3151838,
+    "face": "A"
+   },
+   "to": {
+    "id": 3154336,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 23497,
+   "bends": 1,
+   "ifc_ids": [
+    3154303,
+    3154304,
+    3154305,
+    3154306,
+    3260364,
+    3260374,
+    3260592,
+    3260599,
+    3260682,
+    3260689,
+    3260733,
+    3260740
+   ]
+  },
+  {
+   "from": {
+    "id": 3151603,
+    "face": "C"
+   },
+   "to": {
+    "id": 3151838,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 26090,
+   "bends": 0,
+   "ifc_ids": [
+    3154266,
+    3154267,
+    3154268,
+    3154269
+   ]
+  },
+  {
+   "from": {
+    "id": 3151478,
+    "face": "A"
+   },
+   "to": {
+    "id": 3151603,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 28815,
+   "bends": 0,
+   "ifc_ids": [
+    3153911,
+    3153912,
+    3153913,
+    3153914
+   ]
+  },
+  {
+   "from": {
+    "id": 3150742,
+    "face": "B"
+   },
+   "to": {
+    "id": 3151478,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 28815,
+   "bends": 0,
+   "ifc_ids": [
+    3153830,
+    3153831,
+    3153832,
+    3153833
+   ]
+  },
+  {
+   "from": {
+    "id": 3149448,
+    "face": "A"
+   },
+   "to": {
+    "id": 3324731,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 22965,
+   "bends": 0,
+   "ifc_ids": [
+    3149304,
+    3149332,
+    3149397,
+    3149398
+   ]
+  },
+  {
+   "from": {
+    "id": 3149448,
+    "face": "C"
+   },
+   "to": {
+    "id": 3150742,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 23810,
+   "bends": 1,
+   "ifc_ids": [
+    3149742,
+    3149769,
+    3150041,
+    3150211,
+    3151063,
+    3151073,
+    3151087,
+    3151108,
+    3151165,
+    3151172,
+    3154235,
+    3154250
+   ]
+  },
+  {
+   "from": {
+    "id": 3324731,
+    "face": "D"
+   },
+   "to": {
+    "id": 3528368,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 3,
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "top_mm": [
+    -1620,
+    -900
+   ],
+   "length_mm": 22567,
+   "bends": 2,
+   "ifc_ids": [
+    3189029,
+    3189030,
+    3189031,
+    3189032,
+    3324852,
+    3324854,
+    3324856,
+    3324858,
+    3324860,
+    3324862,
+    3324864,
+    3324866,
+    3324868,
+    3324870,
+    3324872,
+    3324874,
+    3324876,
+    3324880,
+    3531893,
+    3531910
+   ]
+  },
+  {
+   "from": {
+    "id": 3068373,
+    "face": "C"
+   },
+   "to": {
+    "id": 3074114,
+    "face": "C"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1680,
+    -1980
+   ],
+   "length_mm": 32952,
+   "bends": 3,
+   "ifc_ids": [
+    3074124,
+    3074145,
+    3074147,
+    3074148,
+    3083841,
+    3084135,
+    3084241,
+    3084278,
+    3084313,
+    3084383,
+    3084417,
+    3084451,
+    3084520,
+    3084554,
+    3084719,
+    3084753,
+    3084787,
+    3084856,
+    3084888,
+    3084920,
+    3085010,
+    3085042,
+    3085103,
+    3118347,
+    3118413,
+    3119452,
+    3124879,
+    3124922,
+    3124950,
+    3124981,
+    3125006,
+    3125028,
+    3125044,
+    3125069,
+    3125166,
+    3125234,
+    3125274,
+    3125299,
+    3125321,
+    3125337,
+    3125359,
+    3125432,
+    3125454,
+    3125482,
+    3125501,
+    3125532,
+    3125560,
+    3125570,
+    3135178,
+    3135192,
+    3135299,
+    3135328,
+    3135335,
+    3135400,
+    3135407,
+    3135439,
+    3135446,
+    3135471,
+    3135478,
+    3135499,
+    3135506,
+    3135529,
+    3135536,
+    3135577,
+    3135584,
+    3135586,
+    3135619,
+    3135626,
+    3135628,
+    3135635,
+    3135658,
+    3135667,
+    3135692,
+    3135699,
+    3135731,
+    3135740,
+    3135772,
+    3135779,
+    3135806,
+    3135815,
+    3135846,
+    3135855,
+    3135887,
+    3135894,
+    3135921,
+    3135928,
+    3135960,
+    3135969,
+    3135999,
+    3136006,
+    3136031,
+    3136038,
+    3136068,
+    3136075,
+    3136109,
+    3136116,
+    3137628,
+    3137652,
+    3137673,
+    3137704,
+    3137706,
+    3137735,
+    3137783,
+    3137786,
+    3137909,
+    3137912,
+    3138159,
+    3138417,
+    3138432,
+    3138500,
+    3138858,
+    3138860,
+    3138961,
+    3138963,
+    3139069,
+    3139145,
+    3139147,
+    3139190,
+    3139363,
+    3139473,
+    3139475,
+    3139630,
+    3139691,
+    3139693,
+    3139735,
+    3139737,
+    3139807,
+    3139809,
+    3139924,
+    3140003,
+    3140014,
+    3140072,
+    3140898,
+    3140929,
+    3140952,
+    3141034,
+    3141036,
+    3141066,
+    3141068,
+    3141126,
+    3141128,
+    3141280,
+    3141299,
+    3141320,
+    3141327,
+    3141371,
+    3141373,
+    3141411,
+    3141413,
+    3141457,
+    3141524,
+    3141550,
+    3141557,
+    3141576,
+    3141583,
+    3141623,
+    3141625,
+    3141665,
+    3141703,
+    3141777,
+    3141817,
+    3141824,
+    3141842,
+    3141906,
+    3141908,
+    3141978,
+    3142039,
+    3142041
+   ]
+  },
+  {
+   "from": {
+    "id": 3074114,
+    "face": "A"
+   },
+   "to": {
+    "id": 3300150,
+    "face": "A"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1380,
+    -1380
+   ],
+   "length_mm": 27750,
+   "bends": 0,
+   "ifc_ids": [
+    3081508,
+    3081616,
+    3081711,
+    3081800,
+    3081831,
+    3081989,
+    3082014,
+    3082033,
+    3082206,
+    3082322,
+    3082596,
+    3082618,
+    3082640,
+    3082668,
+    3082699,
+    3082730,
+    3082890,
+    3082946,
+    3083008,
+    3083106,
+    3083159,
+    3083248,
+    3083337,
+    3083405
+   ]
+  },
+  {
+   "from": {
+    "id": 2863071,
+    "face": "A"
+   },
+   "to": {
+    "id": 2863090,
+    "face": "C"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1020,
+    -1020
+   ],
+   "length_mm": 28200,
+   "bends": 0,
+   "ifc_ids": [
+    3238003,
+    3238100,
+    3238263,
+    3239216,
+    3239262,
+    3239306,
+    3239352,
+    3239381,
+    3239425,
+    3239469,
+    3239513,
+    3239542,
+    3239571,
+    3239615,
+    3239659,
+    3239703,
+    3239747,
+    3239791,
+    3239835,
+    3241180,
+    3241207,
+    3241240,
+    3241279,
+    3241306
+   ]
+  },
+  {
+   "from": {
+    "id": 2863071,
+    "face": "C"
+   },
+   "to": {
+    "id": 3292609,
+    "face": "D"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 3,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1740,
+    -1740
+   ],
+   "length_mm": 20523,
+   "bends": 2,
+   "ifc_ids": [
+    2903512,
+    2903513,
+    2903514,
+    2903515,
+    2903516,
+    2903517,
+    2903518,
+    2903519,
+    2903520,
+    2903521,
+    2903522,
+    2903523,
+    2903524,
+    2903525,
+    2903526,
+    2903527,
+    2903528,
+    2903529,
+    2903530,
+    2903531,
+    2903532,
+    2903533,
+    2903534,
+    2903535,
+    3292821,
+    3292823,
+    3292826,
+    3292828,
+    3292830,
+    3292832,
+    3292834,
+    3292836,
+    3292838,
+    3292840,
+    3292842,
+    3292844,
+    3292846,
+    3292848,
+    3292850,
+    3292852,
+    3292854,
+    3292856,
+    3292858,
+    3292860,
+    3292862,
+    3292864,
+    3292866,
+    3292868,
+    3292870,
+    3292872,
+    3292874,
+    3292876,
+    3292878,
+    3292880,
+    3292882,
+    3292884,
+    3292886,
+    3292888,
+    3292890,
+    3292892,
+    3292894,
+    3292896,
+    3292898,
+    3292900,
+    3292902,
+    3292904,
+    3292906,
+    3292908,
+    3292910,
+    3292912,
+    3292914,
+    3292916,
+    3292918,
+    3292920,
+    3292922,
+    3292924,
+    3292926,
+    3292928,
+    3292930,
+    3292932,
+    3292934,
+    3292936,
+    3292938,
+    3292940,
+    3292942,
+    3292944,
+    3292946,
+    3292948,
+    3292950,
+    3292952,
+    3292954,
+    3292956,
+    3292958,
+    3292960,
+    3292962,
+    3292964,
+    3292966,
+    3292968,
+    3292970,
+    3292972,
+    3292974,
+    3292976,
+    3292978,
+    3292980,
+    3292982,
+    3292984,
+    3292986,
+    3292988,
+    3292990,
+    3292992,
+    3292994,
+    3292996,
+    3292998,
+    3293000,
+    3293002,
+    3293004,
+    3293006,
+    3293008,
+    3293010,
+    3293012
+   ]
+  },
+  {
+   "from": {
+    "id": 2863090,
+    "face": "A"
+   },
+   "to": {
+    "id": 2863105,
+    "face": "C"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1020,
+    -1020
+   ],
+   "length_mm": 43727,
+   "bends": 0,
+   "ifc_ids": [
+    2903031,
+    2903032,
+    2903033,
+    2903034,
+    2903035,
+    2903036,
+    2903037,
+    2903038,
+    2903039,
+    2903040,
+    2903041,
+    2903042,
+    2903043,
+    2903044,
+    2903045,
+    2903046,
+    2903047,
+    2903048,
+    2903049,
+    2903050,
+    2903051,
+    2903052,
+    2903053,
+    2903054
+   ]
+  },
+  {
+   "from": {
+    "id": 2863105,
+    "face": "A"
+   },
+   "to": {
+    "id": 2863123,
+    "face": "A"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1080,
+    -1080
+   ],
+   "length_mm": 20820,
+   "bends": 0,
+   "ifc_ids": [
+    2902748,
+    2902749,
+    2902750,
+    2902751,
+    2902752,
+    2902753,
+    2902754,
+    2902755,
+    2902756,
+    2902757,
+    2902758,
+    2902759,
+    2902760,
+    2902761,
+    2902762,
+    2902763,
+    2902764,
+    2902765,
+    2902766,
+    2902767,
+    2902768,
+    2902769,
+    2902770,
+    2902771
+   ]
+  },
+  {
+   "from": {
+    "id": 2863123,
+    "face": "C"
+   },
+   "to": {
+    "id": 3300150,
+    "face": "D"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1260,
+    -1260
+   ],
+   "length_mm": 24106,
+   "bends": 0,
+   "ifc_ids": [
+    2902538,
+    2902539,
+    2902540,
+    2902541,
+    2902542,
+    2902543,
+    2902544,
+    2902545,
+    2902546,
+    2902548,
+    2902549,
+    2902550,
+    2902551,
+    2902552,
+    2902553,
+    2902554,
+    2902555,
+    2902558,
+    2902561,
+    3053250,
+    3053251,
+    3053254,
+    3053255,
+    3300448
+   ]
+  },
+  {
+   "from": {
+    "id": 3299200,
+    "face": "A"
+   },
+   "to": {
+    "id": 3300150,
+    "face": "C"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 43082,
+   "bends": 0,
+   "ifc_ids": [
+    3073994,
+    3073995,
+    3073996,
+    3073997,
+    3073998,
+    3073999,
+    3074000,
+    3074001,
+    3074002,
+    3074003,
+    3074004,
+    3074005,
+    3074006,
+    3074007,
+    3074008,
+    3074009,
+    3074010,
+    3074011,
+    3074012,
+    3074013,
+    3074014,
+    3074015,
+    3074016,
+    3074017
+   ]
+  },
+  {
+   "from": {
+    "id": 2863037,
+    "face": "A"
+   },
+   "to": {
+    "id": 3272648,
+    "face": "C"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1140,
+    -1380
+   ],
+   "length_mm": 42313,
+   "bends": 2,
+   "ifc_ids": [
+    3293286,
+    3293290,
+    3293294,
+    3293298,
+    3293302,
+    3293306,
+    3293310,
+    3293314,
+    3293318,
+    3293322,
+    3293326,
+    3293330,
+    3293334,
+    3293338,
+    3293342,
+    3293346,
+    3293350,
+    3293354,
+    3293358,
+    3293362,
+    3293366,
+    3293370,
+    3293374,
+    3293378,
+    3293382,
+    3293384,
+    3293386,
+    3293388,
+    3293390,
+    3293392,
+    3293394,
+    3293396,
+    3293398,
+    3293400,
+    3293402,
+    3293404,
+    3293406,
+    3293408,
+    3293410,
+    3293412,
+    3293414,
+    3293416,
+    3293418,
+    3293422,
+    3293426,
+    3293428,
+    3293430,
+    3293434,
+    3293436,
+    3293438,
+    3293440,
+    3293442,
+    3293444,
+    3293446,
+    3293450,
+    3293454,
+    3293458,
+    3293462,
+    3293466,
+    3293468,
+    3293470,
+    3293472,
+    3293474,
+    3293476,
+    3425581,
+    3425583,
+    3425585,
+    3425587,
+    3425589,
+    3425591,
+    3425593,
+    3425595,
+    3425597,
+    3425599,
+    3425601,
+    3425603,
+    3425605,
+    3425607,
+    3425609,
+    3425611,
+    3425613,
+    3425615,
+    3425617,
+    3425619,
+    3425621,
+    3425623,
+    3425625,
+    3425627,
+    3494785,
+    3494802,
+    3494819,
+    3494852,
+    3494876,
+    3494892,
+    3494917,
+    3494934,
+    3494950,
+    3495064,
+    3495588,
+    3495651,
+    3495693,
+    3495736,
+    3495782,
+    3495819,
+    3495821,
+    3495856,
+    3495858,
+    3495900,
+    3495937,
+    3495939,
+    3495974,
+    3495976,
+    3496014,
+    3496051,
+    3496053,
+    3496095,
+    3496132,
+    3496134,
+    3496169,
+    3496171
+   ]
+  },
+  {
+   "from": {
+    "id": 2863037,
+    "face": "C"
+   },
+   "to": {
+    "id": 3292609,
+    "face": "A"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 51800,
+   "bends": 0,
+   "ifc_ids": [
+    2904652,
+    2904653,
+    2904654,
+    2904655,
+    2904656,
+    2904657,
+    2904658,
+    2904659,
+    2904660,
+    2904661,
+    2904662,
+    2904663,
+    2904664,
+    2904665,
+    2904666,
+    2904667,
+    2904668,
+    2904669,
+    2904670,
+    2904671,
+    2904672,
+    2904673,
+    2904674,
+    2904675
+   ]
+  },
+  {
+   "from": {
+    "id": 2907185,
+    "face": "A"
+   },
+   "to": {
+    "id": 3272648,
+    "face": "D"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -2460,
+    -2460
+   ],
+   "length_mm": 50717,
+   "bends": 0,
+   "ifc_ids": [
+    3155888,
+    3155889,
+    3155890,
+    3155891,
+    3155892,
+    3155893,
+    3155894,
+    3155895,
+    3155896,
+    3155897,
+    3155898,
+    3155899,
+    3155900,
+    3155901,
+    3155902,
+    3155903,
+    3155904,
+    3155905,
+    3155906,
+    3155907,
+    3155908,
+    3155909,
+    3155910,
+    3155911
+   ]
+  },
+  {
+   "from": {
+    "id": 3217313,
+    "face": "A"
+   },
+   "to": {
+    "id": 3299200,
+    "face": "C"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 56468,
+   "bends": 2,
+   "ifc_ids": [
+    3074018,
+    3074019,
+    3074020,
+    3074021,
+    3074022,
+    3074023,
+    3074024,
+    3074025,
+    3074026,
+    3074027,
+    3074028,
+    3074029,
+    3074030,
+    3074031,
+    3074032,
+    3074033,
+    3074034,
+    3074035,
+    3074036,
+    3074037,
+    3074038,
+    3074039,
+    3074040,
+    3074041,
+    3393273,
+    3393277,
+    3393281,
+    3393285,
+    3393289,
+    3393293,
+    3393297,
+    3393301,
+    3393305,
+    3393309,
+    3393313,
+    3393317,
+    3393321,
+    3393325,
+    3393329,
+    3393333,
+    3393337,
+    3393341,
+    3393345,
+    3393349,
+    3393353,
+    3393357,
+    3393361,
+    3393365,
+    3393369,
+    3393371,
+    3393373,
+    3393375,
+    3393377,
+    3393379,
+    3393381,
+    3393383,
+    3393385,
+    3393387,
+    3393389,
+    3393391,
+    3393393,
+    3393395,
+    3393397,
+    3393399,
+    3393401,
+    3393403,
+    3393405,
+    3393407,
+    3393409,
+    3393411,
+    3393413,
+    3393415,
+    3393417,
+    3393419,
+    3393421,
+    3393423,
+    3393425,
+    3393427,
+    3393429,
+    3393431,
+    3393433,
+    3393435,
+    3393437,
+    3393439,
+    3393441,
+    3393443,
+    3393445,
+    3393447,
+    3393449,
+    3393451,
+    3393453,
+    3393455,
+    3393457,
+    3393459,
+    3393461,
+    3393463,
+    3537006,
+    3537027,
+    3537048,
+    3537069,
+    3537090,
+    3537111,
+    3537132,
+    3537153,
+    3537174,
+    3537191,
+    3537212,
+    3537229,
+    3537250,
+    3537271,
+    3537301,
+    3537322,
+    3537343,
+    3537366,
+    3537383,
+    3537400,
+    3537417,
+    3537434,
+    3537451,
+    3537468
+   ]
+  },
+  {
+   "from": {
+    "id": 3217313,
+    "face": "C"
+   },
+   "to": {
+    "id": 3299533,
+    "face": "D"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 53608,
+   "bends": 4,
+   "ifc_ids": [
+    3343355,
+    3343357,
+    3343359,
+    3343361,
+    3343363,
+    3343365,
+    3343367,
+    3343369,
+    3343371,
+    3343373,
+    3343375,
+    3343377,
+    3343379,
+    3343381,
+    3343383,
+    3343385,
+    3343387,
+    3343389,
+    3343391,
+    3343393,
+    3343395,
+    3343397,
+    3343399,
+    3343401,
+    3343414,
+    3343416,
+    3343419,
+    3343421,
+    3343423,
+    3343425,
+    3343427,
+    3343429,
+    3343431,
+    3343433,
+    3343435,
+    3343437,
+    3343439,
+    3343441,
+    3343443,
+    3343445,
+    3343447,
+    3343449,
+    3343451,
+    3343453,
+    3343455,
+    3343457,
+    3343459,
+    3343461,
+    3343463,
+    3343465,
+    3343467,
+    3343469,
+    3343471,
+    3343473,
+    3343475,
+    3343477,
+    3343479,
+    3343481,
+    3343483,
+    3343485,
+    3343487,
+    3343489,
+    3343491,
+    3343493,
+    3343495,
+    3343497,
+    3343499,
+    3343501,
+    3343503,
+    3343505,
+    3343507,
+    3343509,
+    3343511,
+    3343513,
+    3343515,
+    3343517,
+    3343519,
+    3343521,
+    3343523,
+    3343525,
+    3343527,
+    3343529,
+    3343531,
+    3343533,
+    3343535,
+    3343537,
+    3343539,
+    3343541,
+    3343543,
+    3343545,
+    3343547,
+    3343549,
+    3343551,
+    3343553,
+    3343555,
+    3343557,
+    3343559,
+    3343561,
+    3343563,
+    3343565,
+    3343567,
+    3343569,
+    3343571,
+    3343573,
+    3343575,
+    3343577,
+    3343579,
+    3343581,
+    3343583,
+    3343585,
+    3343587,
+    3343589,
+    3343591,
+    3343593,
+    3343595,
+    3343597,
+    3343599,
+    3343601,
+    3343603,
+    3343605,
+    3343607,
+    3343609,
+    3343611,
+    3343613,
+    3343615,
+    3343617,
+    3343619,
+    3343621,
+    3343623,
+    3343625,
+    3343627,
+    3343629,
+    3343631,
+    3343633,
+    3343635,
+    3343637,
+    3343639,
+    3343641,
+    3343643,
+    3343645,
+    3343647,
+    3343649,
+    3343651,
+    3343653,
+    3343655,
+    3343657,
+    3343659,
+    3343661,
+    3343663,
+    3343665,
+    3343667,
+    3343669,
+    3343671,
+    3343673,
+    3343675,
+    3343677,
+    3343679,
+    3343681,
+    3343683,
+    3343685,
+    3343687,
+    3343689,
+    3343691,
+    3343693,
+    3343695,
+    3343697,
+    3343699,
+    3343701,
+    3343868,
+    3343870,
+    3343872,
+    3343874,
+    3343876,
+    3343878,
+    3343880,
+    3343882,
+    3343884,
+    3343886,
+    3343888,
+    3343890,
+    3343892,
+    3343894,
+    3343896,
+    3343898,
+    3343900,
+    3343902,
+    3343904,
+    3343906,
+    3343908,
+    3343910,
+    3343912,
+    3343914,
+    3343916,
+    3343918,
+    3343920,
+    3343922,
+    3343924,
+    3343926,
+    3343928,
+    3343930,
+    3343932,
+    3343934,
+    3343936,
+    3343938,
+    3343940,
+    3343942,
+    3343944,
+    3343946,
+    3343948,
+    3343950,
+    3343952,
+    3343954,
+    3343956,
+    3343958,
+    3343960,
+    3343962
+   ]
+  },
+  {
+   "from": {
+    "id": 3217313,
+    "face": "D"
+   },
+   "to": {
+    "id": 3221206,
+    "face": "A"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -960,
+    -2400
+   ],
+   "length_mm": 25615,
+   "bends": 2,
+   "ifc_ids": [
+    3177718,
+    3177728,
+    3177750,
+    3177769,
+    3177818,
+    3177849,
+    3177859,
+    3177869,
+    3178191,
+    3178210,
+    3178232,
+    3178338,
+    3178432,
+    3178576,
+    3178635,
+    3178685,
+    3178729,
+    3178769,
+    3178782,
+    3178832,
+    3178869,
+    3178876,
+    3178919,
+    3178926,
+    3179997,
+    3180010,
+    3180029,
+    3180064,
+    3180083,
+    3180093,
+    3180109,
+    3180173,
+    3180212,
+    3180233,
+    3180260,
+    3180304,
+    3180349,
+    3180388,
+    3180460,
+    3180478,
+    3180508,
+    3180538,
+    3180568,
+    3180601,
+    3180619,
+    3180646,
+    3180932,
+    3181012,
+    3181550,
+    3181562,
+    3181564,
+    3181743,
+    3181752,
+    3181754,
+    3181762,
+    3181771,
+    3181773,
+    3181832,
+    3181837,
+    3181842,
+    3181857,
+    3181862,
+    3181867,
+    3181880,
+    3181885,
+    3181890,
+    3181903,
+    3181908,
+    3181913,
+    3181928,
+    3181933,
+    3181938,
+    3181953,
+    3181958,
+    3181963,
+    3181978,
+    3181983,
+    3181988,
+    3182094,
+    3182114,
+    3182137,
+    3182157,
+    3182177,
+    3182193,
+    3182213,
+    3182228,
+    3182247,
+    3182262,
+    3182281,
+    3182310,
+    3182360,
+    3182380,
+    3182423,
+    3182459,
+    3182480,
+    3182500,
+    3182522,
+    3182541,
+    3182577,
+    3182624,
+    3182644,
+    3182660,
+    3182737,
+    3182757,
+    3182773,
+    3182796,
+    3182816,
+    3182835,
+    3182850,
+    3182910,
+    3182929,
+    3182948,
+    3182963,
+    3210353,
+    3210355,
+    3210434,
+    3210499,
+    3210501,
+    3210573,
+    3210575
+   ]
+  },
+  {
+   "from": {
+    "id": 2863512,
+    "face": "C"
+   },
+   "to": {
+    "id": 3272648,
+    "face": "A"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1080,
+    -1080
+   ],
+   "length_mm": 52324,
+   "bends": 2,
+   "ifc_ids": [
+    3273397,
+    3273512,
+    3273563,
+    3273610,
+    3273649,
+    3273719,
+    3273762,
+    3273823,
+    3274269,
+    3274322,
+    3274365,
+    3274412,
+    3274454,
+    3274497,
+    3274566,
+    3274639,
+    3274676,
+    3274771,
+    3274801,
+    3274831,
+    3274936,
+    3274970,
+    3275004,
+    3294651,
+    3294653,
+    3294655,
+    3294657,
+    3294659,
+    3294661,
+    3294663,
+    3294665,
+    3294667,
+    3294669,
+    3294671,
+    3294673,
+    3294675,
+    3294677,
+    3294679,
+    3294681,
+    3294683,
+    3294685,
+    3294687,
+    3294689,
+    3294691,
+    3294693,
+    3294695,
+    3294697,
+    3294699,
+    3294701,
+    3294703,
+    3294705,
+    3294707,
+    3294709,
+    3294711,
+    3294713,
+    3294715,
+    3294717,
+    3294719,
+    3294721,
+    3294723,
+    3294725,
+    3294727,
+    3294729,
+    3294731,
+    3294733,
+    3294735,
+    3294737,
+    3294739,
+    3294741,
+    3294746,
+    3294748,
+    3294750,
+    3294752,
+    3294754,
+    3294756,
+    3294758,
+    3294760,
+    3294762,
+    3294764,
+    3294766,
+    3294768,
+    3294770,
+    3294772,
+    3294774,
+    3294776,
+    3294778,
+    3294780,
+    3294782,
+    3294784,
+    3294786,
+    3294788,
+    3294790,
+    3294792,
+    3294794,
+    3294796,
+    3294798,
+    3294800,
+    3294802,
+    3294804,
+    3294806,
+    3294808,
+    3294810,
+    3294812,
+    3294814,
+    3294816,
+    3294818,
+    3294820,
+    3294822,
+    3294824,
+    3294826,
+    3294828,
+    3294830,
+    3294832,
+    3294834,
+    3294836,
+    3345150,
+    3345151,
+    3345152,
+    3345154,
+    3345155
+   ]
+  },
+  {
+   "from": {
+    "id": 3202886,
+    "face": "A"
+   },
+   "to": {
+    "id": 3299533,
+    "face": "A"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 12132,
+   "bends": 1,
+   "ifc_ids": [
+    3090749,
+    3090759,
+    3090769,
+    3090789,
+    3090829,
+    3090839,
+    3090849,
+    3090869,
+    3090909,
+    3090919,
+    3090929,
+    3090939,
+    3090959,
+    3159657,
+    3159689,
+    3160025,
+    3160057,
+    3160089,
+    3400095,
+    3400100,
+    3400104,
+    3400108,
+    3400112,
+    3400116,
+    3400120,
+    3400124,
+    3400128,
+    3400132,
+    3400136,
+    3400140,
+    3400144,
+    3400148,
+    3400152,
+    3400156,
+    3400160,
+    3400164,
+    3400168,
+    3400172,
+    3400176,
+    3400180,
+    3400184,
+    3400188,
+    3496943,
+    3496953,
+    3496962,
+    3496971,
+    3496980,
+    3496991,
+    3497113,
+    3497128,
+    3497143,
+    3497161,
+    3497176,
+    3497191,
+    3497209,
+    3497224,
+    3497239,
+    3497257,
+    3497272,
+    3497287,
+    3497315,
+    3497346,
+    3497361,
+    3497440,
+    3497506,
+    3497521,
+    3497553,
+    3497563,
+    3497572,
+    3497581,
+    3497590,
+    3497599
+   ]
+  },
+  {
+   "from": {
+    "id": 2863495,
+    "face": "C"
+   },
+   "to": {
+    "id": 2863512,
+    "face": "A"
+   },
+   "perRow": [
+    2
+   ],
+   "align": null,
+   "level": 3,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -2220,
+    -1560
+   ],
+   "length_mm": 37854,
+   "bends": 2,
+   "ifc_ids": [
+    3295113,
+    3295121,
+    3295205,
+    3295213,
+    3295215,
+    3425451,
+    3425455,
+    3569501,
+    3569504,
+    3569533
+   ]
+  },
+  {
+   "from": {
+    "id": 2863467,
+    "face": "A"
+   },
+   "to": {
+    "id": 3094273,
+    "face": "C"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1200,
+    -1200
+   ],
+   "length_mm": 18495,
+   "bends": 1,
+   "ifc_ids": [
+    3095877,
+    3095878,
+    3095879,
+    3095880,
+    3095881,
+    3095882,
+    3095883,
+    3095884,
+    3095885,
+    3095886,
+    3095887,
+    3095888,
+    3095889,
+    3095890,
+    3095891,
+    3095892,
+    3095893,
+    3095894,
+    3095895,
+    3095896,
+    3095897,
+    3095898,
+    3095899,
+    3095900,
+    3423702,
+    3423704,
+    3423706,
+    3423708,
+    3423710,
+    3423712,
+    3423714,
+    3423716,
+    3423718,
+    3423720,
+    3423722,
+    3423724,
+    3423726,
+    3423728,
+    3423730,
+    3423732,
+    3423734,
+    3423736,
+    3423738,
+    3423740,
+    3423742,
+    3423744,
+    3423746,
+    3423748,
+    3423833,
+    3423898,
+    3423920,
+    3423941,
+    3423962,
+    3424019,
+    3424021,
+    3424023,
+    3424025,
+    3424027,
+    3424029,
+    3424031,
+    3424033,
+    3424035,
+    3424037,
+    3424039,
+    3424076,
+    3424078,
+    3424080,
+    3424082,
+    3424084,
+    3424086,
+    3424088,
+    3424090
+   ]
+  },
+  {
+   "from": {
+    "id": 2863467,
+    "face": "D"
+   },
+   "to": {
+    "id": 2863495,
+    "face": "A"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 1,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -1440,
+    -1440
+   ],
+   "length_mm": 15759,
+   "bends": 0,
+   "ifc_ids": [
+    3295378,
+    3295380,
+    3295382,
+    3295384,
+    3295386,
+    3295388,
+    3295390,
+    3295392,
+    3295394,
+    3295396,
+    3295398,
+    3295400,
+    3295402,
+    3295404,
+    3295406,
+    3295408,
+    3295410,
+    3295412,
+    3295414,
+    3295416,
+    3295418,
+    3295420,
+    3295422,
+    3295424
+   ]
+  },
+  {
+   "from": {
+    "id": 3094273,
+    "face": "A"
+   },
+   "to": {
+    "id": 3094395,
+    "face": "C"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 53200,
+   "bends": 0,
+   "ifc_ids": [
+    3256519,
+    3256535,
+    3256572,
+    3256603,
+    3256622,
+    3256647,
+    3256669,
+    3256694,
+    3256749,
+    3256774,
+    3256808,
+    3256818,
+    3256834,
+    3256853,
+    3256872,
+    3256894,
+    3257182,
+    3257198,
+    3257223,
+    3257236,
+    3257249,
+    3257271,
+    3257287,
+    3257300
+   ]
+  },
+  {
+   "from": {
+    "id": 3094395,
+    "face": "A"
+   },
+   "to": {
+    "id": 3094428,
+    "face": "A"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 48220,
+   "bends": 1,
+   "ifc_ids": [
+    3095349,
+    3095350,
+    3095351,
+    3095352,
+    3095353,
+    3095354,
+    3095355,
+    3095356,
+    3095357,
+    3095358,
+    3095359,
+    3095360,
+    3095361,
+    3095362,
+    3095363,
+    3095364,
+    3095365,
+    3095366,
+    3095367,
+    3095368,
+    3095369,
+    3095370,
+    3095371,
+    3095372,
+    3095405,
+    3095406,
+    3095407,
+    3095408,
+    3095409,
+    3095410,
+    3095411,
+    3095412,
+    3095413,
+    3095414,
+    3095415,
+    3095416,
+    3095417,
+    3095418,
+    3095419,
+    3095420,
+    3095421,
+    3095422,
+    3095423,
+    3095424,
+    3095425,
+    3255280,
+    3255360,
+    3255382,
+    3255405,
+    3255420,
+    3255445,
+    3255470,
+    3255494,
+    3255524,
+    3255548,
+    3255572,
+    3255595,
+    3255619,
+    3255649,
+    3255673,
+    3255694,
+    3255715,
+    3255736,
+    3255757,
+    3255784,
+    3255805,
+    3255826,
+    3255847,
+    3255868,
+    3255889,
+    3255910,
+    3255959
+   ]
+  },
+  {
+   "from": {
+    "id": 3202523,
+    "face": "A"
+   },
+   "to": {
+    "id": 3202886,
+    "face": "C"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 54378,
+   "bends": 4,
+   "ifc_ids": [
+    3074111,
+    3252430,
+    3252454,
+    3252505,
+    3252529,
+    3252582,
+    3252606,
+    3252657,
+    3252681,
+    3252732,
+    3252756,
+    3252807,
+    3252831,
+    3252884,
+    3252908,
+    3340016,
+    3402771,
+    3403815,
+    3403817,
+    3403819,
+    3403821,
+    3403823,
+    3403825,
+    3403827,
+    3404272,
+    3404274,
+    3404277,
+    3404279,
+    3404281,
+    3404283,
+    3404285,
+    3404287,
+    3404289,
+    3404291,
+    3404293,
+    3404295,
+    3404297,
+    3404299,
+    3404301,
+    3404303,
+    3404305,
+    3404307,
+    3404309,
+    3404311,
+    3404313,
+    3404315,
+    3404317,
+    3404319,
+    3404321,
+    3404323,
+    3404325,
+    3404327,
+    3404329,
+    3404331,
+    3404333,
+    3404335,
+    3404337,
+    3404339,
+    3404341,
+    3404343,
+    3404345,
+    3404347,
+    3404349,
+    3404351,
+    3404353,
+    3404355,
+    3404357,
+    3404359,
+    3404361,
+    3404363,
+    3404365,
+    3404367,
+    3404369,
+    3404371,
+    3404373,
+    3404375,
+    3404377,
+    3404379,
+    3404381,
+    3404383,
+    3404385,
+    3404387,
+    3404389,
+    3404391,
+    3404393,
+    3404395,
+    3404397,
+    3404399,
+    3404401,
+    3404403,
+    3404405,
+    3404407,
+    3404409,
+    3404411,
+    3404413,
+    3404415,
+    3404417,
+    3404419,
+    3404421,
+    3404423,
+    3404425,
+    3404427,
+    3404429,
+    3404431,
+    3404433,
+    3404435,
+    3404437,
+    3404439,
+    3404441,
+    3404443,
+    3404445,
+    3404447,
+    3404449,
+    3404451,
+    3404453,
+    3404455,
+    3404457,
+    3404459,
+    3404461,
+    3404463,
+    3404738,
+    3404740,
+    3404743,
+    3404745,
+    3404747,
+    3404749,
+    3404751,
+    3404753,
+    3404755,
+    3404757,
+    3404759,
+    3404761,
+    3404763,
+    3404765,
+    3404767,
+    3404769,
+    3404771,
+    3404773,
+    3404775,
+    3404777,
+    3404779,
+    3404781,
+    3404783,
+    3404785,
+    3404787,
+    3404789,
+    3404791,
+    3404793,
+    3404795,
+    3404797,
+    3404799,
+    3404801,
+    3404803,
+    3404805,
+    3404807,
+    3404809,
+    3404811,
+    3404813,
+    3404815,
+    3404817,
+    3404819,
+    3404821,
+    3404823,
+    3404825,
+    3404827,
+    3404829,
+    3404831,
+    3404833,
+    3404835,
+    3404837,
+    3404839,
+    3404841,
+    3404843,
+    3404845,
+    3404847,
+    3404849,
+    3404851,
+    3404853,
+    3404855,
+    3404857,
+    3404859,
+    3404861,
+    3404863,
+    3404865,
+    3404867,
+    3404869,
+    3404871,
+    3404873,
+    3404875,
+    3404877,
+    3404879,
+    3404881,
+    3404883,
+    3404885,
+    3404887,
+    3404889,
+    3404891,
+    3404893,
+    3404895,
+    3404897,
+    3404899,
+    3404901,
+    3404903,
+    3404905,
+    3404907,
+    3404909,
+    3404911,
+    3404913,
+    3404915,
+    3404917,
+    3404919,
+    3404921,
+    3404923,
+    3404925,
+    3404927,
+    3404929
+   ]
+  },
+  {
+   "from": {
+    "id": 3094428,
+    "face": "C"
+   },
+   "to": {
+    "id": 3202523,
+    "face": "D"
+   },
+   "perRow": [
+    8,
+    8,
+    8
+   ],
+   "align": null,
+   "level": 0,
+   "od_mm": 128,
+   "pitch_mm": 250,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 27800,
+   "bends": 0,
+   "ifc_ids": [
+    3350214,
+    3350216,
+    3350218,
+    3350220,
+    3350222,
+    3350224,
+    3350226,
+    3350228,
+    3350230,
+    3350232,
+    3350234,
+    3350236,
+    3350238,
+    3350240,
+    3350242,
+    3350244,
+    3350246,
+    3350248,
+    3350250,
+    3350252,
+    3350254,
+    3350256,
+    3350258,
+    3350260
+   ]
+  }
+ ]
+}

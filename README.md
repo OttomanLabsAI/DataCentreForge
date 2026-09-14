@@ -22,6 +22,7 @@ prompt text/             provenance for the version in service (replaced each re
   <N>/ai model.txt       the model attribution for that version
   <N>/*.png              input images referenced by the prompt, where held
 tools/revit/             exporter script for Revit (not served)
+tools/ifc/               reads the fibre model's IFC into the MV example (not served)
 wrangler.jsonc           assets-only Workers config (no build step, no Worker script)
 package.json             wrangler devDependency + dev/deploy scripts
 ```
@@ -63,6 +64,18 @@ internal-origin millimetres.
 Obstacles are drawn in the tool itself; the exporter carries only the
 manholes.
 
+The MV model arrived as an IFC rather than a Revit export.
+`tools/ifc/extract_mv_example.py` reads an IFC 2x3 file from Revit — the
+manhole, vault and pull-box families with their placements, sizes and depths,
+and the conduit segments and bends with their port connections — chains the
+conduits into runs, joins the runs that stop at a wall sleeve, matches each end
+to the chamber face it enters, and writes the example file: every chamber as a
+family instance with its own lid, base and top-row depth, and every bank that
+joins two chambers as one run with the number of conduits in each row. Runs
+that leave the model with an open end are counted but not written. An export
+may give an instance its own `lid_mm`, `base_mm` and `z0_mm`, a family its
+`spacing_mm`, and a `runs` list; the tool honours all three.
+
 Every manhole and obstacle keeps its Revit element id, unique id and source
 document. Importing a later export of the same model refreshes the matching
 elements in place — runs stay attached — adds what is new and keeps what the
@@ -85,9 +98,11 @@ selected set moves, nudges and deletes together. Pan with a middle- or
 right-button drag; zoom with the wheel, a touchpad pinch or two fingers.
 The Examples window places the exports kept in `public/examples/`: the LV
 model of 105 manholes at their true positions and rotations, carrying their
-Revit marks, types and element ids, and the DCBuild test model. The LV model's
-family exposes only its depth planes, so it borrows the DCBuild family's side
-planes for wall and size.
+Revit marks, types and element ids; the MV model read from its IFC — 23
+manholes, 44 vaults and 8 pull boxes, and the 77 conduit banks that join
+them, recreated as runs while its checkbox is ticked; and the DCBuild test
+model. The LV model's family exposes only its depth planes, so it borrows the
+DCBuild family's side planes for wall and size.
 
 Hold shift while dragging a chamber or obstacle and it keeps to one line,
 straight along or straight across, whichever the drag favours. The Drawing
@@ -137,11 +152,12 @@ with as many open as you like. Three of them deserve a word:
 
 - **Examples** (in the Manage group) lists the drawings kept with the site:
   the LV site, the DCBuild test model and the demo drawing. The LV site is
-  built from sub-models, one export per service; today that is the LV model of
-  105 manholes, and the MV model joins it as one more entry when it arrives.
+  built from sub-models, one export per service: the LV model of 105 manholes
+  and the MV model of 75 chambers from the fibre IFC, whose checkbox recreates
+  its 77 conduit banks as runs, each with its rows as the model has them.
   Place the whole site, or Add a sub-model to whatever is on the drawing (a
-  sub-model already there is refreshed in place). Placing replaces the drawing
-  after asking, and Undo brings the previous drawing back.
+  sub-model already there is refreshed in place, its banks with it). Placing
+  replaces the drawing after asking, and Undo brings the previous drawing back.
 - **Elevation** shows one face at a time: its runs with their level controls
   and the whole face at true scale, lid to base, with each level's depth marked,
   every conduit at its own depth and offset, and the boundary box its conduits
@@ -166,6 +182,15 @@ conduit window where the family has one, otherwise the face width less the
 edge clearance. Bends carry only what the extents cannot absorb. Runs sharing
 a face keep their order and pitch, each as close to its own alignment as the
 others allow.
+
+A run's array is given row by row: how many conduits sit in each row, top row
+first, so a bank can be 3 over 2 as readily as 8, 8 and 8. Every row sits on
+the same columns at the face's pitch, so the conduits line up vertically, and
+a shorter row is packed to one side — by default toward the side the next
+manhole lies on, or, when it lies straight ahead, away from the face's other
+runs — or to the left or right chosen on the run, seen along it from its first
+chamber to its second. The elevation and the 3D view draw exactly those
+conduits, and the drawing's file carries the rows and the side.
 
 A run never tilts. Where two square faces are out of line by more than
 sliding can absorb, the run bends, and where the leftover offset is too small

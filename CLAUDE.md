@@ -21,6 +21,7 @@ public/            everything served
   examples/        the example Revit export placed by the Example button
 prompt text/       provenance for the version in service, replaced each release
 tools/revit/       Revit-side exporter script (not served)
+tools/ifc/         IFC reader that builds the MV example (not served)
 .claude/skills/    the prompt-archive skill: how the provenance archive is kept
 wrangler.jsonc     assets-only config, no Worker script
 package.json       wrangler devDependency + dev/deploy scripts
@@ -148,3 +149,4 @@ files themselves are owner-supplied records — never edit, reformat, trim, or
 | v2.18 | The archive habit becomes a skill | The way every version's prompt, reply, model attribution and input files are kept with its release is now written down as a skill and saved with the repository, so any future session, here or in another project, keeps the archive the same way. |
 | v2.19 | Shift holds the line, Revit manholes can lock | Hold shift while dragging a chamber or obstacle and it keeps to one line, straight along or straight across, as in Revit. A new Lock manholes switch in the Drawing window keeps every manhole where its Revit export put it: it can be selected and connected but not dragged, nudged or typed into a new position, and only a fresh import moves it. |
 | v2.20 | One custom bend, only where the angle demands | Two manholes set at an odd angle to each other can now be joined: the run takes one custom bend that makes up exactly the difference, and only when standard fittings cannot make it. Everything else about the run, including any detour around an obstacle, is still made of standard bends, and each custom fitting is flagged on the run. |
+| v2.21 | The MV model brings its conduits, row by row | The MV model joins the site from its IFC: its manholes, vaults and pull boxes at their true positions and depths, and, with a checkbox, the conduit banks that join them recreated as runs. Runs are now laid out row by row: say how many conduits sit in each row, every row lines up on the same columns, and a shorter row packs to the side that suits the next manhole, or the side you choose. |

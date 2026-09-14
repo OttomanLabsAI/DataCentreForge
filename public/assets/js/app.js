@@ -592,8 +592,17 @@ function faceRuns(mhUid, face){
 /** Where a run actually meets the chamber: runs sharing a face are spread
     along it at the manhole's lateral spacing, ordered so the run heading
     left takes the left slot and entries never cross at the wall. */
-const runCols = r => Math.max(1, r.cols|0 || 1);
-const runRows = r => Math.max(1, r.rows|0 || 1);
+/** The array of a run: how many conduits sit in each row, top row first —
+    every row on the same columns, a shorter row packed to one side. Older
+    drawings gave rows × columns; they read as that many equal rows. */
+const runRowsOf = r => Array.isArray(r.perRow) && r.perRow.length
+  ? r.perRow.map(n => Math.max(1, Math.round(Number(n)) || 1))
+  : Array.from({length: Math.max(1, r.rows|0 || 1)}, () => Math.max(1, r.cols|0 || 1));
+const runCols = r => Math.max(...runRowsOf(r));
+const runRows = r => runRowsOf(r).length;
+const runCount = r => runRowsOf(r).reduce((a, b) => a + b, 0);
+const ALIGNS = ['auto', 'left', 'right'];
+const runAlignPref = r => ALIGNS.includes(r.align) ? r.align : 'auto';
 
 const canonTangent = g => {
   let t = norm([g.p2[0]-g.p1[0], g.p2[1]-g.p1[1]]);
@@ -749,6 +758,42 @@ function entryFor(cn, end){
   const off = item.centreOff;
   return {...g, point:[g.mid[0]+t[0]*off, g.mid[1]+t[1]*off], offset:off,
           slots:grp.items.length, S:L.S, cols:item.cols};
+}
+
+/** Which side of the run's direction of travel (a → b) its shorter rows pack
+    to: as chosen on the run, or — auto — the side the next manhole lies on,
+    and where it lies straight ahead, away from the other runs on the face. */
+function runAlign(cn){
+  const pref = runAlignPref(cn);
+  if (pref !== 'auto') return pref;
+  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  if (!A || !B) return 'left';
+  const g = faceGeom(A, cn.a.face), left = [-g.n[1], g.n[0]];              // left of travel out of A
+  const m = (B.x - g.mid[0])*left[0] + (B.y - g.mid[1])*left[1];
+  if (Math.abs(m) > g.width/2) return m > 0 ? 'left' : 'right';
+  const others = faceRuns(cn.a.mh, cn.a.face).filter(r => r !== cn);
+  if (others.length){
+    let sum = 0;
+    for (const r of others){
+      const far = (r.a.mh === cn.a.mh && r.a.face === cn.a.face) ? r.b : r.a, oc = byUid(far.mh);
+      if (oc) sum += (oc.x - g.mid[0])*left[0] + (oc.y - g.mid[1])*left[1];
+    }
+    if (Math.abs(sum) > 1) return sum > 0 ? 'right' : 'left';
+  }
+  return m >= 0 ? 'left' : 'right';
+}
+/** The columns each row occupies, as offsets in columns from the run's
+    centre, positive to the left of travel: the widest row takes them all, a
+    shorter row those on its packed side. */
+function rowColumns(cn){
+  const rows = runRowsOf(cn), cols = Math.max(...rows), side = runAlign(cn);
+  return rows.map(n => Array.from({length:n}, (_, i) => (side === 'left' ? cols - n + i : i) - (cols-1)/2));
+}
+/** +1 when a face's canonical tangent points to the left of the run's travel
+    at this end, −1 when to the right — as the banks lay their lanes. */
+function leftSign(cn, end, g, t){
+  return end === 'a' ? (Math.sign(t[0]*(-g.n[1]) + t[1]*g.n[0]) || 1)
+                     : (Math.sign(t[0]*g.n[1] + t[1]*(-g.n[0])) || 1);
 }
 
 /* ==========================================================================
@@ -1568,12 +1613,13 @@ function run3d(cn){
   const rt = cn.route, out = [];
   if (!rt || !rt.ok) return out;
   const pf = rt.profile, A = byUid(cn.a.mh), B = byUid(cn.b.mh);
-  const cols = runCols(cn), rows = runRows(cn);
   const S = Math.max(entryFor(cn,'a').S || 0, entryFor(cn,'b').S || 0);
   const zPitch = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);
   const zFlat = chamberZ0(A) - (cn.level|0)*zPitch;
-  for (let k = 0; k < cols; k++){
-    const w = (k - (cols-1)/2) * S;
+  const RC = rowColumns(cn), lines = new Map();
+  const lineAt = off => {                       // one centreline per column, shared by the rows that use it
+    if (lines.has(off)) return lines.get(off);
+    const w = off * S;
     let lane = rt;
     if (Math.abs(w) > 1e-6){ try { lane = offsetMember(rt, w, w); } catch(_){ lane = rt; } }
     const {cum, k:kk} = chainage(lane), L = lane.length || 1, PS = pf ? (pf.S || L) : L;
@@ -1581,7 +1627,11 @@ function run3d(cn){
     if (pf) for (const q of pf.poly) ss.push(q[0]*L/PS);
     const sorted = [...new Set(ss.map(v => Math.round(v*10)/10))].filter(v => v >= 0 && v <= L + 1e-6).sort((a,b) => a-b);
     const line = sorted.map(v => { const q = pointAt(lane, v); return [q[0], q[1], pf ? profileZ(pf, v*PS/L) : zFlat]; });
-    for (let rI = 0; rI < rows; rI++) out.push(rI ? line.map(q => [q[0], q[1], q[2] - rI*zPitch]) : line);
+    lines.set(off, line); return line;
+  };
+  for (let rI = 0; rI < RC.length; rI++) for (const off of RC[rI]){
+    const line = lineAt(off);
+    out.push(rI ? line.map(q => [q[0], q[1], q[2] - rI*zPitch]) : line);
   }
   return out;
 }
@@ -2180,7 +2230,7 @@ function pickFace(f){
   const dup = state.connections.find(c =>
     (same(c.a, state.pending) && same(c.b, f)) || (same(c.b, state.pending) && same(c.a, f)));
   if (dup){ state.pending = null; setPendingStatus(); select('conn', dup.uid); return; }
-  const cn = {uid:uid(), a:state.pending, b:f, placed:true, level:0, rows:1, cols:1,     // made and placed at once: nothing to approve
+  const cn = {uid:uid(), a:state.pending, b:f, placed:true, level:0, perRow:[1], align:'auto',     // made and placed at once: nothing to approve
               specId:(state.editSpec || state.specs[0].id), route:null};
   state.connections.push(cn);
   state.pending = null; setPendingStatus();
@@ -2524,17 +2574,20 @@ function renderObstacleProps(box, o){
 
 function renderRunProps(box, cn){
   if (!cn){ box.innerHTML = ''; return; }
-  const rt = cn.route, sp = specOf(cn);
+  const rt = cn.route, sp = specOf(cn), A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   const warns = rt && rt.ok ? rt.warnings : [];
   box.innerHTML =
     `<div class="row"><label style="flex:none" for="qSpec">Conduit spec</label></div>
      <select id="qSpec">${state.specs.map(s =>
        `<option value="${s.id}" ${s.id === cn.specId ? 'selected':''}>${esc(s.name)} — Ø${fmt(s.radius*2)} R${fmt(s.bendR)}</option>`).join('')}</select>
      <div style="height:8px"></div>` +
-    cluster('runArr', 'Array & level', `${runCols(cn)} × ${runRows(cn)} · L${cn.level|0}`,
+    cluster('runArr', 'Array & level', `${runRowsOf(cn).join(' + ')} · L${cn.level|0}`,
       numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
-      numRow('qCols','Columns (wide)', runCols(cn), 1, '') +
-      numRow('qRows','Rows (high)', runRows(cn), 1, '')) +
+      `<div class="row"><label for="qRows">Per row, top down</label>
+         <input type="text" id="qRows" value="${esc(runRowsOf(cn).join(' '))}" placeholder="e.g. 3 2" title="How many conduits sit in each row, top row first"><span class="unit">wide</span></div>
+       <div class="row"><label for="qAlign">Short rows pack</label>
+         <select id="qAlign">${ALIGNS.map(a => `<option value="${a}"${runAlignPref(cn) === a ? ' selected' : ''}>${a === 'auto' ? `auto — ${runAlign(cn)}` : a}</option>`).join('')}</select></div>
+       <div class="derived"><span>Every row sits on the same columns, so the conduits line up vertically, and a shorter row is packed to one side. Left and right are seen along the run from ${esc(A ? A.ref : '?')} to ${esc(B ? B.ref : '?')}: auto packs toward the side the next manhole lies on, or away from the face's other runs when it lies straight ahead.</span></div>`) +
     cluster('runObs', 'Obstacles', obsSummary(cn),
       state.obstacles.length ? state.obstacles.map(o => {
         const chosen = cn.cross && METHODS.includes(cn.cross[o.uid]) ? cn.cross[o.uid] : '';
@@ -2577,13 +2630,16 @@ function renderRunProps(box, cn){
     cn.level = v;
     renderSel(); renderConnections(); draw();
   });
-  for (const [id, key] of [['qCols','cols'], ['qRows','rows']]){
-    const el = document.getElementById(id);
-    el.addEventListener('input', () => {
-      cn[key] = Math.max(1, Math.round(Number(el.value)||1));
-      renderSel(); renderConnections(); draw();
-    });
-  }
+  const rowsEl = document.getElementById('qRows');
+  const readRows = () => { const v = String(rowsEl.value).split(/[^0-9]+/).filter(Boolean).map(Number).filter(n => n >= 1); return v.length ? v : null; };
+  rowsEl.addEventListener('input', () => {          // live while typing, without rebuilding the field under the cursor
+    const v = readRows();
+    if (!v || v.join(' ') === runRowsOf(cn).join(' ')) return;
+    cn.perRow = v; delete cn.rows; delete cn.cols;
+    recomputeRoutes(); draw();
+  });
+  rowsEl.addEventListener('change', () => { const v = readRows(); if (v){ cn.perRow = v; delete cn.rows; delete cn.cols; } renderSel(); renderConnections(); draw(); });
+  document.getElementById('qAlign').onchange = e => { cn.align = e.target.value; renderSel(); renderConnections(); draw(); };
   document.getElementById('qSpec').onchange = e => {
     cn.specId = e.target.value;
     state.editSpec = cn.specId;
@@ -2643,8 +2699,9 @@ function faceSectionSVG(L, wpx = 232, opt = {}){
     const A = byUid(it.cn.a.mh), B = byUid(it.cn.b.mh);
     const zr = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);       // the run's row pitch, as the 3D view lays it
     const rp = Math.max(2.2, it.sp.radius*scale);
-    for (let rI = 0; rI < it.rows; rI++) for (let cI = 0; cI < it.cols; cI++){
-      const xo = it.centreOff + (cI-(it.cols-1)/2)*S, z = z0 - gr.level*zr - rI*zr;
+    const end = (it.cn.a.mh === c.uid && it.cn.a.face === L.g.face) ? 'a' : 'b', sgn = leftSign(it.cn, end, L.g, L.t), RC = rowColumns(it.cn);
+    for (let rI = 0; rI < RC.length; rI++) for (const off of RC[rI]){
+      const xo = it.centreOff + sgn*off*S, z = z0 - gr.level*zr - rI*zr;
       el.push(`<circle cx="${f1(X(xo))}" cy="${f1(Y(z))}" r="${f1(rp)}" fill="${on ? C.sel : 'none'}" fill-opacity="${on ? .25 : 0}" stroke="${on ? C.sel : it.sp.colour}" stroke-width="${on ? 2.2 : 1.6}"${opt.sel ? ` data-sel="${it.cn.uid}"` : ''}/>`);
     }
   }
@@ -2701,7 +2758,7 @@ function renderElevation(){
     const sp = it.sp || {colour:'#888', name:'?'};
     return `<div class="dlgrow${inSel('conn', it.cn.uid) ? ' on' : ''}" data-elsel="${it.cn.uid}">
       <span class="dot" style="background:${sp.colour}"></span>
-      <span class="nm">${esc(connLabel(it.cn))} · ${esc(sp.name)} ${it.cols} × ${it.rows}</span>
+      <span class="nm">${esc(connLabel(it.cn))} · ${esc(sp.name)} ${esc(runRowsOf(it.cn).join(' + '))}</span>
       <em>L${gr.level}</em>
       <button data-fup="${it.cn.uid}" title="raise (smaller level)">▲</button>
       <button data-fdn="${it.cn.uid}" title="lower (bigger level)">▼</button></div>`;
@@ -2786,9 +2843,11 @@ function profileSVG(cn, wpx = 232){
 function arrayLine(cn){
   const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
   const S = Math.max(ea ? ea.S||0 : 0, eb ? eb.S||0 : 0);
-  const c = runCols(cn), r = runRows(cn);
-  if (c === 1 && r === 1) return '';
-  return `<b>Array</b> ${c} wide × ${r} high at ${fmt(S)} centres<br>`;
+  const rows = runRowsOf(cn);
+  if (rows.length === 1 && rows[0] === 1) return '';
+  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  const packed = new Set(rows).size > 1 ? `, short rows to the ${runAlign(cn)} along ${esc(A ? A.ref : '?')} → ${esc(B ? B.ref : '?')}` : '';
+  return `<b>Array</b> ${rows.join(' + ')} — ${runCount(cn)} conduits at ${fmt(S)} centres${packed}<br>`;
 }
 function entryLine(cn){
   const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
@@ -3098,7 +3157,7 @@ document.getElementById('btnExport').onclick = () => {
         level: cn.level|0,
         obstacleRules: (() => { const e = {}; for (const o of state.obstacles) if (cn.cross && METHODS.includes(cn.cross[o.uid])) e[o.name] = cn.cross[o.uid];
                                 return Object.keys(e).length ? e : undefined; })(),
-        rows: runRows(cn), cols: runCols(cn),
+        rows: runRows(cn), cols: runCols(cn), perRow: runRowsOf(cn), align: runAlignPref(cn), packedTo: runAlign(cn),
         placed: cn.placed,
         route: rt && rt.ok ? {
           vertices: rt.pts.map(p => [Math.round(p[0]), Math.round(p[1])]),
@@ -3152,7 +3211,7 @@ document.getElementById('fileIn').onchange = e => {
         if (!A || !B) return null;
         return {uid:uid(), a:{mh:A.uid, face:legacyFace(cn.from.face)}, b:{mh:B.uid, face:legacyFace(cn.to.face)},
                 placed: !!cn.placed, level: Math.max(0, cn.level|0),
-                rows: Math.max(1, cn.rows|0 || 1), cols: Math.max(1, cn.cols|0 || 1),
+                perRow: runRowsOf(cn), align: ALIGNS.includes(cn.align) ? cn.align : 'auto',
                 cross: Object.fromEntries(Object.entries(cn.obstacleRules || {}).map(([nm, m]) => {
                   const ob = state.obstacles.find(x => x.name === nm); return ob && METHODS.includes(m) ? [ob.uid, m] : null; }).filter(Boolean)),
                 specId: byName(cn.spec).id, route:null};
@@ -3235,9 +3294,10 @@ function importRevit(d){
         revitId: inst.id != null ? inst.id : null, revitUid: inst.unique_id || null, revitDoc: d.document || d.source || null,
         x: Math.round(wx), y: Math.round(wy), rot: Math.round(rot*100)/100,
         intX: Math.round(intX), intY: Math.round(intY), wall,
-        z0: Math.round(o[2] + (wZ ? wZ.hi - 150 : -600)),       // top row a half pitch below the window top
-        zLid: Math.round(o[2] + (zs.length ? Math.max(...zs) : 0)),
-        zBase: Math.round(o[2] + (zs.length ? Math.min(...zs) : -1800)),
+        z0: inst.z0_mm != null ? Math.round(inst.z0_mm) : Math.round(o[2] + (wZ ? wZ.hi - 150 : -600)),       // top row a half pitch below the window top, unless the export says where its rows are
+        zLid: inst.lid_mm != null ? Math.round(inst.lid_mm) : Math.round(o[2] + (zs.length ? Math.max(...zs) : 0)),
+        zBase: inst.base_mm != null ? Math.round(inst.base_mm) : Math.round(o[2] + (zs.length ? Math.min(...zs) : -1800)),
+        ...(F.spacing_mm ? {latSpace: Math.max(1, Math.round(F.spacing_mm.lateral || 450)), zSpace: Math.max(1, Math.round(F.spacing_mm.vertical || 300))} : {}),
         sides, win, lid, zd: z, src: 'revit', family: F.family || null, type: inst.type || null
       }));
     }
@@ -3339,6 +3399,49 @@ function applyRevitImport(src, opt = {}){
       renderSel(); renderConnections(); renderObstacles(); fitView();
 }
 
+/** Recreate the conduit banks an export lists — each one run between two faces
+    with its rows — on that export's chambers already on the drawing. A bank
+    already there between the same faces is refreshed, never doubled. */
+function recreateRuns(src){
+  const runs = Array.isArray(src.runs) ? src.runs : [];
+  const doc = src.document || src.source || null;
+  const byU = new Map(state.chambers.filter(c => c.revitUid).map(c => ['u:' + c.revitUid, c]));
+  const byI = new Map(state.chambers.filter(c => c.revitId != null).map(c => [c.revitId + '@' + (c.revitDoc || ''), c]));
+  const find = end => end && ((end.unique_id && byU.get('u:' + end.unique_id)) || (end.id != null && byI.get(end.id + '@' + (doc || ''))) || null);
+  let made = 0, kept = 0, missing = 0;
+  for (const r of runs){
+    const A = find(r.from), B = find(r.to);
+    if (!A || !B || !FACES.includes(r.from.face) || !FACES.includes(r.to.face)){ missing++; continue; }
+    const sp = specForOD(r.od_mm, r.pitch_mm);
+    const same = (x, mh, face) => x.mh === mh.uid && x.face === face;
+    let cn = state.connections.find(c => (same(c.a, A, r.from.face) && same(c.b, B, r.to.face)) || (same(c.a, B, r.to.face) && same(c.b, A, r.from.face)));
+    if (cn) kept++;
+    else { cn = {uid:uid(), a:{mh:A.uid, face:r.from.face}, b:{mh:B.uid, face:r.to.face}, placed:true, route:null}; state.connections.push(cn); made++; }
+    cn.perRow = runRowsOf(r); cn.align = ALIGNS.includes(r.align) ? r.align : 'auto';
+    cn.level = Math.max(0, r.level|0); cn.specId = sp.id; cn.placed = true;
+    delete cn.rows; delete cn.cols;
+  }
+  if (made || kept){ bankCache.clear(); state.sel = null; state.selSet = []; renderSel(); renderConnections(); fitView(); }
+  return {made, kept, missing, listed: runs.length};
+}
+/** The spec for a conduit of this outside diameter: the drawing's own when one
+    matches, else a new one named for it, at the pitch the export laid it. */
+function specForOD(od, pitch){
+  const r = (Number(od) || 100)/2;
+  let sp = state.specs.find(s => Math.abs(s.radius - r) <= 1);
+  if (sp) return sp;
+  sp = makeSpec({name:`FIBRE Ø${Math.round(r*2)}`, radius:r, bendR: r >= 50 ? 1200 : 900, stub:500, minLeg:500, buffer:250,
+                 spacing: Math.max(Math.round(2*r + 50), Math.round(Number(pitch) || 0)), warnAngle:45, angles:[11.25,22.5,45,90]});
+  state.specs.push(sp); renderSpecs(); renderSpecEdit();
+  return sp;
+}
+const runsNote = rs => {
+  if (!rs.length) return '';
+  const made = rs.reduce((a, r) => a + r.made, 0), kept = rs.reduce((a, r) => a + r.kept, 0), miss = rs.reduce((a, r) => a + r.missing, 0);
+  const banks = n => `${n} conduit bank${n === 1 ? '' : 's'}`;
+  return ' · ' + (made ? `${banks(made)} recreated${kept ? `, ${kept} refreshed` : ''}` : `${banks(kept)} refreshed`) + (miss ? `, ${miss} without both chambers` : '');
+};
+
 /* ==========================================================================
    EXAMPLES
    Drawings to place from the Examples window: two Revit exports kept with the
@@ -3347,13 +3450,16 @@ function applyRevitImport(src, opt = {}){
 /* A site is a list of sub-models, one export per service, sharing one set of
    project coordinates. The whole site can be placed at once, or a sub-model
    added to whatever is on the drawing; a sub-model already placed is refreshed
-   in place. New sub-models (the MV model, when it comes) are one more entry. */
+   in place. The MV model came as an IFC rather than a Revit export, and brings
+   its conduit banks as runs when its checkbox is ticked. */
 const EXAMPLES = [
   {id:'site', name:'LV site',
    blurb:'A live data-centre site, one sub-model per service. Place the whole site, or add a sub-model to the drawing as it stands.',
    models:[
      {id:'lv', name:'LV', count:'105 manholes', file:'/examples/lv-manholes.json',
-      blurb:'The LV model: every manhole of its chamber family at its true position and rotation, with marks, types and Revit ids. The family carries only depth planes, so wall and size are borrowed from the DCBuild family.'}
+      blurb:'The LV model: every manhole of its chamber family at its true position and rotation, with marks, types and Revit ids. The family carries only depth planes, so wall and size are borrowed from the DCBuild family.'},
+     {id:'mv', name:'MV', count:'23 manholes · 44 vaults · 8 pull boxes · 77 conduit banks', file:'/examples/mv-manholes.json', runs:true,
+      blurb:'The MV model, read from its IFC: the fibre manholes, vaults and pull boxes at their true positions, sizes and depths, and the conduit banks that join two of them — each with the number of conduits in every row, on the Ø128, Ø114 and Ø51 ducts the model uses. Banks that leave the model with an open end are not recreated.'}
    ]},
   {id:'dcbuild', name:'DCBuild test model', count:'3 manholes', file:'/examples/dcbuild-manholes.json',
    blurb:'The three manholes of the DCBuild test project, read from a family that names the full set of side and depth planes.'},
@@ -3361,6 +3467,8 @@ const EXAMPLES = [
    blurb:'The drawing the tool opens with: two chambers joined by a pair of placed runs skirting an obstacle, and a third chamber turned 45°.'}
 ];
 let DEMO_DOC = null;
+const exRuns = {};                                                  // the conduit checkboxes, by site:model — on unless unticked
+const wantRuns = (x, m) => exRuns[x + ':' + m] !== false;
 const exStatus = t => { document.getElementById('rmode').textContent = t; };
 const fetchJSON = url => fetch(url, {cache:'no-cache'}).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
 function renderExamples(){
@@ -3368,11 +3476,12 @@ function renderExamples(){
     ? `<div class="ex"><b>${esc(x.name)}<em>${x.models.length} sub-model${x.models.length === 1 ? '' : 's'}</em></b><p>${esc(x.blurb)}</p>
          ${x.models.map(m => `<div class="sub"><div class="subrow"><span class="nm">${esc(m.name)}<em>${esc(m.count)}</em></span>
            <button class="mini" data-model="${x.id}:${m.id}" title="Add ${esc(m.name)} to the drawing, or refresh it if it is already there">Add</button></div>
-           <p>${esc(m.blurb)}</p></div>`).join('')}
+           <p>${esc(m.blurb)}</p>${m.runs ? `<label class="chk exopt"><input type="checkbox" data-runsopt="${x.id}:${m.id}"${wantRuns(x.id, m.id) ? ' checked' : ''}> Recreate the conduits from the IFC as runs</label>` : ''}</div>`).join('')}
          <button class="mini" data-example="${x.id}">Place site</button></div>`
     : `<div class="ex"><b>${esc(x.name)}<em>${esc(x.count)}</em></b><p>${esc(x.blurb)}</p><button class="mini" data-example="${x.id}">Place</button></div>`).join('');
   document.querySelectorAll('[data-example]').forEach(b => b.onclick = () => placeExample(b.dataset.example));
   document.querySelectorAll('[data-model]').forEach(b => b.onclick = () => { const [x, m] = b.dataset.model.split(':'); addModel(x, m); });
+  document.querySelectorAll('[data-runsopt]').forEach(el => el.onchange = () => { exRuns[el.dataset.runsopt] = el.checked; });
 }
 /** Place an example: the demo from its snapshot, a single export as an import, a site as every sub-model in turn. */
 function placeExample(id){
@@ -3381,7 +3490,8 @@ function placeExample(id){
   if (x.models){
     Promise.all(x.models.map(m => fetchJSON(m.file)))            // everything fetched first, so a failure places nothing
       .then(srcs => { srcs.forEach((src, i) => applyRevitImport(src, i ? {add:true} : {}));
-                      exStatus(`example placed — ${x.name} · ${state.chambers.length} manholes`); })
+                      const rs = x.models.map((m, i) => m.runs && wantRuns(x.id, m.id) ? recreateRuns(srcs[i]) : null).filter(Boolean);
+                      exStatus(`example placed — ${x.name} · ${state.chambers.length} manholes` + runsNote(rs)); })
       .catch(err => alert('The example could not be loaded: ' + err.message));
     return;
   }
@@ -3400,8 +3510,9 @@ function addModel(exId, mId){
   if (!m) return;
   fetchJSON(m.file)
     .then(src => { const before = state.chambers.length; applyRevitImport(src, {add:true}); const n = state.chambers.length - before;
-                   exStatus(n > 0 ? `${m.name} added — ${n} manholes · ${state.chambers.length} on the drawing`
-                                  : `${m.name} refreshed in place · ${state.chambers.length} manholes on the drawing`); })
+                   const rs = m.runs && wantRuns(exId, mId) ? [recreateRuns(src)] : [];
+                   exStatus((n > 0 ? `${m.name} added — ${n} manholes · ${state.chambers.length} on the drawing`
+                                   : `${m.name} refreshed in place · ${state.chambers.length} manholes on the drawing`) + runsNote(rs)); })
     .catch(err => alert('The sub-model could not be loaded: ' + err.message));
 }
 renderExamples();
