@@ -1525,14 +1525,34 @@ function fit3d(pad = 70){
   cam.s = Math.max(0.0005, Math.min(3, Math.min((r.width-2*pad)/Math.max(1, x1-x0), (r.height-2*pad)/Math.max(1, y1-y0))));
   cam.px = -((x0+x1)/2 - r.width/2)*cam.s;
   cam.py = -((y0+y1)/2 - r.height/2)*cam.s;
+  cam.pivotKey = '';                       // the selection, if any, takes the pivot again on the next draw
   draw3d();
 }
 
+/** The centre of whatever is selected: the point the 3D view orbits about. */
+function pivotOf(sel){
+  if (sel.kind === 'chamber'){ const c = byUid(sel.id); if (!c) return null; const [zb, zl] = chamberZs(c); return [c.x, c.y, (zb+zl)/2]; }
+  if (sel.kind === 'obstacle'){ const o = obsBy(sel.id); return o ? [o.x, o.y, (o.zTop+o.zBot)/2] : null; }
+  const cn = connBy(sel.id);
+  if (!cn) return null;
+  const lines = run3d(cn);
+  if (lines.length && lines[0].length){ const m = [0, 0, 0]; for (const p of lines[0]){ m[0] += p[0]; m[1] += p[1]; m[2] += p[2]; } return m.map(v => v/lines[0].length); }
+  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  return A && B ? [(A.x+B.x)/2, (A.y+B.y)/2, (chamberZ0(A)+chamberZ0(B))/2] : null;
+}
+/** Move the pivot to P without the view moving: P keeps its place on screen. */
+function setPivot(P){
+  const cam = state.cam, q = proj(P);
+  cam.cx = P[0]; cam.cy = P[1]; cam.cz = P[2];
+  cam.px = q[0] - stageW/2; cam.py = q[1] - stageH/2;
+}
 function draw3d(){
   if (!state.view3d) return;
   const r = v3Rect(); stageW = r.width; stageH = r.height;
   if (!(r.width > 0 && r.height > 0)) return;
   const cam = state.cam, s = cam.s, prims = [], out = [];
+  const pk = state.sel ? state.sel.kind + ':' + state.sel.id : '';          // a new selection becomes the pivot
+  if (pk && pk !== cam.pivotKey){ const P = pivotOf(state.sel); if (P) setPivot(P); cam.pivotKey = pk; }
   const fp = q => q[0].toFixed(1) + ',' + q[1].toFixed(1);
   const polyStr = qs => qs.map(fp).join(' ');
   const line = (a, b, attrs) => `<line x1="${a[0].toFixed(1)}" y1="${a[1].toFixed(1)}" x2="${b[0].toFixed(1)}" y2="${b[1].toFixed(1)}" ${attrs}/>`;
@@ -1650,7 +1670,8 @@ function pick3d(sp){
 }
 function pointer3dDown(e, sp){
   drag3 = {sx:sp[0], sy:sp[1], az:state.cam.az, el:state.cam.el, px:state.cam.px, py:state.cam.py,
-           pan:e.shiftKey || e.button === 1 || e.button === 2, button:e.button, moved:false,
+           pan: e.button === 1 ? !e.shiftKey : (e.shiftKey || e.button === 2),   // middle pans, shift+middle orbits, as Revit; right pans
+           button:e.button, moved:false,
            slop: e.pointerType === 'mouse' ? 3 : SLOP};
 }
 function pointer3dMove(e, sp){
@@ -2492,43 +2513,53 @@ function renderRunProps(box, cn){
 /** Cross-section of one chamber face: the shared conduit grid to scale,
     every conduit as a circle in its spec colour, edge-clearance guides,
     and a caption saying whether the face carries it. */
-/** The section through one face: the wall's clear width, the boundary box the conduits
-    must keep to (the family's window when it has one, else the clear width) dotted, and
-    every conduit to scale. With `sel`, each conduit carries its run and the selected run
-    is lit; with `responsive`, the drawing scales to its window. */
+/** The elevation of one face at true scale: the whole face from lid to base, the
+    boundary box its conduits must keep to (the family's conduit window, else the
+    clear area inside the edge clearance) dotted, each level's line and depth, and
+    every conduit at its own depth and lateral offset. With `sel` each conduit
+    carries its run and the selected run is lit; with `responsive` the drawing
+    scales to its window. */
 function faceSectionSVG(L, wpx = 232, opt = {}){
-  const ec = L.c.edgeClear || 0, W = L.g.width, S = L.S;
-  const pad = 12, scale = (wpx - pad*2) / W;
-  const rBig = L.groups.length ? Math.max(...L.groups.map(g => g.rMax)) : 0;
-  let y = rBig; const tops = [];
-  L.groups.forEach((gr, gi) => { tops.push(y); y += (gr.rowsMax-1)*S; if (gi < L.groups.length-1) y += S; });
-  const contentH = L.groups.length ? y + rBig : (L.win && L.win.h ? L.win.h : 2*S);
-  const hpx = contentH*scale + pad*2 + 16;
-  const X = mm => pad + (mm + W/2)*scale;
-  const Y = mm => pad + mm*scale;
+  const c = L.c, ec = c.edgeClear || 0, W = L.g.width, S = L.S;
+  const [zb, zl] = chamberZs(c), Hf = Math.max(1, zl - zb);
+  const z0 = chamberZ0(c), zp = Math.max(1, c.zSpace || 300);
+  const pad = 12, RM = 48, scale = (wpx - pad*2) / W;   // a margin on the right carries the level depths
+  const hpx = Hf*scale + pad*2 + 16;
+  const X = mm => pad + (mm + W/2)*scale;           // lateral offset from the face centre
+  const Y = z => pad + (zl - z)*scale;              // depth, lid at the top
+  const f1 = v => v.toFixed(1);
   const el = [];
-  el.push(`<rect x="${X(-W/2)}" y="${pad-4}" width="${W*scale}" height="${contentH*scale+8}" fill="none" stroke="${C.inkFaint}" stroke-width="1"/>`);
-  const bx0 = L.win ? X(L.shift - L.win.w/2) : X(-(W/2-ec)), bx1 = L.win ? X(L.shift + L.win.w/2) : X(W/2-ec);
-  const by1 = L.win && L.win.h ? Math.min(pad + L.win.h*scale, pad + contentH*scale + 4) : pad + contentH*scale + 4;
-  el.push(`<rect x="${bx0.toFixed(1)}" y="${pad-4}" width="${(bx1-bx0).toFixed(1)}" height="${(by1-(pad-4)).toFixed(1)}" fill="none" stroke="${C.pick}" stroke-width="1.2" stroke-dasharray="2 3" opacity=".9"/>`);
-  L.groups.forEach((gr, gi) => {
-    for (const it of gr.items){
-      if (!it.sp) continue;
-      const on = !!opt.sel && inSel('conn', it.cn.uid);
-      const rp = Math.max(2.2, it.sp.radius*scale);
-      for (let rI = 0; rI < it.rows; rI++) for (let cI = 0; cI < it.cols; cI++){
-        const xo = it.centreOff + (cI-(it.cols-1)/2)*S;
-        el.push(`<circle cx="${X(xo).toFixed(1)}" cy="${Y(tops[gi]+rI*S).toFixed(1)}" r="${rp.toFixed(1)}" fill="${on ? C.sel : 'none'}" fill-opacity="${on ? .25 : 0}" stroke="${on ? C.sel : it.sp.colour}" stroke-width="${on ? 2.2 : 1.6}"${opt.sel ? ` data-sel="${it.cn.uid}"` : ''}/>`);
-      }
+  el.push(`<rect x="${f1(X(-W/2))}" y="${f1(Y(zl))}" width="${f1(W*scale)}" height="${f1(Hf*scale)}" fill="none" stroke="${C.inkFaint}" stroke-width="1"/>`);
+  const win = L.win;
+  const bx0 = win ? X(L.shift - win.w/2) : X(-(W/2-ec)), bx1 = win ? X(L.shift + win.w/2) : X(W/2-ec);
+  const bzt = Math.min(zl, win ? z0 + zp/2 : zl - ec);                                   // the top row sits half a pitch below a window's top
+  const bzbot = Math.max(zb, win ? (win.h ? bzt - win.h : zb + ec) : zb + ec);
+  el.push(`<rect x="${f1(bx0)}" y="${f1(Y(bzt))}" width="${f1(bx1-bx0)}" height="${f1(Math.max(0, Y(bzbot)-Y(bzt)))}" fill="none" stroke="${C.pick}" stroke-width="1.2" stroke-dasharray="2 3" opacity=".9"/>`);
+  el.push(`<text x="${f1(X(-W/2)+4)}" y="${f1(Y(zl)+10)}" fill="${C.inkFaint}" font-family="${C.mono}" font-size="8.5">lid ${fmt(zl)}</text>`);
+  el.push(`<text x="${f1(X(-W/2)+4)}" y="${f1(Y(zb)-4)}" fill="${C.inkFaint}" font-family="${C.mono}" font-size="8.5">base ${fmt(zb)}</text>`);
+  for (const lv of [...new Set(L.groups.map(g => g.level))]){
+    const z = z0 - lv*zp;
+    el.push(`<line x1="${f1(X(-W/2))}" y1="${f1(Y(z))}" x2="${f1(X(W/2))}" y2="${f1(Y(z))}" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="1 4" opacity=".6"/>`);
+    el.push(`<text x="${f1(X(W/2)+5)}" y="${f1(Y(z)+3)}" fill="${C.inkFaint}" font-family="${C.mono}" font-size="8.5">L${lv} ${fmt(z)}</text>`);
+  }
+  for (const gr of L.groups) for (const it of gr.items){
+    if (!it.sp) continue;
+    const on = !!opt.sel && inSel('conn', it.cn.uid);
+    const A = byUid(it.cn.a.mh), B = byUid(it.cn.b.mh);
+    const zr = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);       // the run's row pitch, as the 3D view lays it
+    const rp = Math.max(2.2, it.sp.radius*scale);
+    for (let rI = 0; rI < it.rows; rI++) for (let cI = 0; cI < it.cols; cI++){
+      const xo = it.centreOff + (cI-(it.cols-1)/2)*S, z = z0 - gr.level*zr - rI*zr;
+      el.push(`<circle cx="${f1(X(xo))}" cy="${f1(Y(z))}" r="${f1(rp)}" fill="${on ? C.sel : 'none'}" fill-opacity="${on ? .25 : 0}" stroke="${on ? C.sel : it.sp.colour}" stroke-width="${on ? 2.2 : 1.6}"${opt.sel ? ` data-sel="${it.cn.uid}"` : ''}/>`);
     }
-  });
+  }
   const cap = !L.groups.length
-    ? (L.win ? `window ${fmt(L.win.w)}${L.win.h ? '×' + fmt(L.win.h) : ''} · no runs` : `clear ${fmt(W - 2*ec)} of ${fmt(W)} · no runs`)
-    : L.win
-      ? `pitch ${fmt(S)} · window ${fmt(L.win.w)}${L.win.h ? '×' + fmt(L.win.h) : ''} · grid ${fmt(L.usedW)} ${L.fits ? '✓' : '✗ OVER'}`
+    ? (win ? `window ${fmt(win.w)}${win.h ? '×' + fmt(win.h) : ''} · no runs` : `clear ${fmt(W - 2*ec)} of ${fmt(W)} · no runs`)
+    : win
+      ? `pitch ${fmt(S)} · window ${fmt(win.w)}${win.h ? '×' + fmt(win.h) : ''} · grid ${fmt(L.usedW)} ${L.fits ? '✓' : '✗ OVER'}`
       : `pitch ${fmt(S)} · edge ≥${fmt(ec)} · grid ${fmt(L.usedW)} / face ${fmt(W)} ${L.fits ? '✓' : '✗ OVER'}`;
   el.push(`<text x="${wpx/2}" y="${hpx-4}" fill="${L.fits ? C.inkFaint : C.bad}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${cap}</text>`);
-  const size = opt.responsive ? `viewBox="0 0 ${wpx} ${hpx}" width="100%"` : `width="${wpx}" height="${hpx}"`;
+  const size = opt.responsive ? `viewBox="0 0 ${wpx+RM} ${f1(hpx)}" width="100%"` : `width="${wpx+RM}" height="${f1(hpx)}"`;
   return `<svg ${size} style="display:block;margin:4px 0 2px">${el.join('')}</svg>`;
 }
 
@@ -2919,7 +2950,7 @@ document.querySelectorAll('.win').forEach(el => {
 });
 document.getElementById('v3hint').textContent = TOUCH_UI
   ? 'one finger orbits · two fingers pan and zoom · tap to select · hold for the menu'
-  : 'drag to orbit · shift or right drag to pan · scroll to zoom · click to select';
+  : 'drag or shift+middle drag to orbit · middle or right drag to pan · scroll to zoom · click to select';
 document.getElementById('snap').oninput = e => { state.snap = Math.max(0, Number(e.target.value)||0); };
 document.getElementById('grid').onchange = e => { state.showGrid = e.target.checked; draw(); };
 document.getElementById('dims').onchange = e => { state.showDims = e.target.checked; draw(); };

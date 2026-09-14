@@ -1,7 +1,0 @@
-Version 31: the LV site, with room for its sub-models.
-
-The example is now called the LV site, and nothing in the window names the project it came from. It is built from sub-models, one export per service: the LV model of 105 manholes is the first, and the MV model becomes one more entry under the same site when you send it, sharing the same project coordinates so the two lay out together.
-
-Each sub-model has its own Add button, which joins its manholes to whatever is on the drawing without asking; if that sub-model is already there, it is refreshed in place instead, every run staying attached. Place site lays out every sub-model at once, asking first only when the drawing has something in it. References stay unique across models, Undo takes an added model away again, and Redo brings it back.
-
-Verified in a driven browser: the card, its sub-model row, Add and Place site, the site placed after one question, Add on a model already present refreshing it without a question, the DCBuild model placed and the LV model added beside it to 108 manholes with no question and no clash of references, undo and redo of the addition, plus the batteries from versions 14 to 30, all passing with no console errors.

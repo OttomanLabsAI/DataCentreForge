@@ -136,15 +136,19 @@ with as many open as you like. Three of them deserve a word:
   sub-model already there is refreshed in place). Placing replaces the drawing
   after asking, and Undo brings the previous drawing back.
 - **Elevation** shows one face at a time: its runs with their level controls
-  and the to-scale section through the face, with the boundary box its conduits
-  must keep to (the family's conduit window, or the face's clear width) dotted.
+  and the whole face at true scale, lid to base, with each level's depth marked,
+  every conduit at its own depth and offset, and the boundary box its conduits
+  must keep to (the family's conduit window, or the clear area inside the edge
+  clearance) dotted.
   Open it from a face's right-click ring or a side button in the Chambers
   window; asking for another face replaces the view. Click a conduit or a row
   to select its run.
 - **3D view** opens from the ribbon or key 3 in a window of its own that can be
-  stretched by the grip in its corner. Drag to orbit, shift or right drag to
-  pan, scroll or pinch to zoom, click a chamber, obstacle or run to select it,
-  right-click or hold for the ring. Every buffer zone is drawn as a dotted box.
+  stretched by the grip in its corner. Drag or shift+middle drag to orbit,
+  middle or right drag to pan, scroll or pinch to zoom, click a chamber,
+  obstacle or run to select it, right-click or hold for the ring. Whatever is
+  selected becomes the pivot the view turns about. Every buffer zone is drawn
+  as a dotted box.
 
 ## Where runs meet a face
 
