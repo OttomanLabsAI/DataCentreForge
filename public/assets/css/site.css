@@ -35,6 +35,8 @@
   .ribbon button svg{width:22px; height:22px; display:block}
   .ribbon button span{font-size:11px; line-height:1; white-space:nowrap}
   .ribbon button em{font-style:normal; font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-left:2px}
+  .ribbon button em.lockmark svg{width:11px; height:11px; display:inline-block; vertical-align:-1px; color:var(--sel)}
+  .ribbon button em.lockmark[hidden]{display:none}
   .ribbon button.on{border-color:var(--pick); color:var(--pick); background:#12242c}
   .ribbon button.rel{box-shadow:0 0 0 1px var(--sel) inset; border-color:var(--sel); color:var(--sel)}
   .ribbon button.rel em{color:var(--sel)}

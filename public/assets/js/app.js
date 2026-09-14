@@ -37,6 +37,7 @@ const state = {
   snap: 50,
   showGrid: true, showDims: true, avoidChambers: true, avoidPipes: true, square: true,
   ground: 0, cover: 500,        // ground level and the least cover over any conduit
+  lockChambers: false,          // manholes stay where their Revit export put them: selectable, never dragged
   view3d: false,
   cam: {az:32, el:38, s:0.03, cx:0, cy:0, cz:0, px:0, py:0}   // orbit camera for the 3D view
 };
@@ -1926,8 +1927,10 @@ STAGE.addEventListener('pointerdown', e => {
   }
   const grab = (kind, obj) => {
     if (!inSel(kind, obj.uid)) select(kind, obj.uid); else setPrimary(kind, obj.uid);
-    drag = {kind:'move', wp0:wp, sx:sp[0], sy:sp[1], slop: coarse(e) ? SLOP : 0,
-            items: movables().map(m => ({obj:m, x0:m.x, y0:m.y})), moved:false};
+    if (kind === 'chamber' && state.lockChambers){ noteLocked(); return; }       // locked: selected, never dragged
+    const items = movables().map(m => ({obj:m, x0:m.x, y0:m.y}));
+    if (!items.length) return;
+    drag = {kind:'move', wp0:wp, sx:sp[0], sy:sp[1], slop: coarse(e) ? SLOP : 0, items, moved:false};
     ROUTE_QUICK = true;
   };
   const c = hitChamber(wp);
@@ -1959,7 +1962,9 @@ STAGE.addEventListener('pointermove', e => {
   if (drag && drag.kind === 'move'){
     if (!drag.moved && Math.hypot(sp[0]-drag.sx, sp[1]-drag.sy) <= drag.slop) return;
     drag.moved = true;
-    for (const it of drag.items){ it.obj.x = snap(it.x0 + wp[0]-drag.wp0[0]); it.obj.y = snap(it.y0 + wp[1]-drag.wp0[1]); }
+    let dx = wp[0]-drag.wp0[0], dy = wp[1]-drag.wp0[1];
+    if (e.shiftKey){ if (Math.abs(dx) >= Math.abs(dy)) dy = 0; else dx = 0; }   // shift holds the drag to one line
+    for (const it of drag.items){ it.obj.x = snap(it.x0 + dx); it.obj.y = snap(it.y0 + dy); }
     renderSel(); renderConnections(); return draw();
   }
   if (drag && drag.kind === 'box'){
@@ -1973,7 +1978,7 @@ STAGE.addEventListener('pointermove', e => {
   state.hoverFace = f;
   showCallout(f, sp);
   STAGE.style.cursor = state.pending ? (f ? 'pointer' : 'crosshair')
-    : (hitChamber(wp) || hitObstacle(wp)) ? 'move' : hitConnection(wp) ? 'pointer' : 'crosshair';
+    : hitChamber(wp) ? (state.lockChambers ? 'pointer' : 'move') : hitObstacle(wp) ? 'move' : hitConnection(wp) ? 'pointer' : 'crosshair';
   if (changed) draw();
 });
 
@@ -2114,7 +2119,8 @@ function rectSel(x0, y0, x1, y1, crossing){
   }
   return set;
 }
-const movables = () => state.selSet.map(x => x.kind === 'chamber' ? byUid(x.id) : x.kind === 'obstacle' ? obsBy(x.id) : null).filter(Boolean);
+const movables = () => state.selSet.map(x => x.kind === 'chamber' ? (state.lockChambers ? null : byUid(x.id)) : x.kind === 'obstacle' ? obsBy(x.id) : null).filter(Boolean);
+const noteLocked = () => { document.getElementById('rmode').textContent = 'manholes are locked — untick Lock manholes in the Drawing window to move them'; };
 /** The status line while a connection is being made from a face. */
 function setPendingStatus(){
   const el = document.getElementById('rmode');
@@ -2382,7 +2388,7 @@ function renderChamberProps(box, c){
          <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
          <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
          <b>Sides</b> ${FACES.map(f => f+' '+fmt(faceGeom(c,f).width)).join('  ')}${revitLine(c)}</div>`) +
-    cluster('chPos', 'Position', `${fmt(c.x)}, ${fmt(c.y)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}`,
+    cluster('chPos', 'Position', `${fmt(c.x)}, ${fmt(c.y)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}${state.lockChambers ? ' · locked' : ''}`,
       numRow('pX','Centre X', c.x, state.snap||1, 'mm') +
       numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
       numRow('pR','Rotation', c.rot, 15, '°')) +
@@ -2413,6 +2419,7 @@ function renderChamberProps(box, c){
   bind('pRef','ref',String); bind('pIX','intX'); bind('pIY','intY');
   bind('pW','wall'); bind('pZL','zLid'); bind('pZB','zBase'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
   bind('pLat','latSpace'); bind('pZ','zSpace'); bind('pZ0','z0'); bind('pEC','edgeClear');
+  if (state.lockChambers) for (const id of ['pX', 'pY', 'pR']){ const el = document.getElementById(id); if (el){ el.disabled = true; el.title = 'Locked: only a Revit import moves this manhole'; } }
   wireFaceButtons(c);
   wireClusters(box, renderSel);
   document.getElementById('pSq').onchange = e => {
@@ -2787,6 +2794,7 @@ document.getElementById('btnFit').onclick = () => fitView();
 
 const ICONS = {
   undo:     '<path d="M9 14L4 9l5-5"/><path d="M4 9h9.5a5.5 5.5 0 0 1 0 11H10"/>',
+  lock:     '<rect x="5" y="11" width="14" height="10" rx="1.5"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>',
   elevation:'<rect x="3" y="5" width="18" height="14"/><rect x="6" y="8" width="12" height="8" stroke-dasharray="2 2"/><circle cx="9.5" cy="12" r="1.8"/><circle cx="14.5" cy="12" r="1.8"/>',
   redo:     '<path d="M15 14l5-5-5-5"/><path d="M20 9h-9.5a5.5 5.5 0 0 0 0 11H14"/>',
   chamber:  '<rect x="4" y="4" width="16" height="16"/><rect x="8" y="8" width="8" height="8"/>',
@@ -2816,6 +2824,7 @@ const ICONS = {
 };
 const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k] || ''}</svg>`;
 document.querySelectorAll('[data-icon]').forEach(b => b.insertAdjacentHTML('afterbegin', icon(b.dataset.icon)));
+document.getElementById('chamberLock').innerHTML = icon('lock');
 
 /* ==========================================================================
    RADIAL MENU
@@ -2962,6 +2971,7 @@ function updateRibbon(){
     b.classList.toggle('on', !!el && !el.hidden);
     b.classList.toggle('rel', rel.includes(b.dataset.win));
   });
+  document.getElementById('chamberLock').hidden = !state.lockChambers;
 }
 document.querySelectorAll('[data-win]').forEach(b => b.onclick = () => toggleWin(b.dataset.win));
 document.querySelectorAll('.win').forEach(el => {
@@ -3003,6 +3013,9 @@ document.getElementById('avoidMH').onchange = e => {
 document.getElementById('avoidPipe').onchange = e => {
   state.avoidPipes = e.target.checked; renderSel(); renderConnections(); draw();
 };
+document.getElementById('lockMH').onchange = e => {
+  state.lockChambers = e.target.checked; renderSel(); updateRibbon(); draw();
+};
 for (const [id, key] of [['ground','ground'], ['cover','cover']])
   document.getElementById(id).oninput = e => {
     const v = Number(e.target.value);
@@ -3012,6 +3025,7 @@ for (const [id, key] of [['ground','ground'], ['cover','cover']])
 function syncDrawingInputs(){
   document.getElementById('ground').value = state.ground;
   document.getElementById('cover').value = state.cover;
+  document.getElementById('lockMH').checked = !!state.lockChambers;
 }
 
 document.getElementById('btnExport').onclick = () => {
@@ -3019,7 +3033,7 @@ document.getElementById('btnExport').onclick = () => {
   const revitDocs = [...new Set([...state.chambers, ...state.obstacles].map(e => e.revitDoc).filter(Boolean))];
   const data = {
     units:'mm', axes:'+X east, +Y north',
-    ground: state.ground, cover: state.cover,
+    ground: state.ground, cover: state.cover, lockChambers: state.lockChambers,
     revit: revitDocs.length ? {documents: revitDocs} : undefined,
     specs: state.specs.map(({id, ...rest}) => rest),
     chambers: state.chambers.map(({uid, ...rest}) => rest),
@@ -3079,6 +3093,7 @@ document.getElementById('fileIn').onchange = e => {
           angles:[...(s.angles||[])]}));
       if (Number.isFinite(d.ground)) state.ground = d.ground;
       if (Number.isFinite(d.cover) && d.cover >= 0) state.cover = d.cover;
+      if (typeof d.lockChambers === 'boolean') state.lockChambers = d.lockChambers;
       syncDrawingInputs();
       state.chambers  = (d.chambers ||[]).map(c => makeChamber({buffer:0, ...c, uid:uid()}));
       state.obstacles = (d.obstacles||[]).map(o => {

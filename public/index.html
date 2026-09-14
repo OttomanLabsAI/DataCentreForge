@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=2.17">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.19">
 </head>
 <body>
 
@@ -25,7 +25,7 @@
       <button id="btnFit" data-icon="fit" title="Fit the drawing in the view (key F)"><span>Fit view</span></button>
     </div><div class="rcap">View</div></div>
     <div class="rgroup"><div class="rbtns">
-      <button data-win="chambers" data-icon="chambers"><span>Chambers <em id="chamberCount"></em></span></button>
+      <button data-win="chambers" data-icon="chambers"><span>Chambers <em id="chamberCount"></em><em id="chamberLock" class="lockmark" hidden title="Manholes are locked: only a Revit import moves them"></em></span></button>
       <button data-win="runs" data-icon="runs"><span>Runs <em id="connCount"></em></span></button>
       <button data-win="obstacles" data-icon="obstacles"><span>Obstacles <em id="obsCount"></em></span></button>
       <button data-win="specs" data-icon="specs"><span>Specs</span></button>
@@ -43,7 +43,7 @@
     <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="hud" id="hint">
       <span class="mouse">drag empty space — select · middle or right drag — pan<br>
-      scroll or pinch — zoom · drag chamber or obstacle — move<br>
+      scroll or pinch — zoom · drag chamber or obstacle — move · shift — one line<br>
       click a conduit — select · del — remove<br>
       double-click a face — connect · right-click — menu</span>
       <span class="touch">one finger — tap to select · drag empty space — window select<br>
@@ -101,6 +101,7 @@
         </div>
         <div class="row"><label class="chk"><input type="checkbox" id="avoidMH" checked> Conduits avoid other chambers</label></div>
         <div class="row"><label class="chk"><input type="checkbox" id="avoidPipe" checked> Conduits avoid runs on the same level</label></div>
+        <div class="row"><label class="chk"><input type="checkbox" id="lockMH"> Lock manholes — only a Revit import moves them</label></div>
         <div class="row"><label class="chk"><input type="checkbox" id="grid" checked> Show grid</label></div>
         <div class="row"><label class="chk"><input type="checkbox" id="dims" checked> Show annotation</label></div>
       </div>
@@ -139,6 +140,6 @@
 </main>
 
 
-<script src="/assets/js/app.js?v=2.17"></script>
+<script src="/assets/js/app.js?v=2.19"></script>
 </body>
 </html>

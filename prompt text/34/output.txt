@@ -1,0 +1,7 @@
+Version 34: shift holds the line, and Revit manholes can be locked.
+
+Hold shift while dragging a chamber or obstacle and it keeps to one line: straight along or straight across, whichever way the drag leans, as in Revit. Let go of shift and the drag is free again. Arrow-key nudges were already one line at a time.
+
+The Drawing window gains a Lock manholes switch for drawings fed from Revit. With it on, a manhole can still be selected, connected, given runs and deleted, but it cannot be dragged, nudged with the arrow keys or typed into a new position: its position fields go grey and the Chambers button carries a small padlock. A fresh Revit import still moves it, which is the point. Trying to drag a locked manhole selects it and the status line says why. The lock is saved in the drawing's export and restored on import, and obstacles are untouched by it.
+
+Verified in a driven browser: a shift-drag leaning along X moving a chamber along X only, one leaning along Y along Y only, a free drag moving both ways, the switch locking and marking the button, a locked manhole staying put under a drag and an arrow key while an obstacle still moves, the position fields greyed and marked locked, a fresh Revit export still moving a locked manhole, the lock carried by the export and cleared by an import that has it off, and dragging working again once unlocked, plus the batteries from versions 14 to 33, all passing with no console errors.

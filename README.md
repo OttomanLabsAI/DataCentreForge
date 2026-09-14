@@ -89,6 +89,13 @@ Revit marks, types and element ids, and the DCBuild test model. The LV model's
 family exposes only its depth planes, so it borrows the DCBuild family's side
 planes for wall and size.
 
+Hold shift while dragging a chamber or obstacle and it keeps to one line,
+straight along or straight across, whichever the drag favours. The Drawing
+window's **Lock manholes** switch is for drawings fed from Revit: with it on, a
+manhole can be selected, connected and deleted but not dragged, nudged or
+typed into a new position, and only a fresh import moves it. The lock is saved
+with the drawing's export and shows as a small padlock on the Chambers button.
+
 On an iPad, or any touch screen, the same tool works by hand. A tap selects; a
 one-finger drag on empty space draws the selection box (left to right a window,
 right to left a crossing); a one-finger drag on a chamber or obstacle moves it;
