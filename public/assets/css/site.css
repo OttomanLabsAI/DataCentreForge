@@ -122,6 +122,11 @@
   .exlist .subrow .nm em{font-style:normal; font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-left:6px}
   .exlist .sub p{margin:0 0 4px}
   .exlist .exopt{margin:4px 0 4px; font-size:11px}
+  .arrayed svg{display:block; margin:0 0 4px}
+  .arrayed [data-act]{cursor:pointer; pointer-events:all}
+  .arrayed .ghost{opacity:.4}
+  .arrayed .ghost:hover{opacity:1}
+  .arrayed [data-act="del"]:hover{fill-opacity:.7}
   .winlist{max-height:168px; overflow-y:auto; margin-bottom:10px}
   .winlist:empty{display:none}
   .row{display:flex; align-items:center; gap:8px; margin-bottom:8px}

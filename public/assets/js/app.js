@@ -601,6 +601,7 @@ const runRowsOf = r => Array.isArray(r.perRow) && r.perRow.length
 const runCols = r => Math.max(...runRowsOf(r));
 const runRows = r => runRowsOf(r).length;
 const runCount = r => runRowsOf(r).reduce((a, b) => a + b, 0);
+const arrayText = r => { const rows = runRowsOf(r); return rows.length === 1 ? `${rows[0]} wide` : rows.join(' + '); };
 const ALIGNS = ['auto', 'left', 'right'];
 const runAlignPref = r => ALIGNS.includes(r.align) ? r.align : 'auto';
 
@@ -2572,6 +2573,39 @@ function renderObstacleProps(box, o){
   };
 }
 
+/** The array as a picture to edit: one circle per conduit, rows stacked as
+    they sit with a shorter row against its packed side, seen along the run
+    from its first chamber so left is left. A faint slot at the open end of a
+    row adds a conduit there, the slot beneath the rows adds a row, and the
+    last conduit of a row takes one away. */
+const ARRAY_MAX = {cols:12, rows:8};
+function arrayEditorSVG(cn, wpx = 262){
+  const rows = runRowsOf(cn), cols = Math.max(...rows), side = runAlign(cn), sp = specOf(cn) || {colour:'#888'};
+  const nc = Math.min(ARRAY_MAX.cols, cols + 1), nr = Math.min(ARRAY_MAX.rows, rows.length + 1);
+  const pitch = Math.max(18, Math.min(36, Math.floor((wpx - 12) / nc))), r = pitch*0.36, pad = 8;
+  const W = pad*2 + nc*pitch, H = pad*2 + nr*pitch;
+  const xj = j => side === 'left' ? j : j + 1;                    // the spare column sits on the open side
+  const cx = j => pad + (j + 0.5)*pitch, cy = i => pad + (i + 0.5)*pitch;
+  const f1 = v => v.toFixed(1);
+  const el = [`<rect x="0.5" y="0.5" width="${W-1}" height="${H-1}" rx="3" fill="${C.chamber}" stroke="${C.inkFaint}" stroke-width="1" opacity=".9"/>`];
+  rows.forEach((n, i) => {
+    const start = side === 'left' ? 0 : cols - n;
+    for (let k = 0; k < n; k++){
+      const j = start + k, last = side === 'left' ? k === n-1 : k === 0;
+      el.push(`<circle cx="${f1(cx(xj(j)))}" cy="${f1(cy(i))}" r="${f1(r)}" fill="${sp.colour}" fill-opacity=".35" stroke="${sp.colour}" stroke-width="1.6"${last ? ` data-act="del" data-row="${i}"` : ''}><title>${last ? 'take this conduit away' : `row ${i+1}`}</title></circle>`);
+    }
+    if (n < ARRAY_MAX.cols){
+      const gx = side === 'left' ? n : cols - n;
+      el.push(`<circle class="ghost" cx="${f1(cx(gx))}" cy="${f1(cy(i))}" r="${f1(r)}" fill="none" stroke="${C.ink}" stroke-width="1.2" stroke-dasharray="2 2" data-act="add" data-row="${i}"><title>add a conduit to row ${i+1}</title></circle>`);
+    }
+  });
+  if (rows.length < ARRAY_MAX.rows){
+    const gx = side === 'left' ? 0 : cols;
+    el.push(`<circle class="ghost" cx="${f1(cx(gx))}" cy="${f1(cy(rows.length))}" r="${f1(r)}" fill="none" stroke="${C.ink}" stroke-width="1.2" stroke-dasharray="2 2" data-act="add" data-row="${rows.length}"><title>add a row beneath</title></circle>`);
+  }
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">${el.join('')}</svg>`;
+}
+
 function renderRunProps(box, cn){
   if (!cn){ box.innerHTML = ''; return; }
   const rt = cn.route, sp = specOf(cn), A = byUid(cn.a.mh), B = byUid(cn.b.mh);
@@ -2581,13 +2615,17 @@ function renderRunProps(box, cn){
      <select id="qSpec">${state.specs.map(s =>
        `<option value="${s.id}" ${s.id === cn.specId ? 'selected':''}>${esc(s.name)} — Ø${fmt(s.radius*2)} R${fmt(s.bendR)}</option>`).join('')}</select>
      <div style="height:8px"></div>` +
-    cluster('runArr', 'Array & level', `${runRowsOf(cn).join(' + ')} · L${cn.level|0}`,
+    cluster('runArr', 'Array & level', `${arrayText(cn)} · L${cn.level|0}`,
       numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
-      `<div class="row"><label for="qRows">Per row, top down</label>
-         <input type="text" id="qRows" value="${esc(runRowsOf(cn).join(' '))}" placeholder="e.g. 3 2" title="How many conduits sit in each row, top row first"><span class="unit">wide</span></div>
-       <div class="row"><label for="qAlign">Short rows pack</label>
-         <select id="qAlign">${ALIGNS.map(a => `<option value="${a}"${runAlignPref(cn) === a ? ' selected' : ''}>${a === 'auto' ? `auto — ${runAlign(cn)}` : a}</option>`).join('')}</select></div>
-       <div class="derived"><span>Every row sits on the same columns, so the conduits line up vertically, and a shorter row is packed to one side. Left and right are seen along the run from ${esc(A ? A.ref : '?')} to ${esc(B ? B.ref : '?')}: auto packs toward the side the next manhole lies on, or away from the face's other runs when it lies straight ahead.</span></div>`) +
+      `<div class="row" style="margin-bottom:4px"><label>Array — the section of the run, seen along it from ${esc(A ? A.ref : '?')} to ${esc(B ? B.ref : '?')}</label></div>
+       <div class="arrayed" id="qArray">${arrayEditorSVG(cn)}</div>
+       <div class="derived" style="border-top:none;margin-top:0;padding-top:0"><b>${arrayText(cn)}</b> · ${runCount(cn)} conduit${runCount(cn) === 1 ? '' : 's'} · ${runCols(cn)} wide × ${runRows(cn)} high${new Set(runRowsOf(cn)).size > 1 ? ` · shorter rows on the ${runAlign(cn)}` : ''}<br>
+         <span>Click a dotted slot to add a conduit to that row, the slot beneath to add a row, or the last conduit of a row to take it away. Rows share one set of columns, so the conduits line up vertically.</span></div>` +
+      (new Set(runRowsOf(cn)).size > 1
+        ? `<div class="row"><label for="qAlign">Shorter rows sit</label>
+             <select id="qAlign">${ALIGNS.map(a => `<option value="${a}"${runAlignPref(cn) === a ? ' selected' : ''}>${a === 'auto' ? `auto — ${runAlign(cn)}` : a}</option>`).join('')}</select></div>
+           <div class="derived"><span>Auto takes the side the next manhole lies on, or the side away from the face's other runs when it lies straight ahead.</span></div>`
+        : '')) +
     cluster('runObs', 'Obstacles', obsSummary(cn),
       state.obstacles.length ? state.obstacles.map(o => {
         const chosen = cn.cross && METHODS.includes(cn.cross[o.uid]) ? cn.cross[o.uid] : '';
@@ -2630,16 +2668,18 @@ function renderRunProps(box, cn){
     cn.level = v;
     renderSel(); renderConnections(); draw();
   });
-  const rowsEl = document.getElementById('qRows');
-  const readRows = () => { const v = String(rowsEl.value).split(/[^0-9]+/).filter(Boolean).map(Number).filter(n => n >= 1); return v.length ? v : null; };
-  rowsEl.addEventListener('input', () => {          // live while typing, without rebuilding the field under the cursor
-    const v = readRows();
-    if (!v || v.join(' ') === runRowsOf(cn).join(' ')) return;
+  box.querySelectorAll('#qArray [data-act]').forEach(k => k.addEventListener('click', e => {
+    e.stopPropagation();
+    const v = runRowsOf(cn), i = +k.dataset.row;
+    if (k.dataset.act === 'add'){ if (i >= v.length) v.push(1); else v[i] = Math.min(ARRAY_MAX.cols, v[i] + 1); }
+    else if (v[i] > 1) v[i]--;
+    else if (v.length > 1) v.splice(i, 1);
+    else return;
     cn.perRow = v; delete cn.rows; delete cn.cols;
-    recomputeRoutes(); draw();
-  });
-  rowsEl.addEventListener('change', () => { const v = readRows(); if (v){ cn.perRow = v; delete cn.rows; delete cn.cols; } renderSel(); renderConnections(); draw(); });
-  document.getElementById('qAlign').onchange = e => { cn.align = e.target.value; renderSel(); renderConnections(); draw(); };
+    renderSel(); renderConnections(); draw();
+  }));
+  const alEl = document.getElementById('qAlign');
+  if (alEl) alEl.onchange = e => { cn.align = e.target.value; renderSel(); renderConnections(); draw(); };
   document.getElementById('qSpec').onchange = e => {
     cn.specId = e.target.value;
     state.editSpec = cn.specId;
@@ -2758,7 +2798,7 @@ function renderElevation(){
     const sp = it.sp || {colour:'#888', name:'?'};
     return `<div class="dlgrow${inSel('conn', it.cn.uid) ? ' on' : ''}" data-elsel="${it.cn.uid}">
       <span class="dot" style="background:${sp.colour}"></span>
-      <span class="nm">${esc(connLabel(it.cn))} · ${esc(sp.name)} ${esc(runRowsOf(it.cn).join(' + '))}</span>
+      <span class="nm">${esc(connLabel(it.cn))} · ${esc(sp.name)} ${esc(arrayText(it.cn))}</span>
       <em>L${gr.level}</em>
       <button data-fup="${it.cn.uid}" title="raise (smaller level)">▲</button>
       <button data-fdn="${it.cn.uid}" title="lower (bigger level)">▼</button></div>`;

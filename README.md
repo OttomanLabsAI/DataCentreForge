@@ -183,14 +183,16 @@ edge clearance. Bends carry only what the extents cannot absorb. Runs sharing
 a face keep their order and pitch, each as close to its own alignment as the
 others allow.
 
-A run's array is given row by row: how many conduits sit in each row, top row
-first, so a bank can be 3 over 2 as readily as 8, 8 and 8. Every row sits on
-the same columns at the face's pitch, so the conduits line up vertically, and
-a shorter row is packed to one side — by default toward the side the next
-manhole lies on, or, when it lies straight ahead, away from the face's other
-runs — or to the left or right chosen on the run, seen along it from its first
-chamber to its second. The elevation and the 3D view draw exactly those
-conduits, and the drawing's file carries the rows and the side.
+A run's array is set up on a picture of its section: one circle per conduit,
+rows stacked as they sit, seen along the run from its first chamber so left is
+left. A dotted slot at the open end of a row adds a conduit to that row, the
+slot beneath adds a row, and the last conduit of a row takes it away, so a
+bank can be 3 over 2 as readily as 8, 8 and 8. Every row sits on the same
+columns at the face's pitch, so the conduits line up vertically, and a shorter
+row sits against one side — by default the side the next manhole lies on, or,
+when it lies straight ahead, the side away from the face's other runs — or the
+left or right chosen on the run. The elevation and the 3D view draw exactly
+those conduits, and the drawing's file carries the rows and the side.
 
 A run never tilts. Where two square faces are out of line by more than
 sliding can absorb, the run bends, and where the leftover offset is too small
