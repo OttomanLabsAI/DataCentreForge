@@ -103,6 +103,17 @@
                 overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .winhead button{padding:0 7px; font-size:15px; line-height:1.4}
   .winbody{overflow-y:auto; padding:12px 14px 14px; min-height:0}
+  .winhead .mini{padding:2px 8px; font-size:11px; line-height:1.5}
+  /* windows that stretch: a grip in the corner, dragged with a mouse or a finger */
+  .win.resizable{min-width:320px; min-height:220px}
+  .wingrip{position:absolute; right:0; bottom:0; width:22px; height:22px; cursor:nwse-resize; touch-action:none; opacity:.75;
+           background:linear-gradient(135deg, transparent 0 52%, var(--ink-faint) 52% 60%, transparent 60% 72%, var(--ink-faint) 72% 80%, transparent 80%)}
+  .winbody.v3d{padding:0; overflow:hidden; flex:1; position:relative; cursor:grab}
+  #svg3d{position:absolute; inset:0; width:100%; height:100%; display:block; touch-action:none}
+  .exlist .ex{padding:9px 10px 10px; border:1px solid var(--line); border-radius:3px; background:var(--panel-2); margin-bottom:8px}
+  .exlist .ex b{display:block; font-size:12px; margin-bottom:3px}
+  .exlist .ex b em{font-style:normal; font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-left:6px}
+  .exlist .ex p{margin:0 0 8px; font-size:11px; color:var(--ink-dim); line-height:1.5}
   .winlist{max-height:168px; overflow-y:auto; margin-bottom:10px}
   .winlist:empty{display:none}
   .row{display:flex; align-items:center; gap:8px; margin-bottom:8px}
@@ -180,18 +191,13 @@
   .facebtn{font-family:var(--mono)}
   .facebtn.off{opacity:.35}
   .facebtn.bad{border-color:#6a5220; color:var(--warn)}
-  #faceDlg{position:fixed; inset:0; z-index:20; background:rgba(10,13,17,.62);
-           display:flex; align-items:center; justify-content:center}
-  #faceDlg[hidden]{display:none}
-  .dlgcard{width:300px; max-height:80vh; overflow-y:auto; background:var(--panel);
-           border:1px solid #39465a; border-radius:4px; padding:12px 14px 14px;
-           box-shadow:0 12px 40px rgba(0,0,0,.5)}
-  .dlghead{display:flex; align-items:baseline; gap:8px; margin-bottom:8px}
-  .dlghead b{font-size:13px; letter-spacing:.03em}
-  .dlghead span{flex:1; font-family:var(--mono); font-size:10.5px; color:var(--ink-faint)}
-  .dlghead button{padding:0 7px; font-size:15px; line-height:1.4}
+  /* ---------- the elevation window: one face, its runs and its section ---------- */
   .dlgrow{display:flex; align-items:center; gap:7px; margin:3px 0; font-size:11px;
-          font-family:var(--mono)}
+          font-family:var(--mono); padding:2px 4px; border-radius:3px; cursor:pointer}
+  .dlgrow:hover{background:var(--panel-2)}
+  .dlgrow.on{background:#2a2114}
+  .dlgrow.on .nm{color:var(--sel)}
+  #elevBody svg circle[data-sel]{cursor:pointer; pointer-events:all}   /* the whole conduit, not just its outline, takes the click */
   .dlgrow .dot{width:9px; height:9px; border-radius:2px; flex:none}
   .dlgrow .nm{flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap}
   .dlgrow em{font-style:normal; color:var(--ink-faint)}

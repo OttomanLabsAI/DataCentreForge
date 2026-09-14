@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=2.13">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.14">
 </head>
 <body>
 
@@ -19,10 +19,9 @@
     <div class="rgroup"><div class="rbtns">
       <button id="btnAdd" data-icon="chamber" title="Add a chamber at the centre of the view"><span>Chamber</span></button>
       <button id="btnObs" data-icon="obstacle" title="Add an obstacle at the centre of the view"><span>Obstacle</span></button>
-      <button id="btnExample" data-icon="example" title="Place the example: the manholes of a live data-centre model, at their true positions and rotations"><span>Example</span></button>
     </div><div class="rcap">Create</div></div>
     <div class="rgroup"><div class="rbtns">
-      <button id="btnView3d" data-icon="cube" title="Show the drawing in 3D (key 3)"><span>3D view</span></button>
+      <button id="btnView3d" data-win="view3d" data-icon="cube" title="Open the 3D view in its own window (key 3)"><span>3D view</span></button>
       <button id="btnFit" data-icon="fit" title="Fit the drawing in the view (key F)"><span>Fit view</span></button>
     </div><div class="rcap">View</div></div>
     <div class="rgroup"><div class="rbtns">
@@ -30,6 +29,7 @@
       <button data-win="runs" data-icon="runs"><span>Runs <em id="connCount"></em></span></button>
       <button data-win="obstacles" data-icon="obstacles"><span>Obstacles <em id="obsCount"></em></span></button>
       <button data-win="specs" data-icon="specs"><span>Specs</span></button>
+      <button data-win="examples" data-icon="example" title="Example drawings to place"><span>Examples</span></button>
     </div><div class="rcap">Manage</div></div>
     <div class="rgroup"><div class="rbtns">
       <button data-win="drawing" data-icon="drawing"><span>Drawing</span></button>
@@ -120,11 +120,25 @@
         <div class="btnrow"><button id="btnClear" class="warn ghost">Clear drawing</button></div>
       </div>
     </section>
+    <section class="win" id="win-examples" hidden>
+      <div class="winhead"><b>Examples</b><span></span><button data-close title="Close">×</button></div>
+      <div class="winbody">
+        <div class="exlist" id="exampleList"></div>
+        <div class="note">Placing an example replaces the drawing, after asking unless the drawing is empty. Undo brings the previous drawing back.</div>
+      </div>
+    </section>
+    <section class="win resizable" id="win-elevation" hidden>
+      <div class="winhead"><b>Elevation</b><span id="elevWho"></span><button data-close title="Close">×</button></div>
+      <div class="winbody" id="elevBody"></div>
+    </section>
+    <section class="win resizable" id="win-view3d" hidden style="width:560px;height:440px">
+      <div class="winhead"><b>3D view</b><span id="v3hint"></span><button id="btnFit3d" class="mini" title="Fit everything in the 3D view">Fit</button><button data-close title="Close">×</button></div>
+      <div class="winbody v3d" id="v3body"><svg id="svg3d" xmlns="http://www.w3.org/2000/svg"></svg></div>
+    </section>
   </div>
 </main>
 
-<div id="faceDlg" hidden></div>
 
-<script src="/assets/js/app.js?v=2.13"></script>
+<script src="/assets/js/app.js?v=2.14"></script>
 </body>
 </html>

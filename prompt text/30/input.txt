@@ -1,0 +1,9 @@
+put example data in a seperate panel
+
+also, one of the right click options for the face should be to view the face and its conduit setup elevation view in a new window
+
+if i do it on another manhole, it should replace the elevation view with that one
+
+also, 3d view should open in a window that can be extended and stretched
+
+i should be able to see the boundary box dotted and be able to select the conduit run from there too

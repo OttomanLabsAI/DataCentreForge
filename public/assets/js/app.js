@@ -1217,7 +1217,7 @@ const S2W = p => [(p[0]-state.view.tx)/state.view.s, (state.view.ty-p[1])/state.
 function fitView(pad = 90){
   const r = STAGE.getBoundingClientRect();
   if (!state.chambers.length && !state.obstacles.length){
-    state.view = {tx:r.width/2, ty:r.height/2, s:0.05}; return state.view3d ? fit3d() : draw();
+    state.view = {tx:r.width/2, ty:r.height/2, s:0.05}; return draw();
   }
   let minx=1e12, miny=1e12, maxx=-1e12, maxy=-1e12;
   const eat = p => { minx=Math.min(minx,p[0]); maxx=Math.max(maxx,p[0]);
@@ -1229,7 +1229,7 @@ function fitView(pad = 90){
   state.view.s = Math.max(0.0005, Math.min(3, s));
   state.view.tx = r.width/2  - (minx+maxx)/2*state.view.s;
   state.view.ty = r.height/2 + (miny+maxy)/2*state.view.s;
-  if (state.view3d) fit3d(); else draw();
+  draw();
 }
 
 /* ==========================================================================
@@ -1268,7 +1268,7 @@ function routePathScreen(rt){
 
 function draw(){
   recomputeRoutes();
-  if (state.view3d) return draw3d();
+  if (state.view3d) draw3d();          // the 3D window follows every change
   const r = STAGE.getBoundingClientRect();
   const W = r.width, H = r.height, s = state.view.s;
   const out = [];
@@ -1461,6 +1461,8 @@ function drawScaleBar(scale = state.view.s){
    ========================================================================== */
 
 let stageW = 0, stageH = 0, prims3d = [], drag3 = null;
+const SVG3 = document.getElementById('svg3d'), V3BODY = document.getElementById('v3body');
+const v3Rect = () => V3BODY.getBoundingClientRect();
 
 /** World [x,y,z] → screen [sx, sy, nearness] under the orbit camera. */
 function proj(p){
@@ -1506,12 +1508,14 @@ function drawingExtent(){
 
 /** Fit the camera to everything drawn, keeping the current orbit angles. */
 function fit3d(pad = 70){
-  const r = STAGE.getBoundingClientRect(); stageW = r.width; stageH = r.height;
+  if (!state.view3d) return;
+  const r = v3Rect(); stageW = r.width; stageH = r.height;
+  if (!(r.width > 0 && r.height > 0)) return;
   const cam = state.cam, pts = [];
   for (const c of state.chambers){ const [zb, zl] = chamberZs(c); for (const p of corners(c, c.wall)) pts.push([p[0], p[1], zb], [p[0], p[1], zl]); }
   for (const o of state.obstacles) for (const p of boxCorners(o, 0)) pts.push([p[0], p[1], Math.min(o.zTop, o.zBot)], [p[0], p[1], Math.max(o.zTop, o.zBot)]);
   for (const cn of state.connections) if (cn.placed && cn.route && cn.route.ok) for (const line of run3d(cn)) pts.push(...line);
-  if (!pts.length){ Object.assign(cam, {cx:0, cy:0, cz:0, s:0.03, px:0, py:0}); return draw(); }
+  if (!pts.length){ Object.assign(cam, {cx:0, cy:0, cz:0, s:0.03, px:0, py:0}); return draw3d(); }
   const lo = [Infinity, Infinity, Infinity], hi = [-Infinity, -Infinity, -Infinity];
   for (const p of pts) for (let i = 0; i < 3; i++){ lo[i] = Math.min(lo[i], p[i]); hi[i] = Math.max(hi[i], p[i]); }
   cam.cx = (lo[0]+hi[0])/2; cam.cy = (lo[1]+hi[1])/2; cam.cz = (lo[2]+hi[2])/2;
@@ -1521,11 +1525,13 @@ function fit3d(pad = 70){
   cam.s = Math.max(0.0005, Math.min(3, Math.min((r.width-2*pad)/Math.max(1, x1-x0), (r.height-2*pad)/Math.max(1, y1-y0))));
   cam.px = -((x0+x1)/2 - r.width/2)*cam.s;
   cam.py = -((y0+y1)/2 - r.height/2)*cam.s;
-  draw();
+  draw3d();
 }
 
 function draw3d(){
-  const r = STAGE.getBoundingClientRect(); stageW = r.width; stageH = r.height;
+  if (!state.view3d) return;
+  const r = v3Rect(); stageW = r.width; stageH = r.height;
+  if (!(r.width > 0 && r.height > 0)) return;
   const cam = state.cam, s = cam.s, prims = [], out = [];
   const fp = q => q[0].toFixed(1) + ',' + q[1].toFixed(1);
   const polyStr = qs => qs.map(fp).join(' ');
@@ -1567,15 +1573,26 @@ function draw3d(){
     const q = proj(p);
     prims.push({near:Infinity, svg:`<text x="${q[0].toFixed(1)}" y="${(q[1]-6).toFixed(1)}" fill="${colour}" font-family="${C.mono}" font-size="${size}" text-anchor="middle">${esc(text)}</text>`});
   };
+  /* the buffer zone of a chamber or obstacle, as a dotted box, like the plan's dashed outline */
+  const dotted = (pts4, zlo, zhi) => {
+    const lo = pts4.map(p => proj([p[0], p[1], zlo])), hi = pts4.map(p => proj([p[0], p[1], zhi]));
+    for (let i = 0; i < 4; i++){
+      const j = (i+1)%4;
+      for (const [a, b] of [[lo[i], lo[j]], [hi[i], hi[j]], [lo[i], hi[i]]])
+        prims.push({near:(a[2]+b[2])/2 - 1e-3, svg: line(a, b, `stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="2 4" opacity=".7"`)});
+    }
+  };
   for (const o of state.obstacles){
     const on = isOn('obstacle', o.uid), zb = Math.min(o.zTop, o.zBot), zt = Math.max(o.zTop, o.zBot);
     box(boxCorners(o, 0), zb, zt, C.obsFill, .92, on ? C.sel : C.obsLine, on ? 1.8 : 1.1, {kind:'obstacle', id:o.uid}, true);
-    if (Math.min(o.w, o.d)*s > 30) label([o.x, o.y, zt], o.name, on ? C.sel : C.obsLine);
+    if (o.buffer > 0) dotted(boxCorners(o, o.buffer), zb, zt);
+    if (Math.min(o.w, o.d)*s > 18) label([o.x, o.y, zt], o.name, on ? C.sel : C.obsLine);
   }
   for (const c of state.chambers){
     const on = isOn('chamber', c.uid), [zb, zl] = chamberZs(c);
     box(corners(c, c.wall), zb, zl, C.chamber, .94, on ? C.sel : C.ink, on ? 1.8 : 1.1, {kind:'chamber', id:c.uid});
-    if ((c.intX + 2*c.wall)*s > 30) label([c.x, c.y, zl], c.ref, on ? C.sel : C.ink, 12);
+    if (c.buffer > 0) dotted(corners(c, c.wall + c.buffer), zb, zl);
+    if ((c.intX + 2*c.wall)*s > 18) label([c.x, c.y, zl], c.ref, on ? C.sel : C.ink, 12);   // the window is smaller than the stage was: label sooner
   }
 
   /* conduits: every column and row of every run, segment by segment */
@@ -1616,11 +1633,9 @@ function draw3d(){
     tri.push(`<text x="${(ox+dx*33).toFixed(1)}" y="${(oy+dy*33+3.5).toFixed(1)}" fill="${col}" font-family="${C.mono}" font-size="10" text-anchor="middle">${name}</text>`);
   }
 
-  SVG.setAttribute('viewBox', `0 0 ${stageW} ${stageH}`);
-  SVG.innerHTML = out.join('') + prims.map(p => p.svg).join('') + tri.join('');
+  SVG3.setAttribute('viewBox', `0 0 ${stageW} ${stageH}`);
+  SVG3.innerHTML = out.join('') + prims.map(p => p.svg).join('') + tri.join('');
   prims3d = prims;
-  drawScaleBar(s);
-  document.getElementById('rz').textContent = (s*100).toFixed(1) + ' px/cm';
 }
 
 /** Nearest thing under a screen point: front faces first, conduits by distance. */
@@ -1639,31 +1654,105 @@ function pointer3dDown(e, sp){
            slop: e.pointerType === 'mouse' ? 3 : SLOP};
 }
 function pointer3dMove(e, sp){
-  if (!drag3){ STAGE.style.cursor = pick3d(sp) ? 'pointer' : 'grab'; return; }
+  if (!drag3){ V3BODY.style.cursor = pick3d(sp) ? 'pointer' : 'grab'; return; }
   const dx = sp[0]-drag3.sx, dy = sp[1]-drag3.sy;
   if (!drag3.moved){ if (Math.hypot(dx, dy) <= drag3.slop) return; drag3.moved = true; }
   if (drag3.pan){ state.cam.px = drag3.px + dx; state.cam.py = drag3.py + dy; }
   else { state.cam.az = drag3.az - dx*0.4; state.cam.el = Math.max(5, Math.min(89.5, drag3.el + dy*0.4)); }
-  STAGE.style.cursor = drag3.pan ? 'move' : 'grabbing';
-  draw();
+  V3BODY.style.cursor = drag3.pan ? 'move' : 'grabbing';
+  draw3d();
 }
 function pointer3dUp(e, sp){
   const d = drag3; drag3 = null;
-  STAGE.style.cursor = 'grab';
+  V3BODY.style.cursor = 'grab';
   if (!d || d.moved) return;
-  if (d.button === 2 || e.ctrlKey){ radialAt(sp); return; }
+  if (d.button === 2 || e.ctrlKey){ radial3At(sp); return; }
   const h = pick3d(sp); select(h ? h.kind : null, h ? h.id : null);
 }
-function setView3d(on){
-  state.view3d = on;
-  document.getElementById('btnView3d').classList.toggle('on', on);
-  state.hoverFace = null; showCallout(null);
-  if (on){ state.pending = null; setPendingStatus(); closeRadial(); }   // connecting faces is a plan-view job
-  document.getElementById('rmode').textContent = !on ? '' : TOUCH_UI
-    ? '3D — one finger orbits · two fingers pan and zoom · tap to select · hold for the menu'
-    : '3D — drag to orbit · shift-drag to pan · scroll to zoom · click to select';
-  STAGE.style.cursor = on ? 'grab' : 'crosshair';
-  if (on) fit3d(); else draw();
+/** The 3D view lives in its own window: opening it fits the drawing, closing it leaves the plan as it was. */
+function setView3d(on){ if (on) openWin('view3d'); else closeWin('view3d'); }
+
+/* ---------- the 3D window's own pointer, wheel and finger handling ---------- */
+const touches3 = new Map(); let pinch3 = null, hold3 = null, rest3 = false;
+const pt3 = e => { const r = SVG3.getBoundingClientRect(); return [e.clientX-r.left, e.clientY-r.top]; };
+const cancelHold3 = () => { if (hold3){ clearTimeout(hold3.t); hold3 = null; } };
+const clampS = v => Math.max(0.0004, Math.min(4, v));
+function startPinch3(){
+  cancelHold3(); drag3 = null;
+  const [a, b] = [...touches3.values()], r = v3Rect(), cam = state.cam;
+  pinch3 = {d0:Math.max(1, Math.hypot(b[0]-a[0], b[1]-a[1])), mid0:[(a[0]+b[0])/2, (a[1]+b[1])/2], W:r.width, H:r.height, s0:cam.s};
+  pinch3.X0 = (pinch3.mid0[0] - r.width/2 - cam.px)/cam.s; pinch3.U0 = (r.height/2 + cam.py - pinch3.mid0[1])/cam.s;
+}
+function movePinch3(){
+  const [a, b] = [...touches3.values()], cam = state.cam;
+  const d = Math.max(1, Math.hypot(b[0]-a[0], b[1]-a[1])), mid = [(a[0]+b[0])/2, (a[1]+b[1])/2];
+  const ns = clampS(pinch3.s0 * d/pinch3.d0);
+  cam.s = ns; cam.px = mid[0] - pinch3.W/2 - pinch3.X0*ns; cam.py = mid[1] - pinch3.H/2 + pinch3.U0*ns;
+  draw3d();
+}
+function endTouch3(e){
+  if (!coarse(e)) return false;
+  cancelHold3();
+  if (e.pointerType === 'touch') touches3.delete(e.pointerId);
+  const rest = rest3 || !!pinch3;
+  if (pinch3 && touches3.size < 2) pinch3 = null;
+  rest3 = touches3.size > 0 && rest;
+  return rest;
+}
+SVG3.addEventListener('pointerdown', e => {
+  if (e.target.closest && e.target.closest('#radial')){ ringArmed = true; return; }
+  closeRadial();
+  const sp = pt3(e);
+  if (e.pointerType === 'touch'){
+    touches3.set(e.pointerId, sp);
+    if (touches3.size >= 2){ e.preventDefault(); startPinch3(); return; }
+  }
+  if (rest3) return;
+  e.preventDefault();
+  SVG3.setPointerCapture(e.pointerId);
+  if (coarse(e)) hold3 = {sp, t:setTimeout(() => { hold3 = null; drag3 = null; rest3 = true; radial3At(sp); ringArmed = false; }, 500)};
+  pointer3dDown(e, sp);
+});
+SVG3.addEventListener('pointermove', e => {
+  const sp = pt3(e);
+  if (e.pointerType === 'touch' && touches3.has(e.pointerId)){
+    touches3.set(e.pointerId, sp);
+    if (pinch3 && touches3.size >= 2){ movePinch3(); return; }
+  }
+  if (rest3) return;
+  if (hold3 && Math.hypot(sp[0]-hold3.sp[0], sp[1]-hold3.sp[1]) > SLOP) cancelHold3();
+  pointer3dMove(e, sp);
+});
+SVG3.addEventListener('pointerup', e => {
+  if (e.target.closest && e.target.closest('#radial')) return;
+  const sp = pt3(e);
+  if (endTouch3(e)){ drag3 = null; return; }
+  pointer3dUp(e, sp);
+});
+SVG3.addEventListener('pointercancel', e => { endTouch3(e); drag3 = null; });
+SVG3.addEventListener('contextmenu', e => e.preventDefault());
+SVG3.addEventListener('touchmove', e => e.preventDefault(), {passive:false});
+SVG3.addEventListener('gesturestart', e => e.preventDefault());
+SVG3.addEventListener('wheel', e => {
+  e.preventDefault(); closeRadial();
+  const r = v3Rect(), sp = pt3(e), cam = state.cam;
+  const k = e.ctrlKey && Math.abs(e.deltaY) < 50 ? 0.012 : 0.0016;
+  const ns = clampS(cam.s*Math.exp(-e.deltaY*k)), g = ns/cam.s;
+  cam.px = sp[0] - r.width/2 - (sp[0] - r.width/2 - cam.px)*g;   // keep the point under the cursor still
+  cam.py = sp[1] - r.height/2 - (sp[1] - r.height/2 - cam.py)*g;
+  cam.s = ns;
+  draw3d();
+}, {passive:false});
+new ResizeObserver(() => { if (state.view3d) draw3d(); }).observe(V3BODY);   // a stretched window redraws to fit
+document.getElementById('btnFit3d').onclick = () => fit3d();
+/** The ring for whatever sits under a still right-click or a held finger in the 3D window. */
+function radial3At(sp){
+  const h = pick3d(sp);
+  if (h) keepSel(h.kind, h.id);
+  const m = h ? (h.kind === 'chamber' ? chamberMenu(byUid(h.id)) : h.kind === 'obstacle' ? obstacleMenu(obsBy(h.id)) : runMenu(connBy(h.id)))
+              : ['3D view', [{icon:'fit', label:'Fit view', run:() => fit3d()}, {icon:'runs', label:'Runs', run:() => openWin('runs')},
+                             {icon:'plan', label:'Close 3D', run:() => closeWin('view3d')}]];
+  openRadial(sp, m[0], m[1], V3BODY);
 }
 
 /* ==========================================================================
@@ -1737,20 +1826,14 @@ function startPinch(){
   cancelHold(); abandonDrag();
   const [a, b] = [...touches.values()];
   const r = STAGE.getBoundingClientRect();
-  pinch = {d0: Math.max(1, Math.hypot(b[0]-a[0], b[1]-a[1])), mid0: [(a[0]+b[0])/2, (a[1]+b[1])/2], W:r.width, H:r.height};
-  if (state.view3d){ const cam = state.cam; pinch.s0 = cam.s; pinch.X0 = (pinch.mid0[0] - r.width/2 - cam.px)/cam.s; pinch.U0 = (r.height/2 + cam.py - pinch.mid0[1])/cam.s; }
-  else { pinch.s0 = state.view.s; pinch.w0 = S2W(pinch.mid0); }
+  pinch = {d0: Math.max(1, Math.hypot(b[0]-a[0], b[1]-a[1])), mid0: [(a[0]+b[0])/2, (a[1]+b[1])/2], W:r.width, H:r.height,
+           s0: state.view.s, w0: S2W([(a[0]+b[0])/2, (a[1]+b[1])/2])};
 }
 function movePinch(){
   const [a, b] = [...touches.values()];
   const d = Math.max(1, Math.hypot(b[0]-a[0], b[1]-a[1])), mid = [(a[0]+b[0])/2, (a[1]+b[1])/2];
   const ns = Math.max(0.0004, Math.min(4, pinch.s0 * d/pinch.d0));
-  if (state.view3d){
-    const cam = state.cam;
-    cam.s = ns; cam.px = mid[0] - pinch.W/2 - pinch.X0*ns; cam.py = mid[1] - pinch.H/2 + pinch.U0*ns;
-  } else {
-    state.view.s = ns; state.view.tx = mid[0] - pinch.w0[0]*ns; state.view.ty = mid[1] + pinch.w0[1]*ns;
-  }
+  state.view.s = ns; state.view.tx = mid[0] - pinch.w0[0]*ns; state.view.ty = mid[1] + pinch.w0[1]*ns;
   draw();
 }
 
@@ -1766,7 +1849,6 @@ STAGE.addEventListener('pointerdown', e => {
   e.preventDefault();                       // stop native text selection and middle-button autoscroll
   STAGE.setPointerCapture(e.pointerId);
   if (coarse(e)) hold = {sp, t:setTimeout(() => { hold = null; abandonDrag(); touchRest = true; radialAt(sp, true); ringArmed = false; }, 500)};
-  if (state.view3d){ pointer3dDown(e, sp); return; }
   if (isPan(e)){                            // middle or right button drags the view; a still right-click opens the ring
     drag = {kind:'pan', sx:sp[0], sy:sp[1], tx:state.view.tx, ty:state.view.ty, button:e.button, moved:false};
     return;
@@ -1801,11 +1883,6 @@ STAGE.addEventListener('pointermove', e => {
   }
   if (touchRest) return;
   if (hold && Math.hypot(sp[0]-hold.sp[0], sp[1]-hold.sp[1]) > SLOP) cancelHold();
-  if (state.view3d){
-    document.getElementById('rx').textContent = '—';
-    document.getElementById('ry').textContent = '—';
-    return pointer3dMove(e, sp);
-  }
   document.getElementById('rx').textContent = fmt(wp[0]);
   document.getElementById('ry').textContent = fmt(wp[1]);
 
@@ -1850,7 +1927,6 @@ STAGE.addEventListener('pointerup', e => {
   if (e.target.closest && e.target.closest('#radial')) return;
   const sp = stagePt(e);
   if (endTouch(e)) return;
-  if (state.view3d){ pointer3dUp(e, sp); return; }
   const d = drag; drag = null;
   if ((!d || !d.moved) && !(d && d.kind === 'pan')){           // two clicks or taps on one spot: a double
     const now = performance.now();
@@ -1877,22 +1953,14 @@ STAGE.addEventListener('pointerup', e => {
 });
 STAGE.addEventListener('pointercancel', e => { endTouch(e); abandonDrag(); });
 STAGE.addEventListener('pointerleave', () => {
-  if (state.view3d){ return; }
   state.hoverFace = null; showCallout(null); draw();
   document.getElementById('rx').textContent = '—';
   document.getElementById('ry').textContent = '—';
 });
 /** The ring for whatever sits under a still right-click (or ctrl-click, or a held finger — `big` widens the hit). */
+const keepSel = (kind, id) => { if (!inSel(kind, id)) select(kind, id); else setPrimary(kind, id); };   // a ring on a selected thing keeps the set
 function radialAt(sp, big){
-  const keep = (kind, id) => { if (!inSel(kind, id)) select(kind, id); else setPrimary(kind, id); };   // a ring on a selected thing keeps the set
-  if (state.view3d){
-    const h = pick3d(sp);
-    if (h) keep(h.kind, h.id);
-    const m = h ? (h.kind === 'chamber' ? chamberMenu(byUid(h.id)) : h.kind === 'obstacle' ? obstacleMenu(obsBy(h.id)) : runMenu(connBy(h.id)))
-                : ['3D view', [{icon:'fit', label:'Fit view', run:() => fit3d()}, {icon:'plan', label:'Plan view', run:() => setView3d(false)},
-                               {icon:'runs', label:'Runs', run:() => openWin('runs')}]];
-    return openRadial(sp, m[0], m[1]);
-  }
+  const keep = keepSel;
   const wp = S2W(sp);
   const f = hitFace(wp, big ? 18 : 9);
   if (f) return openRadial(sp, ...faceMenu(f));
@@ -1914,13 +1982,6 @@ STAGE.addEventListener('wheel', e => {
   const sp = [e.clientX-r.left, e.clientY-r.top], before = S2W(sp);
   /* a touchpad pinch arrives as a wheel with ctrl held and small deltas */
   const k = e.ctrlKey && Math.abs(e.deltaY) < 50 ? 0.012 : 0.0016;
-  if (state.view3d){
-    const cam = state.cam, ns = Math.max(0.0004, Math.min(4, cam.s*Math.exp(-e.deltaY*k))), g = ns/cam.s;
-    cam.px = sp[0] - r.width/2 - (sp[0] - r.width/2 - cam.px)*g;   // keep the point under the cursor still
-    cam.py = sp[1] - r.height/2 - (sp[1] - r.height/2 - cam.py)*g;
-    cam.s = ns;
-    return draw();
-  }
   state.view.s = Math.max(0.0004, Math.min(4, state.view.s*Math.exp(-e.deltaY*k)));
   const after = S2W(sp);
   state.view.tx += (after[0]-before[0])*state.view.s;
@@ -2222,6 +2283,7 @@ function renderSel(){
   else if (selIs('obstacle')){ const o = obsBy(state.sel.id); if (o){ renderObstacleProps(oE, o); who('obsWho', o.name); } }
   else if (selIs('conn')){ const cn = connBy(state.sel.id); if (cn){ renderRunProps(rE, cn); who('runWho', connLabel(cn)); } }
   renderChambers();
+  renderElevation();
   updateRibbon();
   historyMark();
 }
@@ -2430,41 +2492,44 @@ function renderRunProps(box, cn){
 /** Cross-section of one chamber face: the shared conduit grid to scale,
     every conduit as a circle in its spec colour, edge-clearance guides,
     and a caption saying whether the face carries it. */
-function faceSectionSVG(L, wpx = 232){
-  if (!L.groups.length) return '';
-  const ec = L.c.edgeClear || 0, W = L.g.width;
+/** The section through one face: the wall's clear width, the boundary box the conduits
+    must keep to (the family's window when it has one, else the clear width) dotted, and
+    every conduit to scale. With `sel`, each conduit carries its run and the selected run
+    is lit; with `responsive`, the drawing scales to its window. */
+function faceSectionSVG(L, wpx = 232, opt = {}){
+  const ec = L.c.edgeClear || 0, W = L.g.width, S = L.S;
   const pad = 12, scale = (wpx - pad*2) / W;
-  const rBig = Math.max(...L.groups.map(g => g.rMax));
+  const rBig = L.groups.length ? Math.max(...L.groups.map(g => g.rMax)) : 0;
   let y = rBig; const tops = [];
-  L.groups.forEach((gr, gi) => { tops.push(y); y += (gr.rowsMax-1)*L.S; if (gi < L.groups.length-1) y += L.S; });
-  const contentH = y + rBig;
+  L.groups.forEach((gr, gi) => { tops.push(y); y += (gr.rowsMax-1)*S; if (gi < L.groups.length-1) y += S; });
+  const contentH = L.groups.length ? y + rBig : (L.win && L.win.h ? L.win.h : 2*S);
   const hpx = contentH*scale + pad*2 + 16;
   const X = mm => pad + (mm + W/2)*scale;
   const Y = mm => pad + mm*scale;
   const el = [];
   el.push(`<rect x="${X(-W/2)}" y="${pad-4}" width="${W*scale}" height="${contentH*scale+8}" fill="none" stroke="${C.inkFaint}" stroke-width="1"/>`);
-  if (L.win){
-    const x0 = X(L.shift - L.win.w/2), x1 = X(L.shift + L.win.w/2);
-    const yb = L.win.h ? Math.min(pad + L.win.h*scale, pad + contentH*scale + 4) : pad + contentH*scale + 4;
-    el.push(`<rect x="${x0}" y="${pad-4}" width="${x1-x0}" height="${yb-(pad-4)}" fill="none" stroke="${C.pick}" stroke-width="1" stroke-dasharray="3 3" opacity=".8"/>`);
-  } else
-  for (const sgn of [-1, 1])
-    el.push(`<line x1="${X(sgn*(W/2-ec))}" y1="${pad-4}" x2="${X(sgn*(W/2-ec))}" y2="${pad+contentH*scale+4}" stroke="${C.inkFaint}" stroke-width="1" stroke-dasharray="3 3" opacity=".7"/>`);
+  const bx0 = L.win ? X(L.shift - L.win.w/2) : X(-(W/2-ec)), bx1 = L.win ? X(L.shift + L.win.w/2) : X(W/2-ec);
+  const by1 = L.win && L.win.h ? Math.min(pad + L.win.h*scale, pad + contentH*scale + 4) : pad + contentH*scale + 4;
+  el.push(`<rect x="${bx0.toFixed(1)}" y="${pad-4}" width="${(bx1-bx0).toFixed(1)}" height="${(by1-(pad-4)).toFixed(1)}" fill="none" stroke="${C.pick}" stroke-width="1.2" stroke-dasharray="2 3" opacity=".9"/>`);
   L.groups.forEach((gr, gi) => {
     for (const it of gr.items){
       if (!it.sp) continue;
+      const on = !!opt.sel && inSel('conn', it.cn.uid);
       const rp = Math.max(2.2, it.sp.radius*scale);
       for (let rI = 0; rI < it.rows; rI++) for (let cI = 0; cI < it.cols; cI++){
-        const xo = it.centreOff + (cI-(it.cols-1)/2)*L.S;
-        el.push(`<circle cx="${X(xo)}" cy="${Y(tops[gi]+rI*L.S)}" r="${rp}" fill="none" stroke="${it.sp.colour}" stroke-width="1.6"/>`);
+        const xo = it.centreOff + (cI-(it.cols-1)/2)*S;
+        el.push(`<circle cx="${X(xo).toFixed(1)}" cy="${Y(tops[gi]+rI*S).toFixed(1)}" r="${rp.toFixed(1)}" fill="${on ? C.sel : 'none'}" fill-opacity="${on ? .25 : 0}" stroke="${on ? C.sel : it.sp.colour}" stroke-width="${on ? 2.2 : 1.6}"${opt.sel ? ` data-sel="${it.cn.uid}"` : ''}/>`);
       }
     }
   });
-  const cap = L.win
-    ? `pitch ${fmt(L.S)} · window ${fmt(L.win.w)}${L.win.h ? '×' + fmt(L.win.h) : ''} · grid ${fmt(L.usedW)} ${L.fits ? '✓' : '✗ OVER'}`
-    : `pitch ${fmt(L.S)} · edge ≥${fmt(ec)} · grid ${fmt(L.usedW)} / face ${fmt(W)} ${L.fits ? '✓' : '✗ OVER'}`;
+  const cap = !L.groups.length
+    ? (L.win ? `window ${fmt(L.win.w)}${L.win.h ? '×' + fmt(L.win.h) : ''} · no runs` : `clear ${fmt(W - 2*ec)} of ${fmt(W)} · no runs`)
+    : L.win
+      ? `pitch ${fmt(S)} · window ${fmt(L.win.w)}${L.win.h ? '×' + fmt(L.win.h) : ''} · grid ${fmt(L.usedW)} ${L.fits ? '✓' : '✗ OVER'}`
+      : `pitch ${fmt(S)} · edge ≥${fmt(ec)} · grid ${fmt(L.usedW)} / face ${fmt(W)} ${L.fits ? '✓' : '✗ OVER'}`;
   el.push(`<text x="${wpx/2}" y="${hpx-4}" fill="${L.fits ? C.inkFaint : C.bad}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${cap}</text>`);
-  return `<svg width="${wpx}" height="${hpx}" style="display:block;margin:4px 0 2px">${el.join('')}</svg>`;
+  const size = opt.responsive ? `viewBox="0 0 ${wpx} ${hpx}" width="100%"` : `width="${wpx}" height="${hpx}"`;
+  return `<svg ${size} style="display:block;margin:4px 0 2px">${el.join('')}</svg>`;
 }
 
 /** One compact button per side — the detail lives in the side dialog. */
@@ -2487,49 +2552,51 @@ function wireFaceButtons(c){
   });
 }
 
-/* ---------- side settings dialog ---------- */
+/* ---------- the elevation window: one face at a time ---------- */
 
-function openFaceDialog(mh, face){ state.faceDialog = {mh, face}; renderFaceDialog(); }
-function closeFaceDialog(){ state.faceDialog = null; renderFaceDialog(); }
+function openFaceDialog(mh, face){ openElevation(mh, face); }
+/** Show a face in the Elevation window; asking for another face replaces it. */
+function openElevation(mh, face){ state.elev = {mh, face}; openWin('elevation'); renderElevation(); }
+function closeElevation(){ closeWin('elevation'); }
 
-/** The launched settings for one side: its runs with stacking controls,
-    and the to-scale section through the face. */
-function renderFaceDialog(){
-  const wrap = document.getElementById('faceDlg');
-  const fd = state.faceDialog, c = fd && byUid(fd.mh);
-  const n = fd && c ? faceRuns(fd.mh, fd.face).length : 0;
-  if (!n){ state.faceDialog = null; wrap.hidden = true; wrap.innerHTML = ''; return; }
-  const L = faceLayout(fd.mh, fd.face);
+/** The face's runs with their stacking controls, and the to-scale section
+    through the face with its boundary box; a conduit or a row selects its run. */
+function renderElevation(){
+  const box = document.getElementById('elevBody'), who = document.getElementById('elevWho');
+  const ev = state.elev, c = ev && byUid(ev.mh);
+  if (!c){
+    state.elev = null; who.textContent = '';
+    box.innerHTML = `<div class="empty">Right-click a face on the plan and choose <b>Elevation</b>, or press a side button in the Chambers window.</div>`;
+    return;
+  }
+  const L = faceLayout(ev.mh, ev.face), n = faceRuns(ev.mh, ev.face).length;
+  who.textContent = `${c.ref} · side ${ev.face}${c.sides && c.sides[ev.face] ? ' (' + c.sides[ev.face] + ')' : ''}`;
   const rows = L.groups.flatMap(gr => gr.items.map(it => {
     const sp = it.sp || {colour:'#888', name:'?'};
-    return `<div class="dlgrow">
+    return `<div class="dlgrow${inSel('conn', it.cn.uid) ? ' on' : ''}" data-elsel="${it.cn.uid}">
       <span class="dot" style="background:${sp.colour}"></span>
-      <span class="nm">${esc(sp.name)} — ${it.cols} × ${it.rows}</span>
+      <span class="nm">${esc(connLabel(it.cn))} · ${esc(sp.name)} ${it.cols} × ${it.rows}</span>
       <em>L${gr.level}</em>
       <button data-fup="${it.cn.uid}" title="raise (smaller level)">▲</button>
       <button data-fdn="${it.cn.uid}" title="lower (bigger level)">▼</button></div>`;
   }));
-  wrap.innerHTML = `<div class="dlgcard">
-    <div class="dlghead"><b>${esc(c.ref)} · side ${fd.face}${c.sides && c.sides[fd.face] ? ' (' + esc(c.sides[fd.face]) + ')' : ''}</b>
-      <span>${n} run${n === 1 ? '' : 's'}${L.fits ? '' : ' — too narrow'}</span>
-      <button id="dlgClose" title="Close">×</button></div>
-    ${rows.join('')}
-    ${faceSectionSVG(L, 268)}
-  </div>`;
-  wrap.hidden = false;
-  wrap.onclick = e => { if (e.target === wrap) closeFaceDialog(); };
-  document.getElementById('dlgClose').onclick = closeFaceDialog;
-  wrap.querySelectorAll('[data-fup],[data-fdn]').forEach(b => {
-    b.onclick = ev => {
-      ev.stopPropagation();
+  box.innerHTML = `<div class="note" style="margin:0 0 8px">${n
+      ? `${n} run${n === 1 ? '' : 's'} on this side${L.fits ? '' : ' — too narrow'} · click a conduit to select its run`
+      : 'No runs on this side yet. The dotted box is where conduits may enter.'}</div>` +
+    rows.join('') + faceSectionSVG(L, 288, {responsive:true, sel:true});
+  box.querySelectorAll('[data-fup],[data-fdn]').forEach(b => {
+    b.onclick = e => {
+      e.stopPropagation();
       const up = b.hasAttribute('data-fup');
       const cn = state.connections.find(x => x.uid === b.getAttribute(up ? 'data-fup' : 'data-fdn'));
       if (!cn) return;
       cn.level = Math.max(0, (cn.level|0) + (up ? -1 : 1));
       recomputeRoutes();
-      renderSel(); renderConnections(); draw(); renderFaceDialog();
+      renderSel(); renderConnections(); draw();
     };
   });
+  box.querySelectorAll('[data-elsel]').forEach(r => r.onclick = () => select('conn', r.dataset.elsel));
+  box.querySelectorAll('svg [data-sel]').forEach(k => k.addEventListener('click', e => { e.stopPropagation(); select('conn', k.dataset.sel); }));
 }
 
 function obsSummary(cn){
@@ -2622,7 +2689,6 @@ function removeChamber(u){
    ========================================================================== */
 
 const viewCentre = () => {
-  if (state.view3d) return [state.cam.cx, state.cam.cy];
   const r = STAGE.getBoundingClientRect();
   return S2W([r.width/2, r.height/2]);
 };
@@ -2639,7 +2705,6 @@ document.getElementById('btnObs').onclick = () => {
   state.obstacles.push(o); select('obstacle', o.uid);
 };
 document.getElementById('btnFit').onclick = () => fitView();
-document.getElementById('btnView3d').onclick = () => setView3d(!state.view3d);
 
 /* ==========================================================================
    ICONS
@@ -2648,6 +2713,7 @@ document.getElementById('btnView3d').onclick = () => setView3d(!state.view3d);
 
 const ICONS = {
   undo:     '<path d="M9 14L4 9l5-5"/><path d="M4 9h9.5a5.5 5.5 0 0 1 0 11H10"/>',
+  elevation:'<rect x="3" y="5" width="18" height="14"/><rect x="6" y="8" width="12" height="8" stroke-dasharray="2 2"/><circle cx="9.5" cy="12" r="1.8"/><circle cx="14.5" cy="12" r="1.8"/>',
   redo:     '<path d="M15 14l5-5-5-5"/><path d="M20 9h-9.5a5.5 5.5 0 0 0 0 11H14"/>',
   chamber:  '<rect x="4" y="4" width="16" height="16"/><rect x="8" y="8" width="8" height="8"/>',
   obstacle: '<rect x="4" y="5" width="16" height="14"/><path d="M4 12l7-7M4 18l13-13M9 19l11-11M15 19l5-5"/>',
@@ -2688,8 +2754,10 @@ const RADIAL = document.getElementById('radial');
    it lifts onto the hub, and the click the browser makes of that lift must not close it. */
 let ringArmed = true;
 RADIAL.addEventListener('keydown', () => { ringArmed = true; });
-function openRadial(sp, hub, items){
-  const r = STAGE.getBoundingClientRect();
+RADIAL.addEventListener('pointerdown', () => { ringArmed = true; });   // a fresh press on the ring itself, wherever it is hosted
+function openRadial(sp, hub, items, host = STAGE){
+  if (RADIAL.parentElement !== host) host.appendChild(RADIAL);      // the ring lives wherever it was asked for
+  const r = host.getBoundingClientRect();
   const R = items.length > 6 ? 82 : items.length > 4 ? 70 : 62, pad = R + 32;
   const cx = Math.max(pad, Math.min(r.width - pad, sp[0])), cy = Math.max(pad, Math.min(r.height - pad, sp[1]));
   RADIAL.style.left = cx + 'px'; RADIAL.style.top = cy + 'px';
@@ -2716,8 +2784,7 @@ function faceMenu(f){
     items.push({icon:'cancel', label:'Cancel', warn:true, run:() => { state.pending = null; setPendingStatus(); draw(); }});
   else
     items.push({icon:'connect', label:'Connect from', run:() => { state.pending = f; setPendingStatus(); draw(); }});
-  if (faceRuns(f.mh, f.face).length)
-    items.push({icon:'sides', label:'Side settings', run:() => { select('chamber', c.uid); openWin('chambers'); openFaceDialog(f.mh, f.face); }});
+  items.push({icon:'elevation', label:'Elevation', run:() => openElevation(f.mh, f.face)});
   items.push({icon:'edit', label:'Chamber', run:() => { select('chamber', c.uid); openWin('chambers'); }});
   return [`${c ? c.ref : '?'} · ${f.face}`, items];
 }
@@ -2782,7 +2849,7 @@ function spaceMenu(wp){
    ribbon lights the buttons that concern whatever is selected.
    ========================================================================== */
 
-const WINS = ['chambers', 'runs', 'obstacles', 'specs', 'drawing', 'file'];
+const WINS = ['chambers', 'runs', 'obstacles', 'specs', 'examples', 'drawing', 'file', 'elevation', 'view3d'];
 let winZ = 30;
 const winEl = k => document.getElementById('win-' + k);
 /** A window opens in the first free slot from the right edge, so several
@@ -2790,20 +2857,29 @@ const winEl = k => document.getElementById('win-' + k);
 function placeWin(el){
   const r = STAGE.getBoundingClientRect();
   const taken = [...document.querySelectorAll('.win')].filter(w => w !== el && !w.hidden).map(w => w.offsetLeft);
+  const w = (el.offsetWidth || 316) + 12;
   for (let i = 0; ; i++){
-    const x = r.width - 328 - i*324;
-    if (x < 8){ const n = WINS.indexOf(el.id.slice(4)); el.style.left = Math.max(8, r.width - 328 - n*36) + 'px'; el.style.top = (12 + n*36) + 'px'; return; }
+    const x = r.width - w - i*324;
+    if (x < 8){ const n = WINS.indexOf(el.id.slice(4)); el.style.left = Math.max(8, r.width - w - n*36) + 'px'; el.style.top = (12 + n*36) + 'px'; return; }
     if (!taken.some(t => Math.abs(t - x) < 40)){ el.style.left = x + 'px'; el.style.top = '12px'; return; }
   }
 }
 function openWin(k){
   const el = winEl(k);
   if (!el) return;
+  const was = el.hidden;
   if (el.hidden){ el.hidden = false; if (!el.dataset.moved) placeWin(el); }     // a dragged window keeps its place
   el.style.zIndex = ++winZ;
+  if (k === 'view3d' && was){ state.view3d = true; state.pending = null; setPendingStatus(); fit3d(); }
+  if (k === 'elevation' && was) renderElevation();
   updateRibbon();
 }
-function closeWin(k){ const el = winEl(k); if (el) el.hidden = true; updateRibbon(); }
+function closeWin(k){
+  const el = winEl(k); if (el) el.hidden = true;
+  if (k === 'view3d'){ state.view3d = false; if (RADIAL.parentElement === V3BODY) closeRadial(); }
+  if (k === 'elevation') state.elev = null;
+  updateRibbon();
+}
 function toggleWin(k){ const el = winEl(k); if (el){ if (el.hidden) openWin(k); else closeWin(k); } }
 function updateRibbon(){
   const rel = ({chamber:['chambers'], obstacle:['obstacles'], conn:['runs', 'specs']})[state.sel ? state.sel.kind : ''] || [];
@@ -2827,7 +2903,23 @@ document.querySelectorAll('.win').forEach(el => {
     head.addEventListener('pointermove', move);
     head.addEventListener('pointerup', up);
   });
+  if (el.classList.contains('resizable')){                 // a grip in the corner stretches the window
+    el.insertAdjacentHTML('beforeend', '<div class="wingrip" title="Drag to resize"></div>');
+    const grip = el.querySelector('.wingrip');
+    grip.addEventListener('pointerdown', e => {
+      e.preventDefault(); e.stopPropagation();
+      const sx = e.clientX, sy = e.clientY, w0 = el.offsetWidth, h0 = el.offsetHeight;
+      const move = ev => { el.dataset.moved = '1'; el.style.width = Math.max(320, w0 + ev.clientX - sx) + 'px'; el.style.height = Math.max(220, h0 + ev.clientY - sy) + 'px'; };
+      const up = () => { grip.removeEventListener('pointermove', move); grip.removeEventListener('pointerup', up); };
+      grip.setPointerCapture(e.pointerId);
+      grip.addEventListener('pointermove', move);
+      grip.addEventListener('pointerup', up);
+    });
+  }
 });
+document.getElementById('v3hint').textContent = TOUCH_UI
+  ? 'one finger orbits · two fingers pan and zoom · tap to select · hold for the menu'
+  : 'drag to orbit · shift or right drag to pan · scroll to zoom · click to select';
 document.getElementById('snap').oninput = e => { state.snap = Math.max(0, Number(e.target.value)||0); };
 document.getElementById('grid').onchange = e => { state.showGrid = e.target.checked; draw(); };
 document.getElementById('dims').onchange = e => { state.showDims = e.target.checked; draw(); };
@@ -3113,13 +3205,40 @@ function applyRevitImport(src){
       renderSel(); renderConnections(); renderObstacles(); fitView();
 }
 
-document.getElementById('btnExample').onclick = () => {
-  fetch('/examples/ams01-manholes.json', {cache:'no-cache'})
+/* ==========================================================================
+   EXAMPLES
+   Drawings to place from the Examples window: two Revit exports kept with the
+   site, and the demo drawing the tool opens with.
+   ========================================================================== */
+const EXAMPLES = [
+  {id:'ams01', name:'AMS01 site', count:'105 manholes', file:'/examples/ams01-manholes.json',
+   blurb:'A live data-centre model: every manhole of its MV Chamber family at its true position and rotation, with marks, types and Revit ids. Its family carries only depth planes, so wall and size are borrowed from the DCBuild family.'},
+  {id:'dcbuild', name:'DCBuild test model', count:'3 manholes', file:'/examples/dcbuild-manholes.json',
+   blurb:'The three manholes of the DCBuild test project, read from a family that names the full set of side and depth planes.'},
+  {id:'demo', name:'Demo drawing', count:'3 chambers · 1 obstacle · 3 runs', file:null,
+   blurb:'The drawing the tool opens with: two chambers joined by a pair of placed runs skirting an obstacle, and a third chamber turned 45°.'}
+];
+let DEMO_DOC = null;
+function renderExamples(){
+  document.getElementById('exampleList').innerHTML = EXAMPLES.map(x =>
+    `<div class="ex"><b>${esc(x.name)}<em>${esc(x.count)}</em></b><p>${esc(x.blurb)}</p><button class="mini" data-example="${x.id}">Place</button></div>`).join('');
+  document.querySelectorAll('[data-example]').forEach(b => b.onclick = () => placeExample(b.dataset.example));
+}
+function placeExample(id){
+  const x = EXAMPLES.find(e => e.id === id);
+  if (!x) return;
+  const status = t => { document.getElementById('rmode').textContent = t; };
+  if (!x.file){
+    if (state.chambers.length || state.obstacles.length){ if (!confirm('Replace the current drawing with the demo drawing?')) return; }
+    applySnapshot(DEMO_DOC); fitView(); status('example placed — the demo drawing'); return;
+  }
+  fetch(x.file, {cache:'no-cache'})
     .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-    .then(src => { applyRevitImport(src); const from = String(src.source || 'the example').split(/[\\/]/).pop();
-                   document.getElementById('rmode').textContent = `example placed — ${state.chambers.length} manholes from ${from}`; })
+    .then(src => { applyRevitImport(src); const from = String(src.source || x.name).split(/[\\/]/).pop();
+                   status(`example placed — ${state.chambers.length} manholes from ${from}`); })
     .catch(err => alert('The example could not be loaded: ' + err.message));
-};
+}
+renderExamples();
 
 document.getElementById('btnClear').onclick = () => {
   if (!state.chambers.length || confirm('Remove every chamber, obstacle and conduit run?')){
@@ -3176,7 +3295,6 @@ function applySnapshot(s){
   state.sel = state.sel && alive.has(state.sel.id) ? state.sel : (state.selSet[0] ? {kind:state.selSet[0].kind, id:state.selSet[0].id} : null);
   if (!state.specs.some(x => x.id === state.editSpec)) state.editSpec = state.specs[0] ? state.specs[0].id : null;
   state.pending = null; setPendingStatus(); closeRadial();
-  if (state.faceDialog) closeFaceDialog();
   syncDrawingInputs(); renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); renderObstacles(); draw();
   HIST.applying = false;
   updateHistoryButtons();
@@ -3201,7 +3319,6 @@ function deleteSelection(){
 document.addEventListener('keydown', e => {
   if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
   if (e.key === 'Escape' && !RADIAL.hidden){ closeRadial(); return; }
-  if (state.faceDialog){ if (e.key === 'Escape') closeFaceDialog(); return; }
   if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'z'){ e.preventDefault(); if (e.shiftKey) redo(); else undo(); return; }
   if ((e.ctrlKey || e.metaKey) && !e.altKey && e.key.toLowerCase() === 'y'){ e.preventDefault(); redo(); return; }
   if (e.key === 'Delete' || e.key === 'Backspace'){
@@ -3255,3 +3372,4 @@ state.connections = [
 ];
 
 renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); renderObstacles(); fitView();
+DEMO_DOC = docSnapshot();
