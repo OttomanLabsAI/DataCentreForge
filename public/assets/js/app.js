@@ -216,7 +216,7 @@ const SAMPLES = 10, SEQ_CAP = 300, BUDGET = 30000;
 /* Route cost, in millimetres of conduit: every bend is worth this much extra
    length, and a bend that trips a warning far more — so the router only
    reaches for a big or over-limit bend when it saves serious run length. */
-const BEND_COST = 1500, ANGLE_COST = 4000, RADIUS_COST = 3000;
+const BEND_COST = 1500, ANGLE_COST = 4000, RADIUS_COST = 3000, CUSTOM_COST = 6000;
 /* Straights are king: run length spent OFF the run's own axes (the directions
    it leaves and enters the manholes on) is charged this multiplier, so the
    router steps aside briefly and runs straight, instead of sailing off on a
@@ -454,7 +454,43 @@ function sequences(signed, delta, count){
   return seqOrder(out, SEQ_CAP);
 }
 
-function search(P, d0, V, delta, signed, spec, blockers, strict, skewTan = SKEW_TAN){
+/* ---------- custom bends ----------
+   Two faces at a non-standard angle to each other cannot be joined with
+   standard fittings alone, however many are used. Then, and only then, the run
+   takes ONE custom bend, made to suit: its angle is what is left of the
+   mismatch after the fewest standard bends that bring it within a right
+   angle (the smallest remainder wins). Every other bend in such a run,
+   including any detour around an obstacle, is a standard fitting, because the
+   custom bend's angle is fixed before routing and the standard bends must sum
+   to exactly their share. */
+const isCustomTurn = (t, angles) => !(angles || []).some(a => Math.abs(Math.abs(t) - a) < 1e-6);
+function customFor(delta, signed){
+  if (Math.abs(wrap(delta)) < 1e-6) return null;
+  for (let n = 1; n <= 4; n++) if (sequences(signed, delta, n).length) return null;   // standard fittings can make it
+  const sums = k => { let acc = new Set([0]); for (let i = 0; i < k; i++){ const nx = new Set(); for (const s of acc) for (const a of signed) nx.add(Math.round(wrap(s + a)*1e6)/1e6); acc = nx; } return [...acc]; };
+  for (let k = 0; k <= 3; k++){
+    let best = null;
+    for (const S of sums(k)){
+      const c = wrap(delta - S);
+      if (Math.abs(c) <= 90 + 1e-6 && Math.abs(c) >= PLAN_SKEW_DEG && (!best || Math.abs(c) < Math.abs(best.c) - 1e-9)) best = {c, S};
+    }
+    if (best) return best;
+  }
+  return null;
+}
+/** Turn sequences of n bends carrying the one custom bend: standard bends summing to its share, the custom anywhere among them. */
+function customSequences(signed, cu, n){
+  const out = [], seen = new Set();
+  for (const base of sequences(signed, cu.S, n-1))
+    for (let p = 0; p <= base.length; p++){
+      const seq = base.slice(); seq.splice(p, 0, cu.c);
+      const k = seq.map(v => v.toFixed(4)).join(','); if (seen.has(k)) continue; seen.add(k); out.push(seq);
+      if (out.length >= SEQ_CAP) return out;
+    }
+  return out;
+}
+
+function search(P, d0, V, delta, signed, spec, blockers, strict, skewTan = SKEW_TAN, cu = null){
   let sawSolution = false, sawBlocked = false, best = null;
   let budget = ROUTE_QUICK ? 6000 : BUDGET;
   const straightLine = Math.hypot(V[0], V[1]);
@@ -468,6 +504,7 @@ function search(P, d0, V, delta, signed, spec, blockers, strict, skewTan = SKEW_
       eff += f.segs[i] * (aligned ? 1 : OFF_AXIS_COST);
     }
     return eff + BEND_COST*f.turns.length
+      + CUSTOM_COST*f.turns.filter(t => isCustomTurn(t, spec.angles)).length
       + ANGLE_COST*f.warnings.filter(w => w.kind === 'angle').length
       + RADIUS_COST*f.warnings.filter(w => w.kind === 'radius').length;
   };
@@ -493,9 +530,13 @@ function search(P, d0, V, delta, signed, spec, blockers, strict, skewTan = SKEW_
      A count is skipped only when even its best imaginable route — dead
      straight, warning-free — could not beat what is already on the table. */
   for (let n = 0; n <= 4 && budget >= 0; n++){
-    if (n > 0 && !signed.length) break;
+    if (n > 0 && !signed.length && !cu) break;
     if (best && straightLine + BEND_COST*n >= best.score) break;
     for (const seq of sequences(signed, delta, n)){
+      evalCands(seq, false);
+      if (budget < 0) break;
+    }
+    if (cu && n > 0) for (const seq of customSequences(signed, cu, n)){
       evalCands(seq, false);
       if (budget < 0) break;
     }
@@ -527,7 +568,8 @@ function solveRoute(P, d0, Q, d2, spec, blockers, opt = {}){
   /* One search with relaxed minimums: geometry honouring the full bend radius
      carries no cut and wins on score; tight spots take a scored radius cut
      instead of being unreachable behind a strict-pass shortcut. */
-  const relaxed = search(P, d0, V, delta, signed, spec, blockers, false, skewTan);
+  const cu = plan ? customFor(delta, signed) : null;                  // the one custom bend, when standard fittings cannot make the angle
+  const relaxed = search(P, d0, V, delta, signed, spec, blockers, false, skewTan, cu);
   if (relaxed.ok) return relaxed;
   if (plan && Math.abs(delta) < 1e-9 && !relaxed.sawBlocked){       // square faces out of line: say what a dogleg would need
     const cr = Math.abs(d0[0]*V[1]-d0[1]*V[0]), along = d0[0]*V[0]+d0[1]*V[1], md = minDogleg(spec);
@@ -540,7 +582,7 @@ function solveRoute(P, d0, Q, d2, spec, blockers, opt = {}){
   }
   return {ok:false, msg: relaxed.sawBlocked ? 'blocked — no way past the keep-outs'
     : relaxed.sawSolution ? 'no room — shorten the minimum straights'
-    : angles.length ? 'no route to that face with these angles' : 'allow a bend angle'};
+    : angles.length ? (cu ? `no route to that face, even with one custom bend of ${fmt1(Math.abs(cu.c))}°` : 'no route to that face with these angles') : 'allow a bend angle'};
 }
 
 function faceRuns(mhUid, face){
@@ -1180,6 +1222,9 @@ function deriveMembers(G){
       if (sp.warnAngle && Math.abs(t) > sp.warnAngle + 1e-6)
         r.warnings.push({kind:'angle', bend:i+1,
           text:`bend ${i+1} — ${fmt1(Math.abs(t))}° is over the ${fmt1(sp.warnAngle)}° limit`});
+      if (isCustomTurn(t, sp.angles))
+        r.warnings.push({kind:'custom', bend:i+1,
+          text:`bend ${i+1} — ${fmt1(Math.abs(t))}° is a custom fitting, made to suit the angle between these faces`});
     });
     /* the section: the bank profile dropped to this member's level */
     let pf = G.route.profile ? memberProfile(G.route.profile, (cn.level|0)*G.zPitch - G.zUp) : null;
@@ -2511,7 +2556,7 @@ function renderRunProps(box, cn){
          ${entryLine(cn)}${arrayLine(cn)}
          <b>Angles</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}<br>` +
          (rt && rt.ok
-           ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°').join(' · ') : 'none — straight run'}<br>
+           ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°' + (isCustomTurn(t, sp.angles) ? ' custom' : '')).join(' · ') : 'none — straight run'}<br>
               <b>Straight duct</b> ${rt.clear.map(v => fmt(Math.max(0,v))).join(' · ')} mm<br>
               <b>Centreline</b> ${metres(rt.length)} in plan${rt.profile && rt.profile.turns.length ? ` · ${metres(rt.length3d)} laid` : ''}` +
              sectionLines(rt)

@@ -177,6 +177,15 @@ dogleg needs, and what is missing. Faces within half a degree of square count
 as square, and a duct between them may skew by that much and no more; in
 section a duct may still fall gently between two levels.
 
+Two manholes set at an angle to each other that standard fittings cannot make
+are joined with one custom bend, and only then: its angle is whatever is left
+of the mismatch after the fewest standard bends that bring it within a right
+angle, so a chamber turned 32.9° gets a single 32.9° fitting and one turned
+175° gets standard bends for 90° of it and an 85° custom for the rest.
+Everything else in such a run, including any detour around an obstacle, is
+still standard, and every custom fitting is flagged on the run and named in
+its bend list.
+
 ## Obstacles in three dimensions
 
 Every obstacle has a top, a bottom, and a default way for runs to pass it —

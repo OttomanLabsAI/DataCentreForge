@@ -1,0 +1,5 @@
+also, add a custom bend only when the angles of the two connected manholes are at a custom angle to each other
+
+minimise their use though
+
+if there is a a custom bend used and there is also a need for obstruction routing, the obstruction routing needs to use standard sizes only

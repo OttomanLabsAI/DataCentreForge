@@ -1,3 +1,0 @@
-holding shift and drag an element should keep it in that line
-
-also, add a lock manholes switch for people who only want it moved from the revit file
