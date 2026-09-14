@@ -1,0 +1,5 @@
+good, but dont call it AMS01 site, call it LV site
+
+and allow for adding sub models of that one
+
+this example is the LV, I will provide the MV later

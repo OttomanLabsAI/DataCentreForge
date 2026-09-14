@@ -114,6 +114,11 @@
   .exlist .ex b{display:block; font-size:12px; margin-bottom:3px}
   .exlist .ex b em{font-style:normal; font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-left:6px}
   .exlist .ex p{margin:0 0 8px; font-size:11px; color:var(--ink-dim); line-height:1.5}
+  .exlist .sub{margin:0 0 8px; padding:7px 9px 4px; border:1px dashed var(--line); border-radius:3px}
+  .exlist .subrow{display:flex; align-items:center; gap:8px; margin-bottom:4px}
+  .exlist .subrow .nm{flex:1; font-size:12px}
+  .exlist .subrow .nm em{font-style:normal; font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-left:6px}
+  .exlist .sub p{margin:0 0 4px}
   .winlist{max-height:168px; overflow-y:auto; margin-bottom:10px}
   .winlist:empty{display:none}
   .row{display:flex; align-items:center; gap:8px; margin-bottom:8px}

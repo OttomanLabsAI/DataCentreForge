@@ -83,11 +83,11 @@ Drag on empty space to select: left to right is a window (only what lies
 wholly inside), right to left a crossing (anything the box touches), and the
 selected set moves, nudges and deletes together. Pan with a middle- or
 right-button drag; zoom with the wheel, a touchpad pinch or two fingers.
-The Example button places the manholes of the export kept in `public/examples/`:
-the 105 manholes of a live data-centre model at their true positions and
-rotations, carrying their Revit marks, types and element ids. That model's
-family exposes only its depth planes, so the example borrows the DCBuild
-family's side planes for wall and size.
+The Examples window places the exports kept in `public/examples/`: the LV
+model of 105 manholes at their true positions and rotations, carrying their
+Revit marks, types and element ids, and the DCBuild test model. The LV model's
+family exposes only its depth planes, so it borrows the DCBuild family's side
+planes for wall and size.
 
 On an iPad, or any touch screen, the same tool works by hand. A tap selects; a
 one-finger drag on empty space draws the selection box (left to right a window,
@@ -128,10 +128,13 @@ never moves the drawing about.
 Every panel is a window opened from the ribbon and dragged by its title bar,
 with as many open as you like. Three of them deserve a word:
 
-- **Examples** (in the Manage group) lists the drawings kept with the site —
-  the AMS01 site of 105 manholes, the DCBuild test model and the demo drawing —
-  each with a Place button. Placing replaces the drawing after asking, and Undo
-  brings the previous drawing back.
+- **Examples** (in the Manage group) lists the drawings kept with the site:
+  the LV site, the DCBuild test model and the demo drawing. The LV site is
+  built from sub-models, one export per service; today that is the LV model of
+  105 manholes, and the MV model joins it as one more entry when it arrives.
+  Place the whole site, or Add a sub-model to whatever is on the drawing (a
+  sub-model already there is refreshed in place). Placing replaces the drawing
+  after asking, and Undo brings the previous drawing back.
 - **Elevation** shows one face at a time: its runs with their level controls
   and the to-scale section through the face, with the boundary box its conduits
   must keep to (the family's conduit window, or the face's clear width) dotted.

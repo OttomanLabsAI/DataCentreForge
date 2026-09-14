@@ -3157,7 +3157,7 @@ function uniqueRef(ref){
   if (!taken(ref)) return ref;
   for (let i = 2; ; i++) if (!taken(`${ref} (${i})`)) return `${ref} (${i})`;
 }
-function applyRevitImport(src){
+function applyRevitImport(src, opt = {}){
       const {chambers: made, obstacles: obs} = importRevit(src);
       if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) found');
       const n = (k, w) => `${k} ${w}${k === 1 ? '' : 's'}`;
@@ -3188,7 +3188,7 @@ function applyRevitImport(src){
         document.getElementById('rmode').textContent =
           `Revit update — ${hits} refreshed · ${added} added · ${kept} not in this export, kept`;
       } else {
-        const replace = (!state.chambers.length && !state.obstacles.length) ||
+        const replace = opt.add ? false : (!state.chambers.length && !state.obstacles.length) ||
           confirm(`Import ${n(made.length, 'manhole')} and ${n(obs.length, 'obstacle')} from Revit — replace the current drawing? (Cancel adds them alongside.)`);
         if (replace){ state.chambers = []; state.obstacles = []; state.connections = []; }
         for (const c of made){
@@ -3210,33 +3210,65 @@ function applyRevitImport(src){
    Drawings to place from the Examples window: two Revit exports kept with the
    site, and the demo drawing the tool opens with.
    ========================================================================== */
+/* A site is a list of sub-models, one export per service, sharing one set of
+   project coordinates. The whole site can be placed at once, or a sub-model
+   added to whatever is on the drawing; a sub-model already placed is refreshed
+   in place. New sub-models (the MV model, when it comes) are one more entry. */
 const EXAMPLES = [
-  {id:'ams01', name:'AMS01 site', count:'105 manholes', file:'/examples/ams01-manholes.json',
-   blurb:'A live data-centre model: every manhole of its MV Chamber family at its true position and rotation, with marks, types and Revit ids. Its family carries only depth planes, so wall and size are borrowed from the DCBuild family.'},
+  {id:'site', name:'LV site',
+   blurb:'A live data-centre site, one sub-model per service. Place the whole site, or add a sub-model to the drawing as it stands.',
+   models:[
+     {id:'lv', name:'LV', count:'105 manholes', file:'/examples/lv-manholes.json',
+      blurb:'The LV model: every manhole of its chamber family at its true position and rotation, with marks, types and Revit ids. The family carries only depth planes, so wall and size are borrowed from the DCBuild family.'}
+   ]},
   {id:'dcbuild', name:'DCBuild test model', count:'3 manholes', file:'/examples/dcbuild-manholes.json',
    blurb:'The three manholes of the DCBuild test project, read from a family that names the full set of side and depth planes.'},
   {id:'demo', name:'Demo drawing', count:'3 chambers · 1 obstacle · 3 runs', file:null,
    blurb:'The drawing the tool opens with: two chambers joined by a pair of placed runs skirting an obstacle, and a third chamber turned 45°.'}
 ];
 let DEMO_DOC = null;
+const exStatus = t => { document.getElementById('rmode').textContent = t; };
+const fetchJSON = url => fetch(url, {cache:'no-cache'}).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
 function renderExamples(){
-  document.getElementById('exampleList').innerHTML = EXAMPLES.map(x =>
-    `<div class="ex"><b>${esc(x.name)}<em>${esc(x.count)}</em></b><p>${esc(x.blurb)}</p><button class="mini" data-example="${x.id}">Place</button></div>`).join('');
+  document.getElementById('exampleList').innerHTML = EXAMPLES.map(x => x.models
+    ? `<div class="ex"><b>${esc(x.name)}<em>${x.models.length} sub-model${x.models.length === 1 ? '' : 's'}</em></b><p>${esc(x.blurb)}</p>
+         ${x.models.map(m => `<div class="sub"><div class="subrow"><span class="nm">${esc(m.name)}<em>${esc(m.count)}</em></span>
+           <button class="mini" data-model="${x.id}:${m.id}" title="Add ${esc(m.name)} to the drawing, or refresh it if it is already there">Add</button></div>
+           <p>${esc(m.blurb)}</p></div>`).join('')}
+         <button class="mini" data-example="${x.id}">Place site</button></div>`
+    : `<div class="ex"><b>${esc(x.name)}<em>${esc(x.count)}</em></b><p>${esc(x.blurb)}</p><button class="mini" data-example="${x.id}">Place</button></div>`).join('');
   document.querySelectorAll('[data-example]').forEach(b => b.onclick = () => placeExample(b.dataset.example));
+  document.querySelectorAll('[data-model]').forEach(b => b.onclick = () => { const [x, m] = b.dataset.model.split(':'); addModel(x, m); });
 }
+/** Place an example: the demo from its snapshot, a single export as an import, a site as every sub-model in turn. */
 function placeExample(id){
   const x = EXAMPLES.find(e => e.id === id);
   if (!x) return;
-  const status = t => { document.getElementById('rmode').textContent = t; };
+  if (x.models){
+    Promise.all(x.models.map(m => fetchJSON(m.file)))            // everything fetched first, so a failure places nothing
+      .then(srcs => { srcs.forEach((src, i) => applyRevitImport(src, i ? {add:true} : {}));
+                      exStatus(`example placed — ${x.name} · ${state.chambers.length} manholes`); })
+      .catch(err => alert('The example could not be loaded: ' + err.message));
+    return;
+  }
   if (!x.file){
     if (state.chambers.length || state.obstacles.length){ if (!confirm('Replace the current drawing with the demo drawing?')) return; }
-    applySnapshot(DEMO_DOC); fitView(); status('example placed — the demo drawing'); return;
+    applySnapshot(DEMO_DOC); fitView(); exStatus('example placed — the demo drawing'); return;
   }
-  fetch(x.file, {cache:'no-cache'})
-    .then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  fetchJSON(x.file)
     .then(src => { applyRevitImport(src); const from = String(src.source || x.name).split(/[\\/]/).pop();
-                   status(`example placed — ${state.chambers.length} manholes from ${from}`); })
+                   exStatus(`example placed — ${state.chambers.length} manholes from ${from}`); })
     .catch(err => alert('The example could not be loaded: ' + err.message));
+}
+/** Add one sub-model to the drawing as it stands; if it is already there, it is refreshed in place. */
+function addModel(exId, mId){
+  const x = EXAMPLES.find(e => e.id === exId), m = x && x.models && x.models.find(k => k.id === mId);
+  if (!m) return;
+  fetchJSON(m.file)
+    .then(src => { const before = state.chambers.length; applyRevitImport(src, {add:true}); const n = state.chambers.length - before;
+                   exStatus(n > 0 ? `${m.name} added — ${n} manholes · ${state.chambers.length} on the drawing`
+                                  : `${m.name} refreshed in place · ${state.chambers.length} manholes on the drawing`); })
+    .catch(err => alert('The sub-model could not be loaded: ' + err.message));
 }
 renderExamples();
 
