@@ -160,6 +160,16 @@ edge clearance. Bends carry only what the extents cannot absorb. Runs sharing
 a face keep their order and pitch, each as close to its own alignment as the
 others allow.
 
+A run never tilts. Where two square faces are out of line by more than
+sliding can absorb, the run bends, and where the leftover offset is too small
+for a dogleg of the gentlest allowed bend, the entries slide the other way,
+apart along their faces, until it is enough for one. When their faces cannot
+give that much, or the run is too short to carry a dogleg, the run says so
+rather than leaning: how far out of line the faces are, what the gentlest
+dogleg needs, and what is missing. Faces within half a degree of square count
+as square, and a duct between them may skew by that much and no more; in
+section a duct may still fall gently between two levels.
+
 ## Obstacles in three dimensions
 
 Every obstacle has a top, a bottom, and a default way for runs to pass it —

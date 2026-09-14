@@ -1,5 +1,0 @@
-i want to hold shift and middle mouse button to rotate around in 3d
-
-if i select an object, it should use its centre point as the pivot point
-
-also, for the elevation section, i want to see the whole face, not just cut off at the boundary

@@ -221,10 +221,12 @@ const BEND_COST = 1500, ANGLE_COST = 4000, RADIUS_COST = 3000;
    router steps aside briefly and runs straight, instead of sailing off on a
    long diagonal or tenting over an obstacle. */
 const OFF_AXIS_COST = 1.6;
-/* A pair of faces this close to square-on (about 2°) takes one straight duct
-   between the entry points instead of a detour of fittings — so a chamber a
-   snap-step out of line still routes dead straight. */
-const SKEW_TAN = Math.tan(2*D2R);
+/* In section a duct may fall gently: two levels this close to level (about 2°)
+   take one straight duct. On the plan a run never tilts: a straight duct is
+   allowed only where the two faces themselves are within half a degree of
+   square, and only by that much — a lateral offset is answered with bends,
+   the entries sliding apart along their faces to make room for them. */
+const SKEW_TAN = Math.tan(2*D2R), PLAN_SKEW_DEG = 0.5;
 let ROUTE_QUICK = false;   // while dragging: smaller search, no fine pass
 
 function solve2(u, v, r){
@@ -367,7 +369,7 @@ function solveWith(ds, V, ia, ib, fixed){
     so an uncut end bend is reachable no matter how coarse the span sweep is.
     Any third free segment is held at its minimum but still gets the tangent
     options — previously it was pinned with no way to buy bend room. */
-function candidates(P, d0, V, turns, lo, fine, ext){
+function candidates(P, d0, V, turns, lo, fine, ext, skewTan = SKEW_TAN){
   const ds = dirsFrom(d0, turns), n = ds.length, res = [];
   const span = Math.max(3000, Math.hypot(V[0],V[1])*1.5);
   const NS = fine ? 30 : SAMPLES, GS = fine ? 9 : 4;
@@ -380,7 +382,7 @@ function candidates(P, d0, V, turns, lo, fine, ext){
 
   if (n === 1){
     const cr = d0[0]*V[1]-d0[1]*V[0], dot = d0[0]*V[0]+d0[1]*V[1];
-    if (dot >= lo[0] && Math.abs(cr) <= Math.max(1, dot*SKEW_TAN))
+    if (dot >= lo[0] && Math.abs(cr) <= Math.max(1, dot*skewTan))
       res.push({turns, pts:[P.slice(), [P[0]+V[0], P[1]+V[1]]], segs:[Math.hypot(V[0], V[1])]});
     return res;
   }
@@ -451,7 +453,7 @@ function sequences(signed, delta, count){
   return seqOrder(out, SEQ_CAP);
 }
 
-function search(P, d0, V, delta, signed, spec, blockers, strict){
+function search(P, d0, V, delta, signed, spec, blockers, strict, skewTan = SKEW_TAN){
   let sawSolution = false, sawBlocked = false, best = null;
   let budget = ROUTE_QUICK ? 6000 : BUDGET;
   const straightLine = Math.hypot(V[0], V[1]);
@@ -474,7 +476,7 @@ function search(P, d0, V, delta, signed, spec, blockers, strict){
       const T = t => spec.bendR * Math.tan(Math.abs(t)*D2R/2);
       ext[0] = T(seq[0]); ext[m-1] = T(seq[seq.length-1]);
     }
-    for (const sol of candidates(P, d0, V, seq, segMins(seq, spec, strict), fine, ext)){
+    for (const sol of candidates(P, d0, V, seq, segMins(seq, spec, strict), fine, ext, skewTan)){
       if (--budget < 0) return;
       sawSolution = true;
       const f = applyFillets(sol, spec);
@@ -504,17 +506,37 @@ function search(P, d0, V, delta, signed, spec, blockers, strict){
 /** First pass keeps every bend at its full radius clear of the minimum
     straights. Only if nothing fits does it try again with the radii cut
     back, and then it says which bends had to give. */
-function solveRoute(P, d0, Q, d2, spec, blockers){
+/** The smallest sideways step a dogleg of the gentlest allowed bend can make, and the run it needs. */
+function minDogleg(spec){
+  const th = Math.min(...(spec.angles || []).filter(a => a > 0 && a < 180));
+  if (!Number.isFinite(th)) return null;
+  const lo = segMins([th, -th], spec, false);
+  return {angle:th, step: lo[1]*Math.sin(th*D2R), run: lo[0] + lo[2] + lo[1]*Math.cos(th*D2R)};
+}
+function solveRoute(P, d0, Q, d2, spec, blockers, opt = {}){
   const V = [Q[0]-P[0], Q[1]-P[1]];
-  const delta = signedAngle(d0, d2);
+  const raw = signedAngle(d0, d2);
+  /* on the plan, faces within half a degree of square count as square, and the duct may skew by that much and no more */
+  const plan = !!opt.plan, skew = plan ? (Math.abs(raw) < PLAN_SKEW_DEG ? Math.abs(raw) : 0) : 0;
+  const delta = plan && skew ? 0 : raw;
+  const skewTan = plan ? Math.tan(skew*D2R) : SKEW_TAN;
   const angles = [...new Set(spec.angles)].filter(a => a > 0 && a < 180).sort((a,b) => a-b);
   const signed = []; for (const a of angles) signed.push(a, -a);
 
   /* One search with relaxed minimums: geometry honouring the full bend radius
      carries no cut and wins on score; tight spots take a scored radius cut
      instead of being unreachable behind a strict-pass shortcut. */
-  const relaxed = search(P, d0, V, delta, signed, spec, blockers, false);
+  const relaxed = search(P, d0, V, delta, signed, spec, blockers, false, skewTan);
   if (relaxed.ok) return relaxed;
+  if (plan && Math.abs(delta) < 1e-9 && !relaxed.sawBlocked){       // square faces out of line: say what a dogleg would need
+    const cr = Math.abs(d0[0]*V[1]-d0[1]*V[0]), along = d0[0]*V[0]+d0[1]*V[1], md = minDogleg(spec);
+    if (cr > 1 && md){
+      if (along < md.run)
+        return {ok:false, msg:`faces ${fmt(cr)} out of line — a ${fmt1(md.angle)}° dogleg needs ${fmt(md.run)} of run, only ${fmt(along)} here`};
+      if (cr < md.step - 1e-6)
+        return {ok:false, msg:`faces ${fmt(cr)} out of line — too little for a ${fmt1(md.angle)}° dogleg, which steps at least ${fmt(md.step)}, and the entries can slide no further apart`};
+    }
+  }
   return {ok:false, msg: relaxed.sawBlocked ? 'blocked — no way past the keep-outs'
     : relaxed.sawSolution ? 'no room — shorten the minimum straights'
     : angles.length ? 'no route to that face with these angles' : 'allow a bend angle'};
@@ -582,6 +604,27 @@ function alignPref(cn, end){
   if (Math.abs(rem) > 1e-6){
     if (Math.abs(u2 - u) < 1e-6) u2 = cl(u2 + rem/sA, hwA);
     else if (Math.abs(v2 - v) < 1e-6) v2 = cl(v2 - rem/sB, hwB);
+  }
+  /* What is left cannot be slid away, so the run must bend — and a dogleg of the
+     gentlest bend can only step so little. Rather than tilt, the ends slide the
+     other way, apart, until the offset is enough for that dogleg; if their faces
+     cannot give that much, or the run is too short for one, they stay as they
+     are and the router says why. */
+  const sp0 = specOf(cn) || {}, wide = runHalf(cn, facePitch(here.mh, here.face)) - (sp0.radius || 0);   // as buildBanks widens a bank for its lanes
+  const r = m - (u2*sA - v2*sB), md = minDogleg({...sp0, bendR:(sp0.bendR||0) + wide, stub:(sp0.stub||0) + wide, minLeg:(sp0.minLeg||0) + wide});
+  if (Math.abs(r) > 1e-6 && md && Math.abs(r) < md.step){
+    const along = (eB.centre[0]-eA.centre[0])*dir[0] + (eB.centre[1]-eA.centre[1])*dir[1];
+    if (along >= md.run){
+      const k = m - Math.sign(r)*md.step*1.05;
+      const uu = k/(2*sA), vv = -k/(2*sB);
+      let u3 = cl(uu, hwA), v3 = cl(vv, hwB);
+      const rem3 = k - (u3*sA - v3*sB);
+      if (Math.abs(rem3) > 1e-6){
+        if (Math.abs(u3 - uu) < 1e-6) u3 = cl(u3 + rem3/sA, hwA);
+        else if (Math.abs(v3 - vv) < 1e-6) v3 = cl(v3 - rem3/sB, hwB);
+      }
+      if (Math.abs(m - (u3*sA - v3*sB)) >= md.step - 1e-6) u2 = u3;
+    }
   }
   return u2;                 // relative to the extent's centre; the layout adds the window shift
 }
@@ -1064,7 +1107,7 @@ function memberProfile(pf, shift){
 /** Plan first, round every obstacle its runs go round; then the section,
     crossing the rest as chosen. */
 function solveBank(G, banks){
-  const rt = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks));
+  const rt = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks), {plan:true});
   if (!rt.ok){
     if (/blocked/.test(rt.msg || '') && state.obstacles.some(o => bankMethod(G, o) === 'around'))
       return {ok:false, msg:'blocked — no way round; choose over or under for an obstacle in the run\'s Obstacles list'};
