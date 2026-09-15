@@ -277,11 +277,15 @@ for key, members in sorted(banks.items(), key=lambda kv: (CH[kv[0][0][0]]['mark'
         align = 'left' if abs(short[0] - longest[0]) < 30 else 'right'
     level = max(0, round((ca['z0'] - ra[0][0]) / ZP))
     od = Counter(od_of(r['r']) for r in members).most_common(1)[0][0]
+    zs = [x[0] for x in ra]
+    row_pitch = round(sum(zs[i] - zs[i+1] for i in range(len(zs)-1)) / max(1, len(zs)-1)) if len(zs) > 1 else ZP
+    lats = [x[1] for x in ra if len(x[1]) > 1 and x[1][-1] - x[1][0] > 1]      # rows that really spread across the face
+    col_pitch = round(sum((r[-1]-r[0])/(len(r)-1) for r in lats) / len(lats)) if lats else ZP
     path, uniform = bank_path(members, a)
     out_runs.append({'from':{'id':a[0], 'face':a[1]}, 'to':{'id':b[0], 'face':b[1]}, 'perRow':per_row, 'align':align, 'level':level,
                      'encased':True, 'enc_mm':100,           # the banks are concrete-encased: the box is modelled in with the run
                      'path_mm':[[round(v, 1) for v in q] for q in path],
-                     'od_mm':od, 'pitch_mm':ZP if ca['kind'] != 'LVV' else 210, 'top_mm':[round(ra[0][0]), round(rb[0][0])],
+                     'od_mm':od, 'pitch_mm':col_pitch, 'row_pitch_mm':row_pitch, 'top_mm':[round(ra[0][0]), round(rb[0][0])],
                      'length_mm':round(sum(r['L'] for r in members)/len(members)), 'bends':Counter(r['bends'] for r in members).most_common(1)[0][0],
                      'ifc_ids':sorted(set(i for r in members for i in r['ids']))})
 open_note = Counter(od_of(r['r']) for r in open_runs)
@@ -294,6 +298,7 @@ doc = {
 json.dump(doc, open(OUT, 'w'), indent=1)
 print('chambers', Counter(c['kind'] for c in chambers), 'runs written', len(out_runs), 'open runs', len(open_runs), 'by OD', open_note)
 print('run patterns', Counter(tuple(r['perRow']) for r in out_runs).most_common(), 'ODs', Counter(r['od_mm'] for r in out_runs), 'levels', Counter(r['level'] for r in out_runs))
+print('pitches: across', Counter(r['pitch_mm'] for r in out_runs).most_common(6), 'down', Counter(r['row_pitch_mm'] for r in out_runs).most_common(6))
 print('path vertices', Counter(len(r['path_mm']) for r in out_runs).most_common(8), 'uniform member make-up', sum(1 for k, v in banks.items() if bank_path(v, k[0])[1]), 'of', len(banks))
 def plen(p): return sum(math.dist(p[i], p[i-1]) for i in range(1, len(p)))
 print('path length vs members', [(round(plen(r['path_mm'])/1000, 1), round(r['length_mm']/1000, 1)) for r in out_runs[:8]])

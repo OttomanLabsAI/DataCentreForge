@@ -627,10 +627,9 @@ const isEncased = cn => !!(cn && cn.encased) && encOf(specOf(cn)) > 0;
 function runEncasement(cn){
   const sp = specOf(cn), off = encOf(sp);
   if (!off || !cn.encased) return null;
-  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
   const S = Math.max(ea ? ea.S || 0 : 0, eb ? eb.S || 0 : 0);
-  const zPitch = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);
+  const zPitch = runZSpace(cn);
   const W = (runCols(cn)-1)*S + 2*sp.radius + 2*off, H = (runRows(cn)-1)*zPitch + 2*sp.radius + 2*off;
   return {off, W, H, halfW: W/2, zTop: sp.radius + off, zBot: -(runRows(cn)-1)*zPitch - sp.radius - off};
 }
@@ -638,6 +637,14 @@ const runRows = r => runRowsOf(r).length;
 const runCount = r => runRowsOf(r).reduce((a, b) => a + b, 0);
 const arrayText = r => { const rows = runRowsOf(r); return rows.length === 1 ? `${rows[0]} wide` : rows.join(' + '); };
 const ALIGNS = ['auto', 'left', 'right'];
+/** The centres a run is laid on: the spec's spacing across, the manholes' Z
+    spacing down — the same values the Specs and Chambers windows hold, which
+    a run's own panel is another place to set. The face takes the largest
+    across-spacing of the runs it carries, so they share one grid. */
+const posNum = v => Number.isFinite(Number(v)) && Number(v) > 0 ? Number(v) : null;
+const runSpace  = cn => posNum(specOf(cn) && specOf(cn).spacing) || 300;
+const runZSpace = cn => { const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  return Math.max(1, A ? A.zSpace || 0 : 0, B ? B.zSpace || 0 : 0); };
 const runAlignPref = r => ALIGNS.includes(r.align) ? r.align : 'auto';
 
 const canonTangent = g => {
@@ -663,7 +670,7 @@ function faceExtent(c, face){
 }
 const facePitch = (mhUid, face) => {
   const c = byUid(mhUid), runs = faceRuns(mhUid, face);
-  return Math.max(c ? c.latSpace : 0, ...runs.map(r => specOf(r) ? (specOf(r).spacing || 0) : 0));
+  return Math.max(c ? c.latSpace : 0, ...runs.map(runSpace));
 };
 const runHalf = (cn, S) => (runCols(cn)-1)/2*S + (specOf(cn) ? specOf(cn).radius : 0);
 
@@ -895,7 +902,7 @@ function buildBanks(){
        carries the profile, its deepest row (zDn) sets how much sits beneath */
     const zPitch = Math.max(1, A.zSpace || 0, B.zSpace || 0);
     const zUp = Math.min(...members.map(cn => (cn.level|0) * zPitch));
-    const zDn = Math.max(...members.map(cn => ((cn.level|0) + runRows(cn) - 1) * zPitch));
+    const zDn = Math.max(...members.map(cn => (cn.level|0)*zPitch + (runRows(cn) - 1)*runZSpace(cn)));
     const g = {
       key, members, ends, A, B, start, finish,
       PS:[gS.mid[0]+tS[0]*meanS, gS.mid[1]+tS[1]*meanS],
@@ -1709,9 +1716,8 @@ function lane3d(cn, w, dz = 0){
 function run3d(cn){
   const rt = cn.route, out = [];
   if (!rt || !rt.ok) return out;
-  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   const S = Math.max(entryFor(cn,'a').S || 0, entryFor(cn,'b').S || 0);
-  const zPitch = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);
+  const zPitch = runZSpace(cn);
   const RC = rowColumns(cn), lines = new Map();
   const lineAt = off => {                       // one centreline per column, shared by the rows that use it
     if (!lines.has(off)) lines.set(off, lane3d(cn, off * S));
@@ -2479,7 +2485,7 @@ function renderSpecEdit(){
        <div class="derived"><b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
          <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
          <b>Clearance</b> ${fmt(sp.buffer)} each side — pairs keep the larger clearance<br>
-         <b>Array pitch</b> ${fmt(sp.spacing || 300)} — faces snap to the largest pitch present<br>
+         <b>Array pitch</b> ${fmt(sp.spacing || 300)} — faces snap to the largest pitch present, and a run's panel sets it too<br>
          <b>Encasement</b> ${encOf(sp) ? fmt(encOf(sp)) + ' beyond the outer diameter, round the whole array' : 'none'}<br>
          <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}</div>`);
 
@@ -2744,8 +2750,11 @@ function renderRunProps(box, cn){
      <select id="qSpec"${cn.fixed ? ' disabled title="Static: the spec is as the model has it"' : ''}>${state.specs.map(s =>
        `<option value="${s.id}" ${s.id === cn.specId ? 'selected':''}>${esc(s.name)} — Ø${fmt(s.radius*2)} R${fmt(s.bendR)}</option>`).join('')}</select>
      <div style="height:8px"></div>` +
-    cluster('runArr', 'Array & level', `${arrayText(cn)} · L${cn.level|0}`,
+    cluster('runArr', 'Array & level', `${arrayText(cn)} · ${fmt(runSpace(cn))}×${fmt(runZSpace(cn))} · L${cn.level|0}`,
       numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
+      numRow('qSpX','Spacing across', runSpace(cn), 25, 'mm') +
+      numRow('qSpZ','Spacing down', runZSpace(cn), 25, 'mm') +
+      `<div class="derived" style="margin-top:0"><span>The centres this run is laid on, set here or where they live: across on the spec (${esc(sp.name)}, in the Specs window), down on the manholes (their Z spacing, in the Chambers window). A face is laid on the largest across-spacing of the runs it carries, so they share one grid.</span></div>` +
       `<div class="row" style="margin-bottom:4px"><label>Array — the section of the run, seen along it from ${esc(A ? A.ref : '?')} to ${esc(B ? B.ref : '?')}</label></div>
        <div class="arrayed" id="qArray">${arrayEditorSVG(cn, 262, {readOnly: !!cn.fixed})}</div>
        <div class="derived" style="border-top:none;margin-top:0;padding-top:0"><b>${arrayText(cn)}</b> · ${runCount(cn)} conduit${runCount(cn) === 1 ? '' : 's'} · ${runCols(cn)} wide × ${runRows(cn)} high${new Set(runRowsOf(cn)).size > 1 ? ` · shorter rows on the ${runAlign(cn)}` : ''}<br>
@@ -2794,6 +2803,20 @@ function renderRunProps(box, cn){
     (cn.placed ? '' : `<div class="note">Not placed yet — the dashed guide shows the face pair.</div>`) +
     `<div class="btnrow"><button id="qEditSpec" class="ghost mini">Edit “${esc(sp.name)}” on the left</button></div>`;
 
+  for (const [id, set] of [['qSpX', v => { sp.spacing = v; }],
+                           ['qSpZ', v => { for (const u of [cn.a.mh, cn.b.mh]){ const c = byUid(u); if (c) c.zSpace = v; } }]]){
+    const el = document.getElementById(id);
+    if (cn.fixed){ el.disabled = true; el.title = 'Static: the spacing is as the model has it'; continue; }
+    el.addEventListener('input', () => {
+      const v = Number(el.value);
+      if (!Number.isFinite(v) || v <= 0) return;
+      set(Math.round(v));                       // the spec's own spacing, or the two manholes' — the same values their windows hold
+      bankCache.clear(); recomputeRoutes();
+      const head = box.querySelector('[data-clus="runArr"] em');      // the summary keeps up without rebuilding the fields under the cursor
+      if (head) head.textContent = `${arrayText(cn)} · ${fmt(runSpace(cn))}×${fmt(runZSpace(cn))} · L${cn.level|0}`;
+      renderSpecs(); draw();
+    });
+  }
   const lvlEl = document.getElementById('qLvl');
   if (cn.fixed){ lvlEl.disabled = true; lvlEl.title = 'Static: the depth is as the model has it'; }
   lvlEl.addEventListener('input', () => {
@@ -2869,7 +2892,7 @@ function faceSectionSVG(L, wpx = 232, opt = {}){
     if (!it.sp) continue;
     const on = !!opt.sel && inSel('conn', it.cn.uid);
     const A = byUid(it.cn.a.mh), B = byUid(it.cn.b.mh);
-    const zr = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);       // the run's row pitch, as the 3D view lays it
+    const zr = runZSpace(it.cn);                                      // the run's row pitch, as the 3D view lays it
     const rp = Math.max(2.2, it.sp.radius*scale);
     const end = (it.cn.a.mh === c.uid && it.cn.a.face === L.g.face) ? 'a' : 'b', sgn = leftSign(it.cn, end, L.g, L.t), RC = rowColumns(it.cn);
     const E = showEnc(it.cn) ? runEncasement(it.cn) : null;
@@ -3028,7 +3051,7 @@ function arrayLine(cn){
   if (rows.length === 1 && rows[0] === 1) return '';
   const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   const packed = new Set(rows).size > 1 ? `, short rows to the ${runAlign(cn)} along ${esc(A ? A.ref : '?')} → ${esc(B ? B.ref : '?')}` : '';
-  return `<b>Array</b> ${rows.join(' + ')} — ${runCount(cn)} conduits at ${fmt(S)} centres${packed}<br>`;
+  return `<b>Array</b> ${rows.join(' + ')} — ${runCount(cn)} conduits at ${fmt(S)} across${rows.length > 1 ? ` × ${fmt(runZSpace(cn))} down` : ''}${packed}<br>`;
 }
 function entryLine(cn){
   const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
@@ -3488,6 +3511,7 @@ document.getElementById('btnExport').onclick = () => {
         static: cn.fixed ? true : undefined, path: cn.fixed && Array.isArray(cn.fixedPath) ? cn.fixedPath.map(q => q.map(v => Math.round(v*10)/10)) : undefined,
         modelPath: Array.isArray(cn.modelPath) ? cn.modelPath.map(q => q.map(v => Math.round(v*10)/10)) : undefined,
         layer: cn.layer || DEFAULT_LAYER, encased: cn.encased ? true : undefined,
+        spacing: {across: Math.round(runSpace(cn)), down: Math.round(runZSpace(cn))},
         encasement: (() => { const E = runEncasement(cn); return E ? {offset: E.off, width: Math.round(E.W), height: Math.round(E.H)} : undefined; })(),
         placed: cn.placed,
         route: rt && rt.ok ? {

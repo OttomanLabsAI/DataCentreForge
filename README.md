@@ -75,8 +75,9 @@ joins two chambers as one run with the number of conduits in each row and
 its modelled centreline, averaged across the bank's conduits. Runs that leave
 the model with an open end are counted but not written. An export may give an
 instance its own `lid_mm`, `base_mm` and `z0_mm`, a family its `spacing_mm`,
-and a `runs` list with a `path_mm` per run; the tool honours all of them, and
-a run placed static keeps that path as its route.
+and a `runs` list with a `path_mm`, `pitch_mm` and `row_pitch_mm` per run; the
+tool honours all of them, and a run placed static keeps that path as its
+route.
 
 Every manhole and obstacle keeps its Revit element id, unique id and source
 document. Importing a later export of the same model refreshes the matching
@@ -194,6 +195,13 @@ conduit window where the family has one, otherwise the face width less the
 edge clearance. Bends carry only what the extents cannot absorb. Runs sharing
 a face keep their order and pitch, each as close to its own alignment as the
 others allow.
+
+A run's Array & level panel also sets the centres it is laid on: Spacing
+across and Spacing down. They are not a third set of numbers — across is the
+spec's array spacing, down is the Z spacing of the run's two manholes, the
+same values the Specs and Chambers windows hold, so either place can be used
+and both show the change. A face is laid on the largest across-spacing of the
+runs it carries, so runs sharing a face stay on one grid.
 
 A run's array is set up on a picture of its section: one circle per conduit,
 rows stacked as they sit, seen along the run from its first chamber so left is

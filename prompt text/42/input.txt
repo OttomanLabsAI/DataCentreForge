@@ -1,5 +1,0 @@
-in manage, there should be a model button where you can turn off the models and elements. also select the model. also, the encasement has to me modelled in
-
-every static model's elements should be obstacles for the dynamic models
-
-in model, i shoudl be able to turn off the model or subelements only like manholes, encasment and conduits

@@ -2321,7 +2321,8 @@
     ]
    ],
    "od_mm": 51,
-   "pitch_mm": 250,
+   "pitch_mm": 200,
+   "row_pitch_mm": 250,
    "top_mm": [
     -840,
     -840
@@ -2373,6 +2374,7 @@
    ],
    "od_mm": 51,
    "pitch_mm": 250,
+   "row_pitch_mm": 250,
    "top_mm": [
     -60,
     -900
@@ -2428,6 +2430,7 @@
    ],
    "od_mm": 51,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -900,
     0
@@ -2473,6 +2476,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -1560,
     -1560
@@ -2517,6 +2521,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1560,
     -1560
@@ -2560,6 +2565,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -1320,
     -1320
@@ -2604,6 +2610,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1140,
     -1140
@@ -2687,6 +2694,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -900,
     -900
@@ -2783,6 +2791,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1140,
     -1140
@@ -2843,6 +2852,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -2926,6 +2936,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -900,
     -900
@@ -3040,6 +3051,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1320,
     -900
@@ -3108,6 +3120,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -3152,6 +3165,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -840,
     -840
@@ -3216,6 +3230,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -1140
@@ -3310,6 +3325,7 @@
    ],
    "od_mm": 51,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -1320,
     -840
@@ -3426,6 +3442,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -3518,6 +3535,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1140,
     -1140
@@ -3582,6 +3600,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1320,
     -1140
@@ -3652,6 +3671,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -840,
     -840
@@ -3723,6 +3743,7 @@
    ],
    "od_mm": 51,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -900,
     480
@@ -3773,6 +3794,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1140,
     -1140
@@ -3827,6 +3849,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -3879,6 +3902,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -3923,6 +3947,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -3976,6 +4001,7 @@
    ],
    "od_mm": 51,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -900,
     480
@@ -4062,6 +4088,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -4137,6 +4164,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -1740,
     -1740
@@ -4191,6 +4219,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1140,
     -1140
@@ -4283,6 +4312,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -4399,6 +4429,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -4514,6 +4545,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -1140,
     -1980
@@ -4590,6 +4622,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -4642,7 +4675,8 @@
     ]
    ],
    "od_mm": 51,
-   "pitch_mm": 210,
+   "pitch_mm": 196,
+   "row_pitch_mm": 250,
    "top_mm": [
     -900,
     480
@@ -4708,6 +4742,7 @@
    ],
    "od_mm": 51,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -900,
     480
@@ -4758,6 +4793,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1140,
     -1140
@@ -4822,6 +4858,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -1140
@@ -4902,6 +4939,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -4962,6 +5000,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5006,6 +5045,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5070,6 +5110,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5130,6 +5171,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5174,6 +5216,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1140,
     -1140
@@ -5218,6 +5261,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5262,6 +5306,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5325,6 +5370,7 @@
    ],
    "od_mm": 51,
    "pitch_mm": 210,
+   "row_pitch_mm": 250,
    "top_mm": [
     -900,
     0
@@ -5395,6 +5441,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1980,
     -900
@@ -5459,7 +5506,8 @@
     ]
    ],
    "od_mm": 114,
-   "pitch_mm": 210,
+   "pitch_mm": 209,
+   "row_pitch_mm": 180,
    "top_mm": [
     -1140,
     -1140
@@ -5512,6 +5560,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5556,6 +5605,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5600,6 +5650,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5644,6 +5695,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5693,6 +5745,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -5765,6 +5818,7 @@
    ],
    "od_mm": 114,
    "pitch_mm": 210,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1620,
     -900
@@ -5856,6 +5910,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1680,
     -1980
@@ -6065,6 +6120,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 270,
    "top_mm": [
     -1380,
     -1380
@@ -6130,6 +6186,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 270,
    "top_mm": [
     -1020,
     -1020
@@ -6215,6 +6272,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1740,
     -1740
@@ -6376,6 +6434,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 270,
    "top_mm": [
     -1020,
     -1020
@@ -6441,6 +6500,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1080,
     -1080
@@ -6506,6 +6566,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1260,
     -1260
@@ -6571,6 +6632,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -6656,6 +6718,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1140,
     -1380
@@ -6817,6 +6880,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1140,
     -1140
@@ -6882,6 +6946,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -2460,
     -2460
@@ -6967,6 +7032,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -7163,6 +7229,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -7440,6 +7507,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 210,
    "top_mm": [
     -960,
     -2400
@@ -7621,6 +7689,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1080,
     -1080
@@ -7792,6 +7861,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -7922,7 +7992,8 @@
     ]
    ],
    "od_mm": 128,
-   "pitch_mm": 250,
+   "pitch_mm": 1750,
+   "row_pitch_mm": 250,
    "top_mm": [
     -2220,
     -1560
@@ -7979,6 +8050,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -1200,
     -1200
@@ -8092,6 +8164,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 270,
    "top_mm": [
     -1440,
     -1440
@@ -8157,6 +8230,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -8227,6 +8301,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -8380,6 +8455,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
@@ -8637,6 +8713,7 @@
    ],
    "od_mm": 128,
    "pitch_mm": 250,
+   "row_pitch_mm": 240,
    "top_mm": [
     -900,
     -900
