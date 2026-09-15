@@ -1,5 +1,0 @@
-Version 38: a Wipe button in the Examples window.
-
-The Examples window now opens with a Wipe the drawing button above the list. One press asks first, then removes every chamber, obstacle and conduit run, and the status line says the drawing is wiped and ready for an example, a sub-model or fresh drawing; on an empty drawing it asks nothing and says so. Undo brings the wiped drawing back, and Redo wipes it again. The File window's Clear drawing does the same thing through the same path, and the note under the examples now says that Wipe clears the drawing first for anyone who would rather place a model on nothing.
-
-Verified in a driven browser: the button sitting above the example list; a press asking once and leaving no chambers, obstacles or runs, with the status line saying so; Undo restoring the three chambers, the obstacle and the three runs and Redo wiping them again; a press on an empty drawing asking nothing; the LV model then placing its 105 manholes without a question; a second wipe clearing them after asking; and the File window's Clear drawing still working, plus the batteries from versions 14 to 37, all passing with no console errors.

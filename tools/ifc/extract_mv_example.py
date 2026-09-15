@@ -161,6 +161,54 @@ for g in groups.values():
     runs.append({'parts':g, 'ends':ends, 'L':sum(ch['L'] for ch in g), 'r':max((ch['r'] or 0) for ch in g),
                  'bends':sum(1 for ch in g for e in ch['els'] if ifc.t(e) == 'IFCFLOWFITTING'),
                  'ids':[int(ifc.a(e)[7]) for ch in g for e in ch['els'] if ifc.a(e)[7]]})
+# the ordered 3D path of a run, from one of its ends to the other, through every joined chain
+JOIN = {}
+for ch, w, ch2, w2 in pairs: JOIN[(id(ch), w)] = (ch2, w2); JOIN[(id(ch2), w2)] = (ch, w)
+def run_path(r, first_end):
+    ch, w, m = first_end; out = []
+    while True:
+        pts = ch['pts'] if w == 'start' else ch['pts'][::-1]
+        if out and math.dist(out[-1], pts[0]) < 1: pts = pts[1:]
+        out += pts
+        other = 'end' if w == 'start' else 'start'
+        nxt = JOIN.get((id(ch), other))
+        if not nxt: return out
+        ch, w = nxt
+def resample(path, n):
+    cum = [0.0]
+    for i in range(1, len(path)): cum.append(cum[-1] + math.dist(path[i], path[i-1]))
+    L = cum[-1] or 1.0; out = []
+    for k in range(n):
+        s = L*k/(n-1); i = 1
+        while i < len(cum)-1 and cum[i] < s: i += 1
+        t = (s - cum[i-1]) / max(1e-9, cum[i]-cum[i-1])
+        out.append([path[i-1][j] + (path[i][j]-path[i-1][j])*t for j in range(3)])
+    return out
+def simplify(path, tol=8.0):
+    # drop points that lie within tol of the line through their neighbours (chords of bends are kept)
+    if len(path) < 3: return path
+    keep = [path[0]]
+    for i in range(1, len(path)-1):
+        a, b, p = keep[-1], path[i+1], path[i]
+        ab = [b[j]-a[j] for j in range(3)]; ap = [p[j]-a[j] for j in range(3)]
+        L2 = sum(v*v for v in ab) or 1e-9; t = max(0.0, min(1.0, sum(ab[j]*ap[j] for j in range(3))/L2))
+        d = math.dist(p, [a[j] + ab[j]*t for j in range(3)])
+        if d > tol or math.dist(p, keep[-1]) > 20000: keep.append(p)
+    keep.append(path[-1]); return keep
+def bank_path(members, endkey):
+    paths = []
+    for r in members:
+        first = r['ends'][0] if r['ka'] == endkey else r['ends'][1]
+        paths.append(run_path(r, first))
+    counts = {len(p) for p in paths}
+    if len(counts) == 1 and len(members) > 1:
+        n = len(paths[0]); avg = [[sum(p[i][j] for p in paths)/len(paths) for j in range(3)] for i in range(n)]
+    else:
+        # members differ in make-up: take them all resampled by chainage fraction and average
+        n = max(len(p) for p in paths)*4 + 8
+        rs = [resample(p, n) for p in paths]
+        avg = [[sum(p[i][j] for p in rs)/len(rs) for j in range(3)] for i in range(n)]
+    return simplify(avg), len(counts) == 1
 both = [r for r in runs if all(e[2] for e in r['ends'])]
 open_runs = [r for r in runs if not all(e[2] for e in r['ends'])]
 print('runs', len(runs), 'both ends on a chamber', len(both), 'open', len(open_runs))
@@ -229,7 +277,9 @@ for key, members in sorted(banks.items(), key=lambda kv: (CH[kv[0][0][0]]['mark'
         align = 'left' if abs(short[0] - longest[0]) < 30 else 'right'
     level = max(0, round((ca['z0'] - ra[0][0]) / ZP))
     od = Counter(od_of(r['r']) for r in members).most_common(1)[0][0]
+    path, uniform = bank_path(members, a)
     out_runs.append({'from':{'id':a[0], 'face':a[1]}, 'to':{'id':b[0], 'face':b[1]}, 'perRow':per_row, 'align':align, 'level':level,
+                     'path_mm':[[round(v, 1) for v in q] for q in path],
                      'od_mm':od, 'pitch_mm':ZP if ca['kind'] != 'LVV' else 210, 'top_mm':[round(ra[0][0]), round(rb[0][0])],
                      'length_mm':round(sum(r['L'] for r in members)/len(members)), 'bends':Counter(r['bends'] for r in members).most_common(1)[0][0],
                      'ifc_ids':sorted(set(i for r in members for i in r['ids']))})
@@ -237,12 +287,15 @@ open_note = Counter(od_of(r['r']) for r in open_runs)
 doc = {
   'units':'mm', 'source':SRC, 'document':SRC,
   'note':('The fibre containment model of the same site, read from its IFC: %d manholes, %d vaults and %d pull boxes at their true positions, sizes and depths, '
-          'and the %d conduit banks that join two of them, each with the number of conduits in every row. %d conduit runs leave the model with one end in the open and are not listed.'
+          'and the %d conduit banks that join two of them, each with the number of conduits in every row and its centreline as modelled. %d conduit runs leave the model with one end in the open and are not listed.'
           % (sum(1 for c in chambers if c['kind']=='MV'), sum(1 for c in chambers if c['kind']=='LVV'), sum(1 for c in chambers if c['kind']=='DPB'), len(out_runs), len(open_runs))),
   'families':families, 'runs':out_runs}
 json.dump(doc, open(OUT, 'w'), indent=1)
 print('chambers', Counter(c['kind'] for c in chambers), 'runs written', len(out_runs), 'open runs', len(open_runs), 'by OD', open_note)
 print('run patterns', Counter(tuple(r['perRow']) for r in out_runs).most_common(), 'ODs', Counter(r['od_mm'] for r in out_runs), 'levels', Counter(r['level'] for r in out_runs))
+print('path vertices', Counter(len(r['path_mm']) for r in out_runs).most_common(8), 'uniform member make-up', sum(1 for k, v in banks.items() if bank_path(v, k[0])[1]), 'of', len(banks))
+def plen(p): return sum(math.dist(p[i], p[i-1]) for i in range(1, len(p)))
+print('path length vs members', [(round(plen(r['path_mm'])/1000, 1), round(r['length_mm']/1000, 1)) for r in out_runs[:8]])
 print('kinds joined', Counter((CH[r['from']['id']]['kind'], CH[r['to']['id']]['kind']) for r in out_runs))
 print('z0 vs lid (MV)', [(c['mark'], c['lid'], c['z0'], c['base']) for c in chambers if c['kind']=='MV'][:6])
 print('DPB', [(c['mark'], c['lid'], c['z0'], c['base']) for c in chambers if c['kind']=='DPB'])

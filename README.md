@@ -71,10 +71,12 @@ and the conduit segments and bends with their port connections — chains the
 conduits into runs, joins the runs that stop at a wall sleeve, matches each end
 to the chamber face it enters, and writes the example file: every chamber as a
 family instance with its own lid, base and top-row depth, and every bank that
-joins two chambers as one run with the number of conduits in each row. Runs
-that leave the model with an open end are counted but not written. An export
-may give an instance its own `lid_mm`, `base_mm` and `z0_mm`, a family its
-`spacing_mm`, and a `runs` list; the tool honours all three.
+joins two chambers as one run with the number of conduits in each row and
+its modelled centreline, averaged across the bank's conduits. Runs that leave
+the model with an open end are counted but not written. An export may give an
+instance its own `lid_mm`, `base_mm` and `z0_mm`, a family its `spacing_mm`,
+and a `runs` list with a `path_mm` per run; the tool honours all of them, and
+a run placed static keeps that path as its route.
 
 Every manhole and obstacle keeps its Revit element id, unique id and source
 document. Importing a later export of the same model refreshes the matching
@@ -156,10 +158,16 @@ with as many open as you like. Three of them deserve a word:
   and the MV model of 75 chambers from the fibre IFC, whose checkbox recreates
   its 77 conduit banks as runs, each with its rows as the model has them.
   Place the whole site, or Add a sub-model to whatever is on the drawing (a
-  sub-model already there is refreshed in place, its banks with it). Placing
-  replaces the drawing after asking; a Wipe button at the top of the window
-  clears it first, also after asking, and Undo brings the previous drawing
-  back either way.
+  sub-model already there is refreshed in place, its banks with it). Each
+  sub-model is placed dynamic or static, chosen beside its Add button: dynamic
+  lets the tool route its runs and move its manholes; static places the model
+  as modelled — its manholes stay put, its conduit banks keep their modelled
+  centrelines and are never re-routed, and every dynamic run keeps clear of
+  them whatever the pipe-avoidance setting. Any number of models can be
+  static and any number dynamic, and re-adding a model with the other choice
+  switches it. Placing replaces the drawing after asking; a Wipe button at the
+  top of the window clears it first, also after asking, and Undo brings the
+  previous drawing back either way.
 - **Elevation** shows one face at a time: its runs with their level controls
   and the whole face at true scale, lid to base, with each level's depth marked,
   every conduit at its own depth and offset, and the boundary box its conduits
@@ -195,6 +203,13 @@ row sits against one side — by default the side the next manhole lies on, or,
 when it lies straight ahead, the side away from the face's other runs — or the
 left or right chosen on the run. The elevation and the 3D view draw exactly
 those conduits, and the drawing's file carries the rows and the side.
+
+A static run — one placed from a model with its modelled centreline — is
+never routed at all: it sits on its path at its modelled depths, meets each
+face where the model put it, and is a keep-out for every dynamic run, which
+bends round it as it would round a placed bank. Its panel shows the run as
+modelled and offers no fittings, spec or depth to change; the drawing's file
+carries the path, so the run comes back static.
 
 A run never tilts. Where two square faces are out of line by more than
 sliding can absorb, the run bends, and where the leftover offset is too small

@@ -732,8 +732,9 @@ function faceLayout(mhUid, face){
     for (const r of rs){
       const end = (r.a.mh === mhUid && r.a.face === face) ? 'a' : 'b';
       const half = runHalf(r, S);
-      items.push({cn:r, sp:specOf(r), cols:runCols(r), rows:runRows(r), colStart:col, half,
-                  lo: ext.lo + half, hi: ext.hi - half, pref: shift + alignPref(r, end)});
+      const fx = fixedOffset(r, end, g, t);
+      items.push({cn:r, sp:specOf(r), cols:runCols(r), rows:runRows(r), colStart:col, half, fixed: fx != null,
+                  lo: fx != null ? fx : ext.lo + half, hi: fx != null ? fx : ext.hi - half, pref: fx != null ? fx : shift + alignPref(r, end)});
       col += runCols(r);
     }
     const totalCols = col;
@@ -748,6 +749,12 @@ function faceLayout(mhUid, face){
   return {c, g, t, S, groups, usedW, rowsTotal, fits, win, shift};
 }
 
+/** Where a static run's modelled centreline meets this face, as an offset along the face; null for a run the tool lays out. */
+function fixedOffset(cn, end, g, t){
+  if (!cn.fixed || !Array.isArray(cn.fixedPath) || cn.fixedPath.length < 2) return null;
+  const q = end === 'a' ? cn.fixedPath[0] : cn.fixedPath[cn.fixedPath.length-1];
+  return (q[0]-g.mid[0])*t[0] + (q[1]-g.mid[1])*t[1];
+}
 function entryFor(cn, end){
   const ep = cn[end], c = byUid(ep.mh);
   if (!c) return null;
@@ -912,28 +919,28 @@ function bankBlockers(G, banks){
       out.push({type:'box', cx:c.x, cy:c.y, rot:c.rot, hw:c.intX/2+c.wall, hh:c.intY/2+c.wall,
                 margin: pad + Math.max(G.maxBuf, c.buffer)});
     }
-  if (state.avoidPipes)
-    for (const H of banks){
-      if (H === G || !H.anyPlaced || !H.route || !H.route.ok) continue;
-      if (!levelsMeet(G, H)) continue;
+  for (const H of banks){
+    if (H === G || !H.anyPlaced || !H.route || !H.route.ok) continue;
+    if (!(state.avoidPipes || H.route.fixed)) continue;         // a static bank is kept clear of whatever the setting
+    if (!levelsMeet(G, H)) continue;
       const margin = G.maxOff + H.maxOff + bankSpacing(G, H);
       const shares = u => u === G.start.mh || u === G.finish.mh;
       const free = Math.max(G.spec.stub, H.spec.stub) + margin;
       const line = clipEnds(H.route.poly, shares(H.start.mh) ? free : 0, shares(H.finish.mh) ? free : 0);
       if (!line) continue;
       out.push({type:'line', pts:line, margin, bb:polyBounds(line)});
-    }
+  }
   return out;
 }
 
 function bankSignature(G, banks){
   const box = o => [o.x, o.y, o.w, o.d, o.rot, o.buffer, o.zTop, o.zBot, bankMethod(G, o)];
   const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace, c.zSpace, chamberZ0(c), chamberZs(c), c.win ? Object.values(c.win).map(w => w && w.h) : 0];
-  const others = state.avoidPipes ? banks
-    .filter(H => H !== G && H.anyPlaced && H.route && H.route.ok && levelsMeet(G, H))
+  const others = banks
+    .filter(H => H !== G && H.anyPlaced && H.route && H.route.ok && (state.avoidPipes || H.route.fixed) && levelsMeet(G, H))
     .map(H => [H.key, H.maxOff, H.maxRad, H.maxBuf, H.spec.stub,
-               H.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]) : 0;
-  return JSON.stringify([G.key, G.PS.map(Math.round), G.PE.map(Math.round),
+               H.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]);
+  return JSON.stringify([G.key, G.PS.map(Math.round), G.PE.map(Math.round), G.ends.map(e => e.cn.fixed ? [e.se, e.cn.fixedPath] : 0),
     G.ends.map(e => [Math.round(e.w0), Math.round(e.w1), Math.round(e.halfW)]), [...G.levels], G.spec, Math.round(G.maxOff), G.zUp, G.zDn,
     state.avoidChambers, state.avoidPipes, ROUTE_QUICK, state.ground, state.cover,
     state.obstacles.map(box), state.chambers.map(mh), others]);
@@ -1193,6 +1200,35 @@ function memberProfile(pf, shift){
           crossings: pf.crossings.map(x => ({...x, z: x.z - shift}))};
 }
 
+/** A run placed as its model has it: the modelled centreline read as plan
+    vertices with the section along it. It is never re-routed, carries no
+    fittings of the tool's own, and other runs keep clear of it. */
+function fixedRoute(path){
+  const pts = [], zs = [];
+  for (const q of path){
+    if (pts.length && Math.hypot(q[0]-pts[pts.length-1][0], q[1]-pts[pts.length-1][1]) < 1) continue;
+    pts.push([q[0], q[1]]); zs.push(q[2] || 0);
+  }
+  if (pts.length < 2){ const q = path[path.length-1]; pts.push([q[0] + 1, q[1]]); zs.push(q[2] || 0); }
+  const segs = [], turns = [];
+  for (let i = 0; i < pts.length-1; i++) segs.push(Math.hypot(pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1]));
+  for (let i = 1; i < pts.length-1; i++)
+    turns.push(signedAngle(norm([pts[i][0]-pts[i-1][0], pts[i][1]-pts[i-1][1]]), norm([pts[i+1][0]-pts[i][0], pts[i+1][1]-pts[i][1]])));
+  const fillets = turns.map(t => ({R:0, T:0, deflect:Math.abs(t), cut:false}));
+  const length = segs.reduce((a, b) => a + b, 0);
+  const cum = [0]; for (const L of segs) cum.push(cum[cum.length-1] + L);
+  let len3 = 0; for (let i = 1; i < pts.length; i++) len3 += Math.hypot(segs[i-1], zs[i]-zs[i-1]);
+  const ppoly = cum.map((s, i) => [s, zs[i]]);
+  const profile = {S:length, pts:ppoly, segs:[], turns:[], fillets:[], clear:[], poly:ppoly, zA:zs[0], zB:zs[zs.length-1], crossings:[], length:len3, warnings:[]};
+  return {ok:true, fixed:true, pts, turns, segs, fillets, clear:segs.slice(), length, warnings:[], poly:pts.map(p => p.slice()), profile, crossings:[], length3d:len3};
+}
+/** The bank's route when a member came in static: its modelled centreline, run the bank's way round. */
+function fixedBankRoute(G){
+  const e = G.ends.find(e => e.cn.fixed && Array.isArray(e.cn.fixedPath) && e.cn.fixedPath.length >= 2);
+  if (!e) return null;
+  return fixedRoute(e.se === 'a' ? e.cn.fixedPath : [...e.cn.fixedPath].reverse());
+}
+
 /** Plan first, round every obstacle its runs go round; then the section,
     crossing the rest as chosen. */
 function solveBank(G, banks){
@@ -1263,8 +1299,9 @@ function deriveMembers(G){
     if (!G.route || !G.route.ok){ cn.route = {ok:false, msg:G.route ? G.route.msg : 'no route'}; continue; }
     let r = offsetMember(G.route, e.w0, e.w1);
     if (e.se !== 'a') r = reversedRoute(r);
+    r.fixed = !!G.route.fixed;
     r.warnings = G.route.warnings.filter(w => w.kind === 'radius').map(w => ({...w}));
-    r.turns.forEach((t, i) => {
+    if (!r.fixed) r.turns.forEach((t, i) => {
       if (sp.warnAngle && Math.abs(t) > sp.warnAngle + 1e-6)
         r.warnings.push({kind:'angle', bend:i+1,
           text:`bend ${i+1} — ${fmt1(Math.abs(t))}° is over the ${fmt1(sp.warnAngle)}° limit`});
@@ -1298,7 +1335,7 @@ function recomputeRoutes(){
       if (cached) G.route = cached.route;
       const sig = bankSignature(G, banks);
       if (cached && cached.sig === sig && cached.route) continue;
-      G.route = solveBank(G, banks);
+      G.route = fixedBankRoute(G) || solveBank(G, banks);
       bankCache.set(G.key, {sig, route:G.route});
       changed = true;
     }
@@ -1323,10 +1360,12 @@ function recomputeRoutes(){
   }
 
   /* residual bank-to-bank separation check */
-  if (!state.avoidPipes || !banks) return;
+  if (!banks) return;
   const live = banks.filter(G => G.anyPlaced && G.route && G.route.ok);
   for (let i = 0; i < live.length; i++) for (let j = i+1; j < live.length; j++){
     const G = live[i], H = live[j];
+    if (G.route.fixed && H.route.fixed) continue;                   // two static banks sit as modelled
+    if (!(state.avoidPipes || G.route.fixed || H.route.fixed)) continue;
     if (!levelsMeet(G, H)) continue;
     const margin = G.maxOff + H.maxOff + bankSpacing(G, H);
     const free = Math.max(G.spec.stub, H.spec.stub) + margin;
@@ -1543,11 +1582,11 @@ function drawConnection(cn){
     out.push(`<path d="${ld}" fill="none" stroke="${edge}" stroke-width="${body}" stroke-linejoin="round" stroke-linecap="butt" opacity=".95"/>`);
     if (body > 4) out.push(`<path d="${ld}" fill="none" stroke="${C.pipeBody}" stroke-width="${body-2.4}" stroke-linejoin="round" stroke-linecap="butt"/>`);
   }
-  out.push(`<path d="${d}" fill="none" stroke="${edge}" stroke-width="1" stroke-dasharray="9 4 2 4" opacity=".8"/>`);
+  out.push(`<path d="${d}" fill="none" stroke="${edge}" stroke-width="1" stroke-dasharray="${rt.fixed ? '2 4' : '9 4 2 4'}" opacity=".8"/>`);
   out.push(`<circle cx="${p[0]}" cy="${p[1]}" r="3.2" fill="${edge}"/><circle cx="${q[0]}" cy="${q[1]}" r="3.2" fill="${edge}"/>`);
 
   const flagged = new Set(rt.warnings.map(w => w.bend));
-  rt.fillets.forEach((f,i) => {
+  if (!rt.fixed) rt.fillets.forEach((f,i) => {
     const v = W2S(rt.pts[i+1]);
     if (flagged.has(i+1)){
       out.push(`<circle cx="${v[0]}" cy="${v[1]}" r="9" fill="none" stroke="${C.warn}" stroke-width="1.6"/>`);
@@ -1559,7 +1598,7 @@ function drawConnection(cn){
   if (state.showDims && rt.length*s > 80){
     const m = W2S(pointAt(rt, rt.length/2));
     const lvl = (cn.level|0) ? ' · L' + (cn.level|0) : '';
-    out.push(`<text x="${m[0]}" y="${m[1]-body/2-7}" fill="${edge}" font-family="${C.mono}" font-size="10.5" text-anchor="middle">${metres(rt.length3d || rt.length)}${lvl}</text>`);
+    out.push(`<text x="${m[0]}" y="${m[1]-body/2-7}" fill="${edge}" font-family="${C.mono}" font-size="10.5" text-anchor="middle">${metres(rt.length3d || rt.length)}${lvl}${rt.fixed ? ' · static' : ''}</text>`);
   }
   if (state.showDims && rt.leadLane && rt.crossings && rt.crossings.length)
     for (const x of rt.crossings){
@@ -2023,7 +2062,7 @@ STAGE.addEventListener('pointerdown', e => {
   }
   const grab = (kind, obj) => {
     if (!inSel(kind, obj.uid)) select(kind, obj.uid); else setPrimary(kind, obj.uid);
-    if (kind === 'chamber' && state.lockChambers){ noteLocked(); return; }       // locked: selected, never dragged
+    if (kind === 'chamber' && !chamberMovable(obj)){ noteLocked(obj); return; }       // locked or static: selected, never dragged
     const items = movables().map(m => ({obj:m, x0:m.x, y0:m.y}));
     if (!items.length) return;
     drag = {kind:'move', wp0:wp, sx:sp[0], sy:sp[1], slop: coarse(e) ? SLOP : 0, items, moved:false};
@@ -2074,7 +2113,7 @@ STAGE.addEventListener('pointermove', e => {
   state.hoverFace = f;
   showCallout(f, sp);
   STAGE.style.cursor = state.pending ? (f ? 'pointer' : 'crosshair')
-    : hitChamber(wp) ? (state.lockChambers ? 'pointer' : 'move') : hitObstacle(wp) ? 'move' : hitConnection(wp) ? 'pointer' : 'crosshair';
+    : hitChamber(wp) ? (chamberMovable(hitChamber(wp)) ? 'move' : 'pointer') : hitObstacle(wp) ? 'move' : hitConnection(wp) ? 'pointer' : 'crosshair';
   if (changed) draw();
 });
 
@@ -2215,8 +2254,12 @@ function rectSel(x0, y0, x1, y1, crossing){
   }
   return set;
 }
-const movables = () => state.selSet.map(x => x.kind === 'chamber' ? (state.lockChambers ? null : byUid(x.id)) : x.kind === 'obstacle' ? obsBy(x.id) : null).filter(Boolean);
-const noteLocked = () => { document.getElementById('rmode').textContent = 'manholes are locked — untick Lock manholes in the Drawing window to move them'; };
+/** A chamber moves unless the drawing locks its manholes or it came in static — placed as its model has it. */
+const chamberMovable = c => !(state.lockChambers || (c && c.fixed));
+const movables = () => state.selSet.map(x => x.kind === 'chamber' ? (chamberMovable(byUid(x.id)) ? byUid(x.id) : null) : x.kind === 'obstacle' ? obsBy(x.id) : null).filter(Boolean);
+const noteLocked = c => { document.getElementById('rmode').textContent = c && c.fixed && !state.lockChambers
+  ? `${c.ref} is static — placed as its model has it, it does not move`
+  : 'manholes are locked — untick Lock manholes in the Drawing window to move them'; };
 /** The status line while a connection is being made from a face. */
 function setPendingStatus(){
   const el = document.getElementById('rmode');
@@ -2271,7 +2314,7 @@ function renderConnections(){
     const cls = !rt || !rt.ok ? 'bad' : warn ? 'warn' : cn.placed ? 'ok' : '';
     const meta = !rt || !rt.ok ? 'no route'
                : !cn.placed ? 'not placed'
-               : (warn ? '⚠ ' : '') + metres(rt.length3d || rt.length);
+               : (cn.fixed ? 'static · ' : '') + (warn ? '⚠ ' : '') + metres(rt.length3d || rt.length);
     return `<div class="item ${inSel('conn', cn.uid) ? 'on':''}" data-conn="${cn.uid}">
       <span class="dot" style="background:${sp ? sp.colour : C.inkFaint}"></span>
       <span class="nm">${esc(connLabel(cn))}</span>
@@ -2484,7 +2527,7 @@ function renderChamberProps(box, c){
          <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
          <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
          <b>Sides</b> ${FACES.map(f => f+' '+fmt(faceGeom(c,f).width)).join('  ')}${revitLine(c)}</div>`) +
-    cluster('chPos', 'Position', `${fmt(c.x)}, ${fmt(c.y)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}${state.lockChambers ? ' · locked' : ''}`,
+    cluster('chPos', 'Position', `${fmt(c.x)}, ${fmt(c.y)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}${state.lockChambers ? ' · locked' : c.fixed ? ' · static' : ''}`,
       numRow('pX','Centre X', c.x, state.snap||1, 'mm') +
       numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
       numRow('pR','Rotation', c.rot, 15, '°')) +
@@ -2515,7 +2558,7 @@ function renderChamberProps(box, c){
   bind('pRef','ref',String); bind('pIX','intX'); bind('pIY','intY');
   bind('pW','wall'); bind('pZL','zLid'); bind('pZB','zBase'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
   bind('pLat','latSpace'); bind('pZ','zSpace'); bind('pZ0','z0'); bind('pEC','edgeClear');
-  if (state.lockChambers) for (const id of ['pX', 'pY', 'pR']){ const el = document.getElementById(id); if (el){ el.disabled = true; el.title = 'Locked: only a Revit import moves this manhole'; } }
+  if (!chamberMovable(c)) for (const id of ['pX', 'pY', 'pR']){ const el = document.getElementById(id); if (el){ el.disabled = true; el.title = state.lockChambers ? 'Locked: only a Revit import moves this manhole' : 'Static: placed as its model has it'; } }
   wireFaceButtons(c);
   wireClusters(box, renderSel);
   document.getElementById('pSq').onchange = e => {
@@ -2579,7 +2622,7 @@ function renderObstacleProps(box, o){
     row adds a conduit there, the slot beneath the rows adds a row, and the
     last conduit of a row takes one away. */
 const ARRAY_MAX = {cols:12, rows:8};
-function arrayEditorSVG(cn, wpx = 262){
+function arrayEditorSVG(cn, wpx = 262, opt = {}){
   const rows = runRowsOf(cn), cols = Math.max(...rows), side = runAlign(cn), sp = specOf(cn) || {colour:'#888'};
   const nc = Math.min(ARRAY_MAX.cols, cols + 1), nr = Math.min(ARRAY_MAX.rows, rows.length + 1);
   const pitch = Math.max(18, Math.min(36, Math.floor((wpx - 12) / nc))), r = pitch*0.36, pad = 8;
@@ -2592,14 +2635,14 @@ function arrayEditorSVG(cn, wpx = 262){
     const start = side === 'left' ? 0 : cols - n;
     for (let k = 0; k < n; k++){
       const j = start + k, last = side === 'left' ? k === n-1 : k === 0;
-      el.push(`<circle cx="${f1(cx(xj(j)))}" cy="${f1(cy(i))}" r="${f1(r)}" fill="${sp.colour}" fill-opacity=".35" stroke="${sp.colour}" stroke-width="1.6"${last ? ` data-act="del" data-row="${i}"` : ''}><title>${last ? 'take this conduit away' : `row ${i+1}`}</title></circle>`);
+      el.push(`<circle cx="${f1(cx(xj(j)))}" cy="${f1(cy(i))}" r="${f1(r)}" fill="${sp.colour}" fill-opacity=".35" stroke="${sp.colour}" stroke-width="1.6"${last && !opt.readOnly ? ` data-act="del" data-row="${i}"` : ''}><title>${last && !opt.readOnly ? 'take this conduit away' : `row ${i+1}`}</title></circle>`);
     }
-    if (n < ARRAY_MAX.cols){
+    if (n < ARRAY_MAX.cols && !opt.readOnly){
       const gx = side === 'left' ? n : cols - n;
       el.push(`<circle class="ghost" cx="${f1(cx(gx))}" cy="${f1(cy(i))}" r="${f1(r)}" fill="none" stroke="${C.ink}" stroke-width="1.2" stroke-dasharray="2 2" data-act="add" data-row="${i}"><title>add a conduit to row ${i+1}</title></circle>`);
     }
   });
-  if (rows.length < ARRAY_MAX.rows){
+  if (rows.length < ARRAY_MAX.rows && !opt.readOnly){
     const gx = side === 'left' ? 0 : cols;
     el.push(`<circle class="ghost" cx="${f1(cx(gx))}" cy="${f1(cy(rows.length))}" r="${f1(r)}" fill="none" stroke="${C.ink}" stroke-width="1.2" stroke-dasharray="2 2" data-act="add" data-row="${rows.length}"><title>add a row beneath</title></circle>`);
   }
@@ -2612,16 +2655,16 @@ function renderRunProps(box, cn){
   const warns = rt && rt.ok ? rt.warnings : [];
   box.innerHTML =
     `<div class="row"><label style="flex:none" for="qSpec">Conduit spec</label></div>
-     <select id="qSpec">${state.specs.map(s =>
+     <select id="qSpec"${cn.fixed ? ' disabled title="Static: the spec is as the model has it"' : ''}>${state.specs.map(s =>
        `<option value="${s.id}" ${s.id === cn.specId ? 'selected':''}>${esc(s.name)} — Ø${fmt(s.radius*2)} R${fmt(s.bendR)}</option>`).join('')}</select>
      <div style="height:8px"></div>` +
     cluster('runArr', 'Array & level', `${arrayText(cn)} · L${cn.level|0}`,
       numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
       `<div class="row" style="margin-bottom:4px"><label>Array — the section of the run, seen along it from ${esc(A ? A.ref : '?')} to ${esc(B ? B.ref : '?')}</label></div>
-       <div class="arrayed" id="qArray">${arrayEditorSVG(cn)}</div>
+       <div class="arrayed" id="qArray">${arrayEditorSVG(cn, 262, {readOnly: !!cn.fixed})}</div>
        <div class="derived" style="border-top:none;margin-top:0;padding-top:0"><b>${arrayText(cn)}</b> · ${runCount(cn)} conduit${runCount(cn) === 1 ? '' : 's'} · ${runCols(cn)} wide × ${runRows(cn)} high${new Set(runRowsOf(cn)).size > 1 ? ` · shorter rows on the ${runAlign(cn)}` : ''}<br>
-         <span>Click a dotted slot to add a conduit to that row, the slot beneath to add a row, or the last conduit of a row to take it away. Rows share one set of columns, so the conduits line up vertically.</span></div>` +
-      (new Set(runRowsOf(cn)).size > 1
+         <span>${cn.fixed ? 'Static: the array is as the model has it.' : 'Click a dotted slot to add a conduit to that row, the slot beneath to add a row, or the last conduit of a row to take it away. Rows share one set of columns, so the conduits line up vertically.'}</span></div>` +
+      (new Set(runRowsOf(cn)).size > 1 && !cn.fixed
         ? `<div class="row"><label for="qAlign">Shorter rows sit</label>
              <select id="qAlign">${ALIGNS.map(a => `<option value="${a}"${runAlignPref(cn) === a ? ' selected' : ''}>${a === 'auto' ? `auto — ${runAlign(cn)}` : a}</option>`).join('')}</select></div>
            <div class="derived"><span>Auto takes the side the next manhole lies on, or the side away from the face's other runs when it lies straight ahead.</span></div>`
@@ -2640,29 +2683,33 @@ function renderRunProps(box, cn){
       }).join('') + `<div class="derived"><span>How this run passes each obstacle. Runs sharing these two faces travel as one bank and follow the majority.</span></div>`
       : `<div class="empty">No obstacles on the drawing.</div>`) +
     cluster('runRt', 'Route',
-      rt && rt.ok ? metres(rt.length3d || rt.length) + (rt.turns.length ? ` · ${rt.turns.length} bend${rt.turns.length === 1 ? '' : 's'}` : ' · straight')
-                    + (rt.profile && rt.profile.turns.length ? ` + ${rt.profile.turns.length} vertical` : '') : 'no route',
+      rt && rt.ok ? metres(rt.length3d || rt.length) + (rt.fixed ? ' · static' : (rt.turns.length ? ` · ${rt.turns.length} bend${rt.turns.length === 1 ? '' : 's'}` : ' · straight')
+                    + (rt.profile && rt.profile.turns.length ? ` + ${rt.profile.turns.length} vertical` : '')) : 'no route',
       `<div class="derived" style="border-top:none;margin-top:0;padding-top:2px">
          <b>Run</b> ${esc(connLabel(cn))}<br>
-         ${entryLine(cn)}${arrayLine(cn)}
-         <b>Angles</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}<br>` +
-         (rt && rt.ok
-           ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°' + (isCustomTurn(t, sp.angles) ? ' custom' : '')).join(' · ') : 'none — straight run'}<br>
-              <b>Straight duct</b> ${rt.clear.map(v => fmt(Math.max(0,v))).join(' · ')} mm<br>
-              <b>Centreline</b> ${metres(rt.length)} in plan${rt.profile && rt.profile.turns.length ? ` · ${metres(rt.length3d)} laid` : ''}` +
-             sectionLines(rt)
-           : `<span style="color:${C.bad}">${esc(rt ? rt.msg : '')}</span>`) +
+         ${entryLine(cn)}${arrayLine(cn)}` +
+         (rt && rt.ok && rt.fixed
+           ? `<b>Static</b> placed as its model has it — it is never re-routed, and other runs keep clear of it<br>
+              <b>Centreline</b> ${metres(rt.length)} in plan · ${metres(rt.length3d || rt.length)} laid · ${rt.pts.length} points`
+           : `<b>Angles</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}<br>` +
+             (rt && rt.ok
+               ? `<b>Bends</b> ${rt.turns.length ? rt.turns.map(t => fmt1(Math.abs(t))+'°' + (isCustomTurn(t, sp.angles) ? ' custom' : '')).join(' · ') : 'none — straight run'}<br>
+                  <b>Straight duct</b> ${rt.clear.map(v => fmt(Math.max(0,v))).join(' · ')} mm<br>
+                  <b>Centreline</b> ${metres(rt.length)} in plan${rt.profile && rt.profile.turns.length ? ` · ${metres(rt.length3d)} laid` : ''}` +
+                 sectionLines(rt)
+               : `<span style="color:${C.bad}">${esc(rt ? rt.msg : '')}</span>`)) +
       `</div>`) +
     cluster('runSec', 'Long section', sectionSummary(rt), profileSVG(cn, 232)) +
     (warns.length ? `<div class="alert warn"><b>Check this run</b>${warns.map(w => esc(w.text)).join('<br>')}</div>` : '') +
     (rt && !rt.ok ? `<div class="alert bad"><b>Cannot place</b>${esc(rt.msg)}</div>` : '') +
     `<div class="btnrow">
-       <button id="qPlace" class="primary" ${rt && rt.ok ? '' : 'disabled'}>${cn.placed ? 'Update line' : 'Place line'}</button>
+       ${cn.fixed ? '' : `<button id="qPlace" class="primary" ${rt && rt.ok ? '' : 'disabled'}>${cn.placed ? 'Update line' : 'Place line'}</button>`}
        <button id="qDrop" class="warn">Disconnect</button></div>` +
     (cn.placed ? '' : `<div class="note">Not placed yet — the dashed guide shows the face pair.</div>`) +
     `<div class="btnrow"><button id="qEditSpec" class="ghost mini">Edit “${esc(sp.name)}” on the left</button></div>`;
 
   const lvlEl = document.getElementById('qLvl');
+  if (cn.fixed){ lvlEl.disabled = true; lvlEl.title = 'Static: the depth is as the model has it'; }
   lvlEl.addEventListener('input', () => {
     const v = Math.max(0, Math.round(Number(lvlEl.value)||0));
     cn.level = v;
@@ -2685,9 +2732,8 @@ function renderRunProps(box, cn){
     state.editSpec = cn.specId;
     renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); draw();
   };
-  document.getElementById('qPlace').onclick = () => {
-    cn.placed = true; renderSel(); renderConnections(); draw();
-  };
+  const placeBtn = document.getElementById('qPlace');
+  if (placeBtn) placeBtn.onclick = () => { cn.placed = true; renderSel(); renderConnections(); draw(); };
   document.getElementById('qDrop').onclick = () => disconnect(cn.uid);
   box.querySelectorAll('[data-obs]').forEach(el => el.onchange = () => {
     cn.cross = cn.cross || {};
@@ -2799,9 +2845,9 @@ function renderElevation(){
     return `<div class="dlgrow${inSel('conn', it.cn.uid) ? ' on' : ''}" data-elsel="${it.cn.uid}">
       <span class="dot" style="background:${sp.colour}"></span>
       <span class="nm">${esc(connLabel(it.cn))} · ${esc(sp.name)} ${esc(arrayText(it.cn))}</span>
-      <em>L${gr.level}</em>
-      <button data-fup="${it.cn.uid}" title="raise (smaller level)">▲</button>
-      <button data-fdn="${it.cn.uid}" title="lower (bigger level)">▼</button></div>`;
+      <em>L${gr.level}${it.cn.fixed ? ' · static' : ''}</em>
+      ${it.cn.fixed ? '' : `<button data-fup="${it.cn.uid}" title="raise (smaller level)">▲</button>
+      <button data-fdn="${it.cn.uid}" title="lower (bigger level)">▼</button>`}</div>`;
   }));
   box.innerHTML = `<div class="note" style="margin:0 0 8px">${n
       ? `${n} run${n === 1 ? '' : 's'} on this side${L.fits ? '' : ' — too narrow'} · click a conduit to select its run`
@@ -3198,6 +3244,7 @@ document.getElementById('btnExport').onclick = () => {
         obstacleRules: (() => { const e = {}; for (const o of state.obstacles) if (cn.cross && METHODS.includes(cn.cross[o.uid])) e[o.name] = cn.cross[o.uid];
                                 return Object.keys(e).length ? e : undefined; })(),
         rows: runRows(cn), cols: runCols(cn), perRow: runRowsOf(cn), align: runAlignPref(cn), packedTo: runAlign(cn),
+        static: cn.fixed ? true : undefined, path: cn.fixed && Array.isArray(cn.fixedPath) ? cn.fixedPath.map(q => q.map(v => Math.round(v*10)/10)) : undefined,
         placed: cn.placed,
         route: rt && rt.ok ? {
           vertices: rt.pts.map(p => [Math.round(p[0]), Math.round(p[1])]),
@@ -3252,6 +3299,7 @@ document.getElementById('fileIn').onchange = e => {
         return {uid:uid(), a:{mh:A.uid, face:legacyFace(cn.from.face)}, b:{mh:B.uid, face:legacyFace(cn.to.face)},
                 placed: !!cn.placed, level: Math.max(0, cn.level|0),
                 perRow: runRowsOf(cn), align: ALIGNS.includes(cn.align) ? cn.align : 'auto',
+                fixed: !!cn.static && Array.isArray(cn.path) && cn.path.length >= 2, fixedPath: cn.static && Array.isArray(cn.path) && cn.path.length >= 2 ? cn.path.map(q => [Number(q[0]), Number(q[1]), Number(q[2]) || 0]) : undefined,
                 cross: Object.fromEntries(Object.entries(cn.obstacleRules || {}).map(([nm, m]) => {
                   const ob = state.obstacles.find(x => x.name === nm); return ob && METHODS.includes(m) ? [ob.uid, m] : null; }).filter(Boolean)),
                 specId: byName(cn.spec).id, route:null};
@@ -3394,6 +3442,7 @@ function uniqueRef(ref){
 function applyRevitImport(src, opt = {}){
       const {chambers: made, obstacles: obs} = importRevit(src);
       if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) found');
+      for (const c of made) c.fixed = !!opt.fixed;                    // static: placed as its model has it, never moved
       const n = (k, w) => `${k} ${w}${k === 1 ? '' : 's'}`;
       const oldC = new Map(state.chambers.filter(revitKey).map(c => [revitKey(c), c]));
       const oldO = new Map(state.obstacles.filter(revitKey).map(o => [revitKey(o), o]));
@@ -3401,7 +3450,7 @@ function applyRevitImport(src, opt = {}){
       if (hits){
         /* a later export of a model already on the drawing: refresh what matches
            in place — every run stays attached — add what is new, keep the rest */
-        const CH = ['x','y','rot','intX','intY','wall','sides','win','lid','zd','z0','zLid','zBase','family','type','revitId','revitUid','revitDoc'];
+        const CH = ['x','y','rot','intX','intY','wall','sides','win','lid','zd','z0','zLid','zBase','family','type','revitId','revitUid','revitDoc','fixed'];
         const OB = ['x','y','rot','w','d','zTop','zBot','family','type','revitId','revitUid','revitDoc'];
         let added = 0;
         for (const c of made){
@@ -3442,7 +3491,7 @@ function applyRevitImport(src, opt = {}){
 /** Recreate the conduit banks an export lists — each one run between two faces
     with its rows — on that export's chambers already on the drawing. A bank
     already there between the same faces is refreshed, never doubled. */
-function recreateRuns(src){
+function recreateRuns(src, opt = {}){
   const runs = Array.isArray(src.runs) ? src.runs : [];
   const doc = src.document || src.source || null;
   const byU = new Map(state.chambers.filter(c => c.revitUid).map(c => ['u:' + c.revitUid, c]));
@@ -3460,6 +3509,8 @@ function recreateRuns(src){
     cn.perRow = runRowsOf(r); cn.align = ALIGNS.includes(r.align) ? r.align : 'auto';
     cn.level = Math.max(0, r.level|0); cn.specId = sp.id; cn.placed = true;
     delete cn.rows; delete cn.cols;
+    const path = Array.isArray(r.path_mm) && r.path_mm.length >= 2 ? r.path_mm.map(q => [Number(q[0]), Number(q[1]), Number(q[2]) || 0]) : null;
+    if (opt.fixed && path){ cn.fixed = true; cn.fixedPath = path; } else { delete cn.fixed; delete cn.fixedPath; }
   }
   if (made || kept){ bankCache.clear(); state.sel = null; state.selSet = []; renderSel(); renderConnections(); fitView(); }
   return {made, kept, missing, listed: runs.length};
@@ -3494,7 +3545,7 @@ const runsNote = rs => {
    its conduit banks as runs when its checkbox is ticked. */
 const EXAMPLES = [
   {id:'site', name:'LV site',
-   blurb:'A live data-centre site, one sub-model per service. Place the whole site, or add a sub-model to the drawing as it stands.',
+   blurb:'A live data-centre site, one sub-model per service. Place the whole site, or add a sub-model to the drawing as it stands. Each sub-model is dynamic — the tool routes its runs and its manholes can move — or static: placed as modelled, its manholes stay put, its conduits keep their modelled routes, and dynamic runs keep clear of them.',
    models:[
      {id:'lv', name:'LV', count:'105 manholes', file:'/examples/lv-manholes.json',
       blurb:'The LV model: every manhole of its chamber family at its true position and rotation, with marks, types and Revit ids. The family carries only depth planes, so wall and size are borrowed from the DCBuild family.'},
@@ -3509,12 +3560,16 @@ const EXAMPLES = [
 let DEMO_DOC = null;
 const exRuns = {};                                                  // the conduit checkboxes, by site:model — on unless unticked
 const wantRuns = (x, m) => exRuns[x + ':' + m] !== false;
+const exMode = {};                                                  // static or dynamic, by site:model — dynamic unless chosen
+const modeOf = (x, m) => exMode[x + ':' + m] === 'static' ? 'static' : 'dynamic';
+const MODE_NOTE = {dynamic: 'dynamic — the tool routes its runs and its manholes can be moved', static: 'static — placed as modelled: its manholes stay put, its conduits keep their modelled routes, and dynamic runs keep clear of them'};
 const exStatus = t => { document.getElementById('rmode').textContent = t; };
 const fetchJSON = url => fetch(url, {cache:'no-cache'}).then(r => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); });
 function renderExamples(){
   document.getElementById('exampleList').innerHTML = EXAMPLES.map(x => x.models
     ? `<div class="ex"><b>${esc(x.name)}<em>${x.models.length} sub-model${x.models.length === 1 ? '' : 's'}</em></b><p>${esc(x.blurb)}</p>
          ${x.models.map(m => `<div class="sub"><div class="subrow"><span class="nm">${esc(m.name)}<em>${esc(m.count)}</em></span>
+           <select class="mini exmode" data-mode="${x.id}:${m.id}" title="${esc(MODE_NOTE[modeOf(x.id, m.id)])}">${['dynamic','static'].map(k => `<option value="${k}"${modeOf(x.id, m.id) === k ? ' selected' : ''}>${k}</option>`).join('')}</select>
            <button class="mini" data-model="${x.id}:${m.id}" title="Add ${esc(m.name)} to the drawing, or refresh it if it is already there">Add</button></div>
            <p>${esc(m.blurb)}</p>${m.runs ? `<label class="chk exopt"><input type="checkbox" data-runsopt="${x.id}:${m.id}"${wantRuns(x.id, m.id) ? ' checked' : ''}> Recreate the conduits from the IFC as runs</label>` : ''}</div>`).join('')}
          <button class="mini" data-example="${x.id}">Place site</button></div>`
@@ -3522,6 +3577,7 @@ function renderExamples(){
   document.querySelectorAll('[data-example]').forEach(b => b.onclick = () => placeExample(b.dataset.example));
   document.querySelectorAll('[data-model]').forEach(b => b.onclick = () => { const [x, m] = b.dataset.model.split(':'); addModel(x, m); });
   document.querySelectorAll('[data-runsopt]').forEach(el => el.onchange = () => { exRuns[el.dataset.runsopt] = el.checked; });
+  document.querySelectorAll('[data-mode]').forEach(el => el.onchange = () => { exMode[el.dataset.mode] = el.value; el.title = MODE_NOTE[el.value]; });
 }
 /** Place an example: the demo from its snapshot, a single export as an import, a site as every sub-model in turn. */
 function placeExample(id){
@@ -3529,8 +3585,8 @@ function placeExample(id){
   if (!x) return;
   if (x.models){
     Promise.all(x.models.map(m => fetchJSON(m.file)))            // everything fetched first, so a failure places nothing
-      .then(srcs => { srcs.forEach((src, i) => applyRevitImport(src, i ? {add:true} : {}));
-                      const rs = x.models.map((m, i) => m.runs && wantRuns(x.id, m.id) ? recreateRuns(srcs[i]) : null).filter(Boolean);
+      .then(srcs => { srcs.forEach((src, i) => applyRevitImport(src, {...(i ? {add:true} : {}), fixed: modeOf(x.id, x.models[i].id) === 'static'}));
+                      const rs = x.models.map((m, i) => m.runs && wantRuns(x.id, m.id) ? recreateRuns(srcs[i], {fixed: modeOf(x.id, m.id) === 'static'}) : null).filter(Boolean);
                       exStatus(`example placed — ${x.name} · ${state.chambers.length} manholes` + runsNote(rs)); })
       .catch(err => alert('The example could not be loaded: ' + err.message));
     return;
@@ -3549,8 +3605,9 @@ function addModel(exId, mId){
   const x = EXAMPLES.find(e => e.id === exId), m = x && x.models && x.models.find(k => k.id === mId);
   if (!m) return;
   fetchJSON(m.file)
-    .then(src => { const before = state.chambers.length; applyRevitImport(src, {add:true}); const n = state.chambers.length - before;
-                   const rs = m.runs && wantRuns(exId, mId) ? [recreateRuns(src)] : [];
+    .then(src => { const before = state.chambers.length; const fixed = modeOf(exId, mId) === 'static';
+                   applyRevitImport(src, {add:true, fixed}); const n = state.chambers.length - before;
+                   const rs = m.runs && wantRuns(exId, mId) ? [recreateRuns(src, {fixed})] : [];
                    exStatus((n > 0 ? `${m.name} added — ${n} manholes · ${state.chambers.length} on the drawing`
                                    : `${m.name} refreshed in place · ${state.chambers.length} manholes on the drawing`) + runsNote(rs)); })
     .catch(err => alert('The sub-model could not be loaded: ' + err.message));

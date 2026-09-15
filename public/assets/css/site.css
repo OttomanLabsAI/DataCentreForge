@@ -122,6 +122,7 @@
   .exlist .subrow .nm em{font-style:normal; font-family:var(--mono); font-size:10px; color:var(--ink-faint); margin-left:6px}
   .exlist .sub p{margin:0 0 4px}
   .exlist .exopt{margin:4px 0 4px; font-size:11px}
+  .exlist select.exmode{width:auto; padding:3px 6px; font-size:11px}
   .arrayed svg{display:block; margin:0 0 4px}
   .arrayed [data-act]{cursor:pointer; pointer-events:all}
   .arrayed .ghost{opacity:.4}
