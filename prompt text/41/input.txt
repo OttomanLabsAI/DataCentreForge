@@ -1,0 +1,13 @@
+there should be an encasment button in create. itll encase the selection. if no selection, encase all
+
+there should also be a layer option, kinda like the workset feature in revit
+
+i should be able to change the model to static/dynamic in there. after changing to dynamic, it'll have a seperate button to do update the obstacle avoidance
+
+those that are set to static,, the same. they will turn off the obstable avoidance and just do the auto-route
+
+the update button will do all
+
+for avoiding pipes and conduits, it'll just avoid the encasment instead if modelled
+
+add a shift + ctrl feature that drags in the axis of the manhole itself

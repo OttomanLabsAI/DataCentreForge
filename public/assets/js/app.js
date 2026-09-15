@@ -26,6 +26,7 @@ const SPEC_COLOURS  = ['#35c3e8','#6bd68a','#d8a0e0','#f0a35e','#e0655f','#9db4d
 
 const state = {
   chambers: [], obstacles: [], connections: [], specs: [],
+  layers: [{id:'drawing', name:'Drawing', mode:'dynamic', visible:true}], activeLayer: 'drawing',   // like Revit worksets
   view: {tx:0, ty:0, s:0.04},
   sel: null,            // {kind:'chamber'|'obstacle'|'conn', id} — the primary selection
   selSet: [],           // everything selected, primary included (window / crossing selection)
@@ -86,6 +87,22 @@ function makeSpec(o = {}){
     radius:150, bendR:600, stub:500, minLeg:500, buffer:300, spacing:300, warnAngle:45, angles:[22.5,45,90], enc:0
   }, o);
 }
+/* ---------- layers: every element belongs to one, like a Revit workset ---------- */
+const DEFAULT_LAYER = 'drawing';
+const makeLayer = o => Object.assign({id:uid(), name:'Layer', mode:'dynamic', visible:true}, o);
+const layerById = id => state.layers.find(l => l.id === id) || null;
+const layerOf = el => (el && layerById(el.layer)) || layerById(DEFAULT_LAYER) || state.layers[0] || null;
+const layerMode = el => { const l = layerOf(el); return l && l.mode === 'static' ? 'static' : 'dynamic'; };
+const isVisible = el => { const l = layerOf(el); return !l || l.visible !== false; };
+const activeLayerId = () => layerById(state.activeLayer) ? state.activeLayer : DEFAULT_LAYER;
+/** The layer of this name, made when there is none; a mode given sets it. */
+function ensureLayer(name, mode){
+  let l = state.layers.find(x => String(x.name).toLowerCase() === String(name).toLowerCase());
+  if (!l){ l = makeLayer({name:String(name)}); state.layers.push(l); }
+  if (mode) l.mode = mode === 'static' ? 'static' : 'dynamic';
+  return l;
+}
+const docLayerName = src => String((src && (src.document || src.source)) || 'Import').split(/[\\/]/).pop().replace(/\.[^.]+$/, '');
 function nextRef(){
   let n = 1; const used = new Set(state.chambers.map(c => c.ref));
   while (used.has('MH'+String(n).padStart(2,'0'))) n++;
@@ -603,9 +620,10 @@ const runCols = r => Math.max(...runRowsOf(r));
 const encOf = sp => Math.max(0, Number(sp && sp.enc) || 0);
 /** The encasement box of a run, in section: a rectangle `off` beyond the outer
     diameter, as wide as its widest row and as high as all its rows together. */
+const isEncased = cn => !!(cn && cn.encased) && encOf(specOf(cn)) > 0;
 function runEncasement(cn){
   const sp = specOf(cn), off = encOf(sp);
-  if (!off) return null;
+  if (!off || !cn.encased) return null;
   const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
   const S = Math.max(ea ? ea.S || 0 : 0, eb ? eb.S || 0 : 0);
@@ -882,7 +900,7 @@ function buildBanks(){
       d0:[gS.n[0], gS.n[1]], d2:[-gE.n[0], -gE.n[1]],
       maxOff,
       maxRad: Math.max(...specs.map(sp => sp.radius)),
-      enc: Math.max(...specs.map(encOf)),                 // the encasement stands this far beyond the conduits
+      enc: Math.max(0, ...members.filter(isEncased).map(cn => encOf(specOf(cn)))),   // an encased bank stands this far beyond its conduits — and is avoided by that box, not a clearance
       maxBuf: Math.max(...specs.map(sp => sp.buffer)),
       levels: new Set(members.map(cn => cn.level|0)),
       zPitch, zUp, zDn,
@@ -908,7 +926,7 @@ function buildBanks(){
 /** Conduit-to-conduit spacing between two banks: buffers rule, unless they
     share a manhole — then that manhole's lateral spacing governs. */
 function bankSpacing(G, H){
-  let sPair = G.maxRad + G.enc + H.maxRad + H.enc + Math.max(G.maxBuf, H.maxBuf);
+  let sPair = G.maxRad + G.enc + H.maxRad + H.enc + Math.max(G.enc ? 0 : G.maxBuf, H.enc ? 0 : H.maxBuf);   // an encasement is the boundary itself
   for (const u of [G.start.mh, G.finish.mh]){
     if (u !== H.start.mh && u !== H.finish.mh) continue;
     const c = byUid(u);
@@ -926,13 +944,13 @@ function bankBlockers(G, banks){
   for (const o of state.obstacles){
     if (bankMethod(G, o) !== 'around') continue;
     out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
-              margin: pad + Math.max(G.maxBuf, o.buffer)});
+              margin: pad + Math.max(G.enc ? 0 : G.maxBuf, o.buffer)});
   }
   if (state.avoidChambers)
     for (const c of state.chambers){
       if (c.uid === G.start.mh || c.uid === G.finish.mh) continue;
       out.push({type:'box', cx:c.x, cy:c.y, rot:c.rot, hw:c.intX/2+c.wall, hh:c.intY/2+c.wall,
-                margin: pad + Math.max(G.maxBuf, c.buffer)});
+                margin: pad + Math.max(G.enc ? 0 : G.maxBuf, c.buffer)});
     }
   for (const H of banks){
     if (H === G || !H.anyPlaced || !H.route || !H.route.ok) continue;
@@ -1000,7 +1018,7 @@ function routeCrossings(G, rt){
   const STEP = 25, out = [];
   for (const o of state.obstacles){
     const method = bankMethod(G, o);
-    const reach = reachBase + Math.max(G.maxBuf, o.buffer);
+    const reach = reachBase + Math.max(G.enc ? 0 : G.maxBuf, o.buffer);
     let s0 = Infinity, s1 = -Infinity;
     for (let i = 0; i < P.length-1; i++){
       const L = cum[i+1]-cum[i], n = Math.max(1, Math.ceil(L/STEP));
@@ -1114,7 +1132,7 @@ function solveProfile(G, rt, xs){
   const chord = s => zA + (zB-zA)*s/S, chordLen = Math.hypot(S, zB-zA);
   const info = xs.map(x => {
     const top = Math.max(x.o.zTop, x.o.zBot) + lift, bot = Math.min(x.o.zTop, x.o.zBot);
-    const margin = G.maxRad + G.enc + Math.max(G.maxBuf, x.o.buffer);
+    const margin = G.maxRad + G.enc + Math.max(G.enc ? 0 : G.maxBuf, x.o.buffer);
     const needOver = top + margin + 1, needUnder = bot - margin - 1;     // a hair clear of the keep-out
     const clearOver  = x.method === 'over'  && chord(x.s0) >= needOver  && chord(x.s1) >= needOver;
     const clearUnder = x.method === 'under' && chord(x.s0) <= needUnder && chord(x.s1) <= needUnder;
@@ -1486,10 +1504,11 @@ function draw(){
     out.push(`<line x1="${o[0]}" y1="0" x2="${o[0]}" y2="${H}" stroke="${C.axisY}" stroke-width="1"/>`);
   }
 
-  for (const o of state.obstacles) out.push(drawObstacle(o));
-  for (const cn of state.connections) out.push(drawConnection(cn));
+  for (const o of state.obstacles) if (isVisible(o)) out.push(drawObstacle(o));
+  for (const cn of state.connections) if (isVisible(cn)) out.push(drawConnection(cn));
 
   for (const c of state.chambers){
+    if (!isVisible(c)) continue;
     const inner = corners(c, 0), outer = corners(c, c.wall);
     const on = inSel('chamber', c.uid);
     const stroke = on ? C.sel : C.ink, ext = c.intX + 2*c.wall;
@@ -1815,12 +1834,14 @@ function draw3d(){
     }
   };
   for (const o of state.obstacles){
+    if (!isVisible(o)) continue;
     const on = isOn('obstacle', o.uid), zb = Math.min(o.zTop, o.zBot), zt = Math.max(o.zTop, o.zBot);
     box(boxCorners(o, 0), zb, zt, C.obsFill, .92, on ? C.sel : C.obsLine, on ? 1.8 : 1.1, {kind:'obstacle', id:o.uid}, true);
     if (o.buffer > 0) dotted(boxCorners(o, o.buffer), zb, zt);
     if (Math.min(o.w, o.d)*s > 18) label([o.x, o.y, zt], o.name, on ? C.sel : C.obsLine);
   }
   for (const c of state.chambers){
+    if (!isVisible(c)) continue;
     const on = isOn('chamber', c.uid), [zb, zl] = chamberZs(c);
     box(corners(c, c.wall), zb, zl, C.chamber, .94, on ? C.sel : C.ink, on ? 1.8 : 1.1, {kind:'chamber', id:c.uid});
     if (c.buffer > 0) dotted(corners(c, c.wall + c.buffer), zb, zl);
@@ -1829,6 +1850,7 @@ function draw3d(){
 
   /* conduits: every column and row of every run, segment by segment */
   for (const cn of state.connections){
+    if (!isVisible(cn)) continue;
     const rt = cn.route, sp = specOf(cn), on = isOn('conn', cn.uid);
     const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
     if (!A || !B) continue;
@@ -2005,6 +2027,7 @@ function hitFace(world, tolPx = 9){
   const tol = tolPx/state.view.s;
   let best = null, bestD = Infinity;
   for (const c of state.chambers) for (const f of FACES){
+    if (!isVisible(c)) continue;
     const g = faceGeom(c, f), d = distToSeg(world, g.p1, g.p2);
     if (d < tol && d < bestD){ bestD = d; best = {mh:c.uid, face:f}; }
   }
@@ -2012,17 +2035,18 @@ function hitFace(world, tolPx = 9){
 }
 function hitChamber(w){
   for (let i = state.chambers.length-1; i >= 0; i--)
-    if (pointInPoly(w, corners(state.chambers[i], state.chambers[i].wall))) return state.chambers[i];
+    if (isVisible(state.chambers[i]) && pointInPoly(w, corners(state.chambers[i], state.chambers[i].wall))) return state.chambers[i];
   return null;
 }
 function hitObstacle(w){
   for (let i = state.obstacles.length-1; i >= 0; i--)
-    if (pointInPoly(w, boxCorners(state.obstacles[i], 0))) return state.obstacles[i];
+    if (isVisible(state.obstacles[i]) && pointInPoly(w, boxCorners(state.obstacles[i], 0))) return state.obstacles[i];
   return null;
 }
 function hitConnection(w, tolPx = 8){
   let best = null, bestD = Infinity;
   for (const cn of state.connections){
+    if (!isVisible(cn)) continue;
     const rt = cn.route;
     let line;
     if (cn.placed && rt && rt.ok) line = rt.poly;
@@ -2107,7 +2131,7 @@ STAGE.addEventListener('pointerdown', e => {
     if (kind === 'chamber' && !chamberMovable(obj)){ noteLocked(obj); return; }       // locked or static: selected, never dragged
     const items = movables().map(m => ({obj:m, x0:m.x, y0:m.y}));
     if (!items.length) return;
-    drag = {kind:'move', wp0:wp, sx:sp[0], sy:sp[1], slop: coarse(e) ? SLOP : 0, items, moved:false};
+    drag = {kind:'move', wp0:wp, sx:sp[0], sy:sp[1], slop: coarse(e) ? SLOP : 0, items, moved:false, axisRot: obj.rot || 0};   // the grabbed one's own axes, for ctrl+shift
     ROUTE_QUICK = true;
   };
   const c = hitChamber(wp);
@@ -2140,8 +2164,16 @@ STAGE.addEventListener('pointermove', e => {
     if (!drag.moved && Math.hypot(sp[0]-drag.sx, sp[1]-drag.sy) <= drag.slop) return;
     drag.moved = true;
     let dx = wp[0]-drag.wp0[0], dy = wp[1]-drag.wp0[1];
-    if (e.shiftKey){ if (Math.abs(dx) >= Math.abs(dy)) dy = 0; else dx = 0; }   // shift holds the drag to one line
-    for (const it of drag.items){ it.obj.x = snap(it.x0 + dx); it.obj.y = snap(it.y0 + dy); }
+    let exact = false;
+    if (e.shiftKey){
+      if (e.ctrlKey || e.metaKey){                    // ctrl+shift: along the grabbed chamber's own axes, as it is turned
+        const r = (drag.axisRot || 0)*D2R, u = [Math.cos(r), Math.sin(r)], v = [-u[1], u[0]];
+        const a = snap(dx*u[0] + dy*u[1]), b = snap(dx*v[0] + dy*v[1]);
+        if (Math.abs(a) >= Math.abs(b)){ dx = u[0]*a; dy = u[1]*a; } else { dx = v[0]*b; dy = v[1]*b; }
+        exact = true;
+      } else if (Math.abs(dx) >= Math.abs(dy)) dy = 0; else dx = 0;   // shift holds the drag to one line
+    }
+    for (const it of drag.items){ it.obj.x = exact ? Math.round(it.x0 + dx) : snap(it.x0 + dx); it.obj.y = exact ? Math.round(it.y0 + dy) : snap(it.y0 + dy); }
     renderSel(); renderConnections(); return draw();
   }
   if (drag && drag.kind === 'box'){
@@ -2286,9 +2318,10 @@ function rectSel(x0, y0, x1, y1, crossing){
     : pts.every(inside);
   const lineHit = pts => crossing ? pts.some(inside) || pts.some((p, i) => i > 0 && cuts(pts[i-1], p)) : pts.every(inside);
   const set = [];
-  for (const c of state.chambers) if (polyHit(corners(c, c.wall))) set.push({kind:'chamber', id:c.uid});
-  for (const o of state.obstacles) if (polyHit(boxCorners(o, 0))) set.push({kind:'obstacle', id:o.uid});
+  for (const c of state.chambers) if (isVisible(c) && polyHit(corners(c, c.wall))) set.push({kind:'chamber', id:c.uid});
+  for (const o of state.obstacles) if (isVisible(o) && polyHit(boxCorners(o, 0))) set.push({kind:'obstacle', id:o.uid});
   for (const cn of state.connections){
+    if (!isVisible(cn)) continue;
     const rt = cn.route; let pts;
     if (cn.placed && rt && rt.ok) pts = rt.poly;
     else { const ea = entryFor(cn,'a'), eb = entryFor(cn,'b'); if (!ea || !eb) continue; pts = [ea.point, eb.point]; }
@@ -2296,11 +2329,11 @@ function rectSel(x0, y0, x1, y1, crossing){
   }
   return set;
 }
-/** A chamber moves unless the drawing locks its manholes or it came in static — placed as its model has it. */
-const chamberMovable = c => !(state.lockChambers || (c && c.fixed));
+/** A chamber moves unless the drawing locks its manholes or its layer is static. */
+const chamberMovable = c => !(state.lockChambers || (c && layerMode(c) === 'static'));
 const movables = () => state.selSet.map(x => x.kind === 'chamber' ? (chamberMovable(byUid(x.id)) ? byUid(x.id) : null) : x.kind === 'obstacle' ? obsBy(x.id) : null).filter(Boolean);
-const noteLocked = c => { document.getElementById('rmode').textContent = c && c.fixed && !state.lockChambers
-  ? `${c.ref} is static — placed as its model has it, it does not move`
+const noteLocked = c => { document.getElementById('rmode').textContent = c && !state.lockChambers && layerMode(c) === 'static'
+  ? `${c.ref} is on the static layer ${layerOf(c).name} — it does not move`
   : 'manholes are locked — untick Lock manholes in the Drawing window to move them'; };
 /** The status line while a connection is being made from a face. */
 function setPendingStatus(){
@@ -2316,7 +2349,7 @@ function pickFace(f){
   const dup = state.connections.find(c =>
     (same(c.a, state.pending) && same(c.b, f)) || (same(c.b, state.pending) && same(c.a, f)));
   if (dup){ state.pending = null; setPendingStatus(); select('conn', dup.uid); return; }
-  const cn = {uid:uid(), a:state.pending, b:f, placed:true, level:0, perRow:[1], align:'auto',     // made and placed at once: nothing to approve
+  const cn = {uid:uid(), a:state.pending, b:f, placed:true, level:0, perRow:[1], align:'auto', layer: activeLayerId(),     // made and placed at once: nothing to approve
               specId:(state.editSpec || state.specs[0].id), route:null};
   state.connections.push(cn);
   state.pending = null; setPendingStatus();
@@ -2348,6 +2381,7 @@ function renderConnections(){
   document.getElementById('connCount').textContent = state.connections.length || '';
   if (!state.connections.length){
     box.innerHTML = `<div class="empty">None yet. Double-click a face, then double-click a face on another chamber — or right-click a face and choose <b>Connect from</b>.</div>`;
+    renderLayers();
     return;
   }
   box.innerHTML = '<div class="list">' + state.connections.map(cn => {
@@ -2365,6 +2399,7 @@ function renderConnections(){
   }).join('') + '</div>';
   box.querySelectorAll('[data-conn]').forEach(el => el.onclick = () => select('conn', el.dataset.conn));
   box.querySelectorAll('[data-del]').forEach(b => b.onclick = ev => { ev.stopPropagation(); disconnect(b.dataset.del); });
+  renderLayers();
 }
 
 function renderObstacles(){
@@ -2573,7 +2608,7 @@ function renderChamberProps(box, c){
          <b>External</b> ${fmt(c.intX+2*c.wall)} × ${fmt(c.intY+2*c.wall)} mm<br>
          <b>Internal plan area</b> ${(c.intX*c.intY/1e6).toFixed(2)} m²<br>
          <b>Sides</b> ${FACES.map(f => f+' '+fmt(faceGeom(c,f).width)).join('  ')}${revitLine(c)}</div>`) +
-    cluster('chPos', 'Position', `${fmt(c.x)}, ${fmt(c.y)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}${state.lockChambers ? ' · locked' : c.fixed ? ' · static' : ''}`,
+    cluster('chPos', 'Position', `${fmt(c.x)}, ${fmt(c.y)}${c.rot ? ' · ' + fmt1(c.rot) + '°' : ''}${state.lockChambers ? ' · locked' : layerMode(c) === 'static' ? ' · static' : ''}`,
       numRow('pX','Centre X', c.x, state.snap||1, 'mm') +
       numRow('pY','Centre Y', c.y, state.snap||1, 'mm') +
       numRow('pR','Rotation', c.rot, 15, '°')) +
@@ -2604,7 +2639,7 @@ function renderChamberProps(box, c){
   bind('pRef','ref',String); bind('pIX','intX'); bind('pIY','intY');
   bind('pW','wall'); bind('pZL','zLid'); bind('pZB','zBase'); bind('pX','x'); bind('pY','y'); bind('pR','rot'); bind('pB','buffer');
   bind('pLat','latSpace'); bind('pZ','zSpace'); bind('pZ0','z0'); bind('pEC','edgeClear');
-  if (!chamberMovable(c)) for (const id of ['pX', 'pY', 'pR']){ const el = document.getElementById(id); if (el){ el.disabled = true; el.title = state.lockChambers ? 'Locked: only a Revit import moves this manhole' : 'Static: placed as its model has it'; } }
+  if (!chamberMovable(c)) for (const id of ['pX', 'pY', 'pR']){ const el = document.getElementById(id); if (el){ el.disabled = true; el.title = state.lockChambers ? 'Locked: only a Revit import moves this manhole' : 'Static layer: it does not move'; } }
   wireFaceButtons(c);
   wireClusters(box, renderSel);
   document.getElementById('pSq').onchange = e => {
@@ -2735,7 +2770,7 @@ function renderRunProps(box, cn){
          <b>Run</b> ${esc(connLabel(cn))}<br>
          ${entryLine(cn)}${arrayLine(cn)}${encLine(cn)}` +
          (rt && rt.ok && rt.fixed
-           ? `<b>Static</b> placed as its model has it — it is never re-routed, and other runs keep clear of it<br>
+           ? `<b>Static</b> on the layer ${esc(layerOf(cn).name)} — it is never re-routed, and other runs keep clear of it<br>
               <b>Centreline</b> ${metres(rt.length)} in plan · ${metres(rt.length3d || rt.length)} laid · ${rt.pts.length} points`
            : `<b>Angles</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}<br>` +
              (rt && rt.ok
@@ -3021,16 +3056,123 @@ const viewCentre = () => {
 
 document.getElementById('btnAdd').onclick = () => {
   const p = viewCentre(), base = state.chambers[state.chambers.length-1];
-  const c = makeChamber({x:snap(p[0]), y:snap(p[1]),
+  const c = makeChamber({x:snap(p[0]), y:snap(p[1]), layer: activeLayerId(),
     intX: base?base.intX:1200, intY: base?base.intY:1200, wall: base?base.wall:150});
   state.chambers.push(c); select('chamber', c.uid);
 };
 document.getElementById('btnObs').onclick = () => {
   const p = viewCentre();
-  const o = makeObstacle({x:snap(p[0]), y:snap(p[1])});
+  const o = makeObstacle({x:snap(p[0]), y:snap(p[1]), layer: activeLayerId()});
   state.obstacles.push(o); select('obstacle', o.uid);
 };
 document.getElementById('btnFit').onclick = () => fitView();
+
+/* ---------- Encase: the selected runs, or every run, in their specs' encasement ---------- */
+document.getElementById('btnEncase').onclick = () => {
+  const selRuns = new Set(state.selSet.filter(x => x.kind === 'conn').map(x => x.id));
+  const selCh = new Set(state.selSet.filter(x => x.kind === 'chamber').map(x => x.id));
+  let targets = state.connections.filter(cn => selRuns.has(cn.uid) || selCh.has(cn.a.mh) || selCh.has(cn.b.mh));
+  const all = !targets.length;
+  if (all) targets = state.connections.slice();
+  if (!targets.length){ exStatus('nothing to encase — draw a run first'); return; }
+  const allOn = targets.every(cn => cn.encased);
+  const given = new Set();
+  for (const cn of targets){
+    cn.encased = !allOn;
+    if (!allOn){ const sp = specOf(cn); if (sp && !encOf(sp)){ sp.enc = 100; given.add(sp.name); } }
+  }
+  const n = targets.length, s = n === 1 ? '' : 's';
+  bankCache.clear(); renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); draw();
+  exStatus(allOn ? `encasement taken off ${n} run${s}`
+    : `${n} run${s} encased${all ? ' — every run on the drawing' : ''}${given.size ? ` · ${[...given].join(', ')} given a 100 mm encasement offset` : ''}`);
+};
+
+/* ---------- Layers: like Revit worksets ---------- */
+function renderLayers(){
+  const box = document.getElementById('layerList');
+  if (!box) return;
+  const idOf = e => layerById(e.layer) ? e.layer : DEFAULT_LAYER;
+  const count = (arr, id) => arr.filter(e => idOf(e) === id).length;
+  const cnt = document.getElementById('layerCount'); if (cnt) cnt.textContent = state.layers.length > 1 ? state.layers.length : '';
+  box.innerHTML = state.layers.map(l => {
+    const nc = count(state.chambers, l.id), nr = count(state.connections, l.id), no = count(state.obstacles, l.id);
+    const pending = state.connections.filter(cn => idOf(cn) === l.id && ((l.mode === 'static') !== !!(cn.fixed && cn.fixedPath))).length;
+    const mode = l.mode === 'static' ? 'static' : 'dynamic';
+    return `<div class="layer${l.id === activeLayerId() ? ' on' : ''}" data-layer="${l.id}">
+      <div class="lrow"><input type="radio" name="activeLayer" data-lact="${l.id}"${l.id === activeLayerId() ? ' checked' : ''} title="New chambers, runs and obstacles go to the active layer">
+        <input type="text" class="lname" data-lname="${l.id}" value="${esc(l.name)}" title="The layer's name">
+        <label class="chk" title="Show or hide the layer on the drawing"><input type="checkbox" data-lvis="${l.id}"${l.visible !== false ? ' checked' : ''}> shown</label></div>
+      <div class="lrow"><span class="meta">${nc} chamber${nc === 1 ? '' : 's'} · ${nr} run${nr === 1 ? '' : 's'} · ${no} obstacle${no === 1 ? '' : 's'}${pending ? ` · <b>${pending} to update</b>` : ''}</span>
+        <select class="mini" data-lmode="${l.id}" title="${esc(MODE_NOTE[mode])}">${['dynamic','static'].map(k => `<option value="${k}"${mode === k ? ' selected' : ''}>${k}</option>`).join('')}</select>
+        <button class="mini" data-lmove="${l.id}" title="Move the selected chambers, runs and obstacles to this layer">Move selection here</button>
+        ${l.id === DEFAULT_LAYER ? '' : `<button class="mini x" data-ldel="${l.id}" title="Delete the layer — what is on it goes to the Drawing layer">×</button>`}</div></div>`;
+  }).join('');
+  const who = document.getElementById('layerWho'); if (who) who.textContent = `${state.layers.length} layer${state.layers.length === 1 ? '' : 's'}`;
+  box.querySelectorAll('[data-lact]').forEach(el => el.onchange = () => { state.activeLayer = el.dataset.lact; renderLayers(); });
+  box.querySelectorAll('[data-lname]').forEach(el => el.addEventListener('input', () => { const l = layerById(el.dataset.lname); if (l) l.name = el.value; }));
+  box.querySelectorAll('[data-lvis]').forEach(el => el.onchange = () => { const l = layerById(el.dataset.lvis); if (l){ l.visible = el.checked; } renderSel(); draw(); });
+  box.querySelectorAll('[data-lmode]').forEach(el => el.onchange = () => {
+    const l = layerById(el.dataset.lmode); if (!l) return;
+    l.mode = el.value === 'static' ? 'static' : 'dynamic';
+    renderSel(); renderLayers(); draw();
+    exStatus(`${l.name} is now ${l.mode} — its manholes ${l.mode === 'static' ? 'stay put' : 'can move'}; press Update routes to ${l.mode === 'static' ? 'fix its runs as they stand' : 'route its runs again with avoidance'}`);
+  });
+  box.querySelectorAll('[data-lmove]').forEach(el => el.onclick = () => {
+    const id = el.dataset.lmove; let n = 0;
+    for (const x of state.selSet){
+      const e = x.kind === 'chamber' ? byUid(x.id) : x.kind === 'obstacle' ? obsBy(x.id) : x.kind === 'conn' ? connBy(x.id) : null;
+      if (e && e.layer !== id){ e.layer = id; n++; }
+    }
+    renderSel(); renderConnections(); renderLayers(); draw();
+    exStatus(n ? `${n} element${n === 1 ? '' : 's'} moved to ${layerById(id).name}` : 'select something on the drawing first');
+  });
+  box.querySelectorAll('[data-ldel]').forEach(el => el.onclick = () => {
+    const id = el.dataset.ldel, l = layerById(id); if (!l || id === DEFAULT_LAYER) return;
+    for (const e of [...state.chambers, ...state.obstacles, ...state.connections]) if (e.layer === id) e.layer = DEFAULT_LAYER;
+    state.layers = state.layers.filter(x => x.id !== id);
+    if (state.activeLayer === id) state.activeLayer = DEFAULT_LAYER;
+    renderSel(); renderConnections(); renderLayers(); draw();
+  });
+}
+document.getElementById('layerNew').onclick = () => {
+  let n = state.layers.length + 1; while (state.layers.some(l => l.name === 'Layer ' + n)) n++;
+  const l = makeLayer({name:'Layer ' + n}); state.layers.push(l); state.activeLayer = l.id; renderLayers();
+};
+/** A run's centreline laid without any avoidance, as a path with its depths:
+    its current route when it has one, else a fresh route past nothing. */
+function plainPath(cn){
+  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  if (!A || !B) return null;
+  const zPitch = Math.max(1, A.zSpace || 0, B.zSpace || 0), zFlat = chamberZ0(A) - (cn.level|0)*zPitch;
+  let rt = cn.route && cn.route.ok ? cn.route : null;
+  if (!rt){
+    const G = buildBanks().find(g => g.members.includes(cn));
+    if (!G) return null;
+    const r = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, [], {plan:true});
+    if (!r.ok) return null;
+    rt = r;
+  }
+  const pf = rt.profile, cum = [0];
+  for (let i = 1; i < rt.pts.length; i++) cum.push(cum[i-1] + Math.hypot(rt.pts[i][0]-rt.pts[i-1][0], rt.pts[i][1]-rt.pts[i-1][1]));
+  const k = (rt.length || cum[cum.length-1] || 1) / (cum[cum.length-1] || 1);
+  return rt.pts.map((p, i) => [p[0], p[1], pf ? profileZ(pf, cum[i]*k) : zFlat]);
+}
+/** Update routes: every dynamic layer is routed again round everything static
+    and encased; every static layer is fixed as it stands — a modelled path
+    kept, anything else laid without avoidance and then fixed. */
+function updateLayers(){
+  let fixed = 0, freed = 0, stuck = 0;
+  for (const cn of state.connections){
+    if (layerMode(cn) === 'static'){
+      if (cn.fixed && Array.isArray(cn.fixedPath) && cn.fixedPath.length >= 2) continue;
+      const path = Array.isArray(cn.modelPath) && cn.modelPath.length >= 2 ? cn.modelPath : plainPath(cn);
+      if (path){ cn.fixed = true; cn.fixedPath = path; fixed++; } else stuck++;
+    } else if (cn.fixed){ delete cn.fixed; delete cn.fixedPath; freed++; }
+  }
+  bankCache.clear(); renderSel(); renderConnections(); draw();
+  exStatus(`routes updated — ${fixed} fixed as static, ${freed} routed again with avoidance${stuck ? `, ${stuck} with no route to fix` : ''}`);
+}
+document.getElementById('layerUpdate').onclick = updateLayers;
 
 /* ==========================================================================
    ICONS
@@ -3043,6 +3185,8 @@ const ICONS = {
   elevation:'<rect x="3" y="5" width="18" height="14"/><rect x="6" y="8" width="12" height="8" stroke-dasharray="2 2"/><circle cx="9.5" cy="12" r="1.8"/><circle cx="14.5" cy="12" r="1.8"/>',
   redo:     '<path d="M15 14l5-5-5-5"/><path d="M20 9h-9.5a5.5 5.5 0 0 0 0 11H14"/>',
   chamber:  '<rect x="4" y="4" width="16" height="16"/><rect x="8" y="8" width="8" height="8"/>',
+  encase:   '<rect x="3" y="6" width="18" height="12" rx="1"/><circle cx="8" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="16" cy="12" r="2"/>',
+  layers:   '<path d="M12 4l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17l9 5 9-5"/>',
   obstacle: '<rect x="4" y="5" width="16" height="14"/><path d="M4 12l7-7M4 18l13-13M9 19l11-11M15 19l5-5"/>',
   cube:     '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
   plan:     '<rect x="4" y="4" width="16" height="16"/><path d="M4 12h16M12 4v16"/>',
@@ -3177,7 +3321,7 @@ function spaceMenu(wp){
    ribbon lights the buttons that concern whatever is selected.
    ========================================================================== */
 
-const WINS = ['chambers', 'runs', 'obstacles', 'specs', 'examples', 'drawing', 'file', 'elevation', 'view3d'];
+const WINS = ['chambers', 'runs', 'obstacles', 'layers', 'specs', 'examples', 'drawing', 'file', 'elevation', 'view3d'];
 let winZ = 30;
 const winEl = k => document.getElementById('win-' + k);
 /** A window opens in the first free slot from the right edge, so several
@@ -3200,6 +3344,7 @@ function openWin(k){
   el.style.zIndex = ++winZ;
   if (k === 'view3d' && was){ state.view3d = true; state.pending = null; setPendingStatus(); fit3d(); }
   if (k === 'elevation' && was) renderElevation();
+  if (k === 'layers') renderLayers();
   updateRibbon();
 }
 function closeWin(k){
@@ -3281,6 +3426,7 @@ document.getElementById('btnExport').onclick = () => {
     ground: state.ground, cover: state.cover, lockChambers: state.lockChambers,
     revit: revitDocs.length ? {documents: revitDocs} : undefined,
     specs: state.specs.map(({id, ...rest}) => rest),
+    layers: state.layers, activeLayer: activeLayerId(),
     chambers: state.chambers.map(({uid, ...rest}) => rest),
     obstacles: state.obstacles.map(({uid, ...rest}) => rest),
     runs: state.connections.map(cn => {
@@ -3300,6 +3446,8 @@ document.getElementById('btnExport').onclick = () => {
                                 return Object.keys(e).length ? e : undefined; })(),
         rows: runRows(cn), cols: runCols(cn), perRow: runRowsOf(cn), align: runAlignPref(cn), packedTo: runAlign(cn),
         static: cn.fixed ? true : undefined, path: cn.fixed && Array.isArray(cn.fixedPath) ? cn.fixedPath.map(q => q.map(v => Math.round(v*10)/10)) : undefined,
+        modelPath: Array.isArray(cn.modelPath) ? cn.modelPath.map(q => q.map(v => Math.round(v*10)/10)) : undefined,
+        layer: cn.layer || DEFAULT_LAYER, encased: cn.encased ? true : undefined,
         encasement: (() => { const E = runEncasement(cn); return E ? {offset: E.off, width: Math.round(E.W), height: Math.round(E.H)} : undefined; })(),
         placed: cn.placed,
         route: rt && rt.ok ? {
@@ -3342,6 +3490,10 @@ document.getElementById('fileIn').onchange = e => {
       if (Number.isFinite(d.cover) && d.cover >= 0) state.cover = d.cover;
       if (typeof d.lockChambers === 'boolean') state.lockChambers = d.lockChambers;
       syncDrawingInputs();
+      const hadLayers = Array.isArray(d.layers) && d.layers.length > 0;
+      state.layers = hadLayers ? d.layers.map(l => makeLayer({...l})) : [makeLayer({id:DEFAULT_LAYER, name:'Drawing'})];
+      if (!layerById(DEFAULT_LAYER)) state.layers.unshift(makeLayer({id:DEFAULT_LAYER, name:'Drawing'}));
+      state.activeLayer = layerById(d.activeLayer) ? d.activeLayer : DEFAULT_LAYER;
       state.chambers  = (d.chambers ||[]).map(c => makeChamber({buffer:0, ...c, uid:uid()}));
       state.obstacles = (d.obstacles||[]).map(o => {
         const m = makeObstacle({...o, method: obsMethod(o), buffer: o.buffer != null ? o.buffer : (o.clearance != null ? o.clearance : 250), uid:uid()});
@@ -3356,10 +3508,25 @@ document.getElementById('fileIn').onchange = e => {
                 placed: !!cn.placed, level: Math.max(0, cn.level|0),
                 perRow: runRowsOf(cn), align: ALIGNS.includes(cn.align) ? cn.align : 'auto',
                 fixed: !!cn.static && Array.isArray(cn.path) && cn.path.length >= 2, fixedPath: cn.static && Array.isArray(cn.path) && cn.path.length >= 2 ? cn.path.map(q => [Number(q[0]), Number(q[1]), Number(q[2]) || 0]) : undefined,
+                modelPath: Array.isArray(cn.modelPath) && cn.modelPath.length >= 2 ? cn.modelPath.map(q => [Number(q[0]), Number(q[1]), Number(q[2]) || 0]) : undefined,
+                layer: layerById(cn.layer) ? cn.layer : undefined, encased: cn.encased === true ? true : undefined,
                 cross: Object.fromEntries(Object.entries(cn.obstacleRules || {}).map(([nm, m]) => {
                   const ob = state.obstacles.find(x => x.name === nm); return ob && METHODS.includes(m) ? [ob.uid, m] : null; }).filter(Boolean)),
                 specId: byName(cn.spec).id, route:null};
       }).filter(Boolean);
+      if (!hadLayers){                                                  // an older file: its static models become static layers, the rest is the Drawing layer
+        const docs = new Map();
+        for (const c of state.chambers){
+          if (c.revitDoc && !layerById(c.layer)){
+            if (!docs.has(c.revitDoc)) docs.set(c.revitDoc, ensureLayer(docLayerName({document:c.revitDoc})));
+            c.layer = docs.get(c.revitDoc).id;
+            if (c.fixed) docs.get(c.revitDoc).mode = 'static';
+          }
+          delete c.fixed;
+        }
+        for (const o of state.obstacles) if (o.revitDoc && docs.has(o.revitDoc) && !layerById(o.layer)) o.layer = docs.get(o.revitDoc).id;
+      }
+      for (const cn of state.connections) if (!layerById(cn.layer)){ const A = byUid(cn.a.mh); cn.layer = A && layerById(A.layer) ? A.layer : DEFAULT_LAYER; }
       state.sel = null; state.editSpec = state.specs[0].id;
       renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); renderObstacles(); fitView();
     } catch(err){ alert('That file is not a plan export. Expected JSON with a chambers array.'); }
@@ -3498,7 +3665,9 @@ function uniqueRef(ref){
 function applyRevitImport(src, opt = {}){
       const {chambers: made, obstacles: obs} = importRevit(src);
       if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) found');
-      for (const c of made) c.fixed = !!opt.fixed;                    // static: placed as its model has it, never moved
+      const lay = ensureLayer(opt.layer || docLayerName(src), opt.fixed ? 'static' : 'dynamic');   // one layer per model, static or dynamic
+      for (const c of made) c.layer = lay.id;
+      for (const o of obs) o.layer = lay.id;
       const n = (k, w) => `${k} ${w}${k === 1 ? '' : 's'}`;
       const oldC = new Map(state.chambers.filter(revitKey).map(c => [revitKey(c), c]));
       const oldO = new Map(state.obstacles.filter(revitKey).map(o => [revitKey(o), o]));
@@ -3506,8 +3675,8 @@ function applyRevitImport(src, opt = {}){
       if (hits){
         /* a later export of a model already on the drawing: refresh what matches
            in place — every run stays attached — add what is new, keep the rest */
-        const CH = ['x','y','rot','intX','intY','wall','sides','win','lid','zd','z0','zLid','zBase','family','type','revitId','revitUid','revitDoc','fixed'];
-        const OB = ['x','y','rot','w','d','zTop','zBot','family','type','revitId','revitUid','revitDoc'];
+        const CH = ['x','y','rot','intX','intY','wall','sides','win','lid','zd','z0','zLid','zBase','family','type','revitId','revitUid','revitDoc','layer'];
+        const OB = ['x','y','rot','w','d','zTop','zBot','family','type','revitId','revitUid','revitDoc','layer'];
         let added = 0;
         for (const c of made){
           const old = oldC.get(revitKey(c));
@@ -3566,7 +3735,9 @@ function recreateRuns(src, opt = {}){
     cn.level = Math.max(0, r.level|0); cn.specId = sp.id; cn.placed = true;
     delete cn.rows; delete cn.cols;
     const path = Array.isArray(r.path_mm) && r.path_mm.length >= 2 ? r.path_mm.map(q => [Number(q[0]), Number(q[1]), Number(q[2]) || 0]) : null;
-    if (opt.fixed && path){ cn.fixed = true; cn.fixedPath = path; } else { delete cn.fixed; delete cn.fixedPath; }
+    const lay = layerOf(A); cn.layer = lay.id;
+    if (path) cn.modelPath = path;                                   // the modelled centreline, kept so the run can go static again
+    if (lay.mode === 'static' && path){ cn.fixed = true; cn.fixedPath = path; } else { delete cn.fixed; delete cn.fixedPath; }
   }
   if (made || kept){ bankCache.clear(); state.sel = null; state.selSet = []; renderSel(); renderConnections(); fitView(); }
   return {made, kept, missing, listed: runs.length};
@@ -3641,7 +3812,7 @@ function placeExample(id){
   if (!x) return;
   if (x.models){
     Promise.all(x.models.map(m => fetchJSON(m.file)))            // everything fetched first, so a failure places nothing
-      .then(srcs => { srcs.forEach((src, i) => applyRevitImport(src, {...(i ? {add:true} : {}), fixed: modeOf(x.id, x.models[i].id) === 'static'}));
+      .then(srcs => { srcs.forEach((src, i) => applyRevitImport(src, {...(i ? {add:true} : {}), fixed: modeOf(x.id, x.models[i].id) === 'static', layer: x.models[i].name}));
                       const rs = x.models.map((m, i) => m.runs && wantRuns(x.id, m.id) ? recreateRuns(srcs[i], {fixed: modeOf(x.id, m.id) === 'static'}) : null).filter(Boolean);
                       exStatus(`example placed — ${x.name} · ${state.chambers.length} manholes` + runsNote(rs)); })
       .catch(err => alert('The example could not be loaded: ' + err.message));
@@ -3662,7 +3833,7 @@ function addModel(exId, mId){
   if (!m) return;
   fetchJSON(m.file)
     .then(src => { const before = state.chambers.length; const fixed = modeOf(exId, mId) === 'static';
-                   applyRevitImport(src, {add:true, fixed}); const n = state.chambers.length - before;
+                   applyRevitImport(src, {add:true, fixed, layer: m.name}); const n = state.chambers.length - before;
                    const rs = m.runs && wantRuns(exId, mId) ? [recreateRuns(src, {fixed})] : [];
                    exStatus((n > 0 ? `${m.name} added — ${n} manholes · ${state.chambers.length} on the drawing`
                                    : `${m.name} refreshed in place · ${state.chambers.length} manholes on the drawing`) + runsNote(rs)); })
@@ -3673,6 +3844,7 @@ renderExamples();
 /** Remove every chamber, obstacle and conduit run — one step Undo takes back. */
 function wipeDrawing(){
   state.chambers = []; state.obstacles = []; state.connections = [];
+  state.layers = [makeLayer({id:DEFAULT_LAYER, name:'Drawing'})]; state.activeLayer = DEFAULT_LAYER;
   state.sel = null; state.selSet = []; state.pending = null;
   bankCache.clear(); setPendingStatus();
   renderSel(); renderConnections(); renderObstacles(); draw();
@@ -3700,6 +3872,7 @@ document.addEventListener('input', e => { lastInput = {key: e.target.id || e.tar
 function docSnapshot(){
   return JSON.stringify({
     ground: state.ground, cover: state.cover, avoidChambers: state.avoidChambers, avoidPipes: state.avoidPipes, square: state.square,
+    layers: state.layers, activeLayer: state.activeLayer,
     specs: state.specs, chambers: state.chambers, obstacles: state.obstacles,
     connections: state.connections.map(({route, ...rest}) => rest)
   });
@@ -3728,6 +3901,8 @@ function applySnapshot(s){
   HIST.applying = true;
   state.ground = d.ground; state.cover = d.cover; state.avoidChambers = d.avoidChambers; state.avoidPipes = d.avoidPipes; state.square = d.square;
   state.specs = d.specs; state.chambers = d.chambers; state.obstacles = d.obstacles;
+  state.layers = Array.isArray(d.layers) && d.layers.length ? d.layers : [makeLayer({id:DEFAULT_LAYER, name:'Drawing'})];
+  state.activeLayer = d.activeLayer || DEFAULT_LAYER;
   state.connections = d.connections.map(cn => ({...cn, route:null}));
   const alive = new Set([...state.chambers, ...state.obstacles, ...state.connections].map(x => x.uid));
   state.selSet = state.selSet.filter(x => alive.has(x.id));         // the selection survives where its things do

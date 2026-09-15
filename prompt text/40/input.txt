@@ -1,5 +1,0 @@
-ok, now the conduit runs need their own encasement boxes. make it a settings in the conduit settings. MV should have an encaasement offset boundary that will be ofset from the outer dia
-
-it'll always be a rectangular/square. width will be the widest extent if there are multiple lines of conduit with differing numbers
-
-same with the height in the vertical direction

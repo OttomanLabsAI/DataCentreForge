@@ -106,6 +106,8 @@ them, recreated as runs while its checkbox is ticked; and the DCBuild test
 model. The LV model's family exposes only its depth planes, so it borrows the
 DCBuild family's side planes for wall and size.
 
+Hold ctrl (or ⌘) with shift while dragging and the line follows the grabbed
+chamber's own axes instead, along or across it however it is turned.
 Hold shift while dragging a chamber or obstacle and it keeps to one line,
 straight along or straight across, whichever the drag favours. The Drawing
 window's **Lock manholes** switch is for drawings fed from Revit: with it on, a
@@ -204,13 +206,35 @@ when it lies straight ahead, the side away from the face's other runs — or the
 left or right chosen on the run. The elevation and the 3D view draw exactly
 those conduits, and the drawing's file carries the rows and the side.
 
-A spec can carry an encasement offset — the MV spec has 100 mm by default —
-and every run on that spec then has an encasement box: a rectangle that far
-beyond the conduits' outer diameter, as wide as the array's widest row and as
-high as all its rows together. The plan draws it as a band with its two
-edges, the elevation as a box round the array, the 3D view as the box's four
-edges, and the run's panel and the file give its size. Other runs, obstacles
-and the ground cover keep their clearance from the box, not the conduits.
+A spec carries an encasement offset — the MV spec has 100 mm by default —
+and the Encase button in the Create group puts the box on runs: the selected
+runs, the runs on the selected chambers, or every run when nothing is
+selected; pressed again on the same runs it takes the box off, and a spec
+with no offset is given 100 mm the first time one of its runs is encased. An
+encased run's box is a rectangle that far beyond the conduits' outer
+diameter, as wide as the array's widest row and as high as all its rows
+together. The plan draws it as a band with its two edges, the elevation as a
+box round the array, the 3D view as the box's four edges, and the run's panel
+and the file give its size. Other runs avoid the box itself rather than the
+conduits and their clearance, obstacles and the ground cover allow for it, and
+an unencased neighbour keeps its own clearance from the box.
+
+## Layers
+
+Every chamber, run and obstacle belongs to a layer, like a Revit workset. The
+Layers window (in the Manage group) lists them with their counts: each can be
+renamed, shown or hidden, made the active layer that new elements go to, or
+deleted, which sends what was on it to the Drawing layer, and the selection
+can be moved to any of them. Each model placed from the Examples window or a
+Revit import lands on a layer of its own, static or dynamic as chosen.
+
+A layer is dynamic or static. A dynamic layer is the tool's to route and its
+manholes can move. A static layer's manholes stay put at once, and its runs
+are fixed by the one Update routes button: a modelled path is kept, and any
+other run is laid without avoidance and then fixed as it stands, so dynamic
+runs keep clear of it. Set a layer dynamic again and Update routes routes its
+runs afresh round everything static and encased. The setting only takes
+effect on Update, and a layer says how many of its runs are waiting for it.
 
 A static run — one placed from a model with its modelled centreline — is
 never routed at all: it sits on its path at its modelled depths, meets each

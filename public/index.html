@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=2.25">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.26">
 </head>
 <body>
 
@@ -19,6 +19,7 @@
     <div class="rgroup"><div class="rbtns">
       <button id="btnAdd" data-icon="chamber" title="Add a chamber at the centre of the view"><span>Chamber</span></button>
       <button id="btnObs" data-icon="obstacle" title="Add an obstacle at the centre of the view"><span>Obstacle</span></button>
+      <button id="btnEncase" data-icon="encase" title="Encase the selected runs — or every run when nothing is selected — in their specs' encasement; press again to take it off"><span>Encase</span></button>
     </div><div class="rcap">Create</div></div>
     <div class="rgroup"><div class="rbtns">
       <button id="btnView3d" data-win="view3d" data-icon="cube" title="Open the 3D view in its own window (key 3)"><span>3D view</span></button>
@@ -28,6 +29,7 @@
       <button data-win="chambers" data-icon="chambers"><span>Chambers <em id="chamberCount"></em><em id="chamberLock" class="lockmark" hidden title="Manholes are locked: only a Revit import moves them"></em></span></button>
       <button data-win="runs" data-icon="runs"><span>Runs <em id="connCount"></em></span></button>
       <button data-win="obstacles" data-icon="obstacles"><span>Obstacles <em id="obsCount"></em></span></button>
+      <button data-win="layers" data-icon="layers" title="Layers — like Revit worksets: each is static or dynamic, shown or hidden"><span>Layers <em id="layerCount"></em></span></button>
       <button data-win="specs" data-icon="specs"><span>Specs</span></button>
       <button data-win="examples" data-icon="example" title="Example drawings to place"><span>Examples</span></button>
     </div><div class="rcap">Manage</div></div>
@@ -43,7 +45,7 @@
     <svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="hud" id="hint">
       <span class="mouse">drag empty space — select · middle or right drag — pan<br>
-      scroll or pinch — zoom · drag chamber or obstacle — move · shift — one line<br>
+      scroll or pinch — zoom · drag chamber or obstacle — move · shift — one line · ctrl+shift — its own axis<br>
       click a conduit — select · del — remove<br>
       double-click a face — connect · right-click — menu</span>
       <span class="touch">one finger — tap to select · drag empty space — window select<br>
@@ -129,6 +131,14 @@
         <div class="note">Placing an example replaces the drawing, after asking unless the drawing is empty; Wipe clears it first if you would rather start from nothing. Undo brings the previous drawing back.</div>
       </div>
     </section>
+    <section class="win" id="win-layers" hidden>
+      <div class="winhead"><b>Layers</b><span id="layerWho"></span><button data-close title="Close">×</button></div>
+      <div class="winbody">
+        <div class="btnrow" style="margin:0 0 10px"><button id="layerNew" class="mini">+ New layer</button><button id="layerUpdate" class="primary" title="Route every dynamic layer again round everything static and encased, and fix every static layer as it stands">Update routes</button></div>
+        <div id="layerList"></div>
+        <div class="note">Every chamber, run and obstacle belongs to a layer, like a Revit workset. A dynamic layer is routed by the tool and its manholes can move; a static layer stays as it is — its manholes stay put, modelled paths are kept, and anything else is laid without avoidance and then fixed — and dynamic runs keep clear of it. A layer's setting takes effect on Update routes. New elements go to the active layer.</div>
+      </div>
+    </section>
     <section class="win resizable" id="win-elevation" hidden>
       <div class="winhead"><b>Elevation</b><span id="elevWho"></span><button data-close title="Close">×</button></div>
       <div class="winbody" id="elevBody"></div>
@@ -141,6 +151,6 @@
 </main>
 
 
-<script src="/assets/js/app.js?v=2.25"></script>
+<script src="/assets/js/app.js?v=2.26"></script>
 </body>
 </html>
