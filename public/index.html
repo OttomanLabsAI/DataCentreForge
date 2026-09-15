@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=2.22">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.23">
 </head>
 <body>
 
@@ -124,8 +124,9 @@
     <section class="win" id="win-examples" hidden>
       <div class="winhead"><b>Examples</b><span></span><button data-close title="Close">×</button></div>
       <div class="winbody">
+        <div class="btnrow" style="margin:0 0 10px"><button id="exWipe" class="warn ghost" title="Remove every chamber, obstacle and conduit run — Undo brings them back">Wipe the drawing</button></div>
         <div class="exlist" id="exampleList"></div>
-        <div class="note">Placing an example replaces the drawing, after asking unless the drawing is empty. Undo brings the previous drawing back.</div>
+        <div class="note">Placing an example replaces the drawing, after asking unless the drawing is empty; Wipe clears it first if you would rather start from nothing. Undo brings the previous drawing back.</div>
       </div>
     </section>
     <section class="win resizable" id="win-elevation" hidden>
@@ -140,6 +141,6 @@
 </main>
 
 
-<script src="/assets/js/app.js?v=2.22"></script>
+<script src="/assets/js/app.js?v=2.23"></script>
 </body>
 </html>

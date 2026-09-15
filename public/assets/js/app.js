@@ -3557,12 +3557,21 @@ function addModel(exId, mId){
 }
 renderExamples();
 
+/** Remove every chamber, obstacle and conduit run — one step Undo takes back. */
+function wipeDrawing(){
+  state.chambers = []; state.obstacles = []; state.connections = [];
+  state.sel = null; state.selSet = []; state.pending = null;
+  bankCache.clear(); setPendingStatus();
+  renderSel(); renderConnections(); renderObstacles(); draw();
+}
+const drawingEmpty = () => !state.chambers.length && !state.obstacles.length && !state.connections.length;
 document.getElementById('btnClear').onclick = () => {
-  if (!state.chambers.length || confirm('Remove every chamber, obstacle and conduit run?')){
-    state.chambers = []; state.obstacles = []; state.connections = [];
-    state.sel = null; state.pending = null;
-    renderSel(); renderConnections(); renderObstacles(); draw();
-  }
+  if (!state.chambers.length || confirm('Remove every chamber, obstacle and conduit run?')) wipeDrawing();
+};
+document.getElementById('exWipe').onclick = () => {
+  if (drawingEmpty()){ exStatus('the drawing is already empty'); return; }
+  if (!confirm('Wipe the drawing — remove every chamber, obstacle and conduit run? Undo brings them back.')) return;
+  wipeDrawing(); exStatus('drawing wiped — place an example, add a sub-model, or start drawing');
 };
 
 /* ==========================================================================

@@ -1,3 +1,0 @@
-this setup makes no sense for the columns and rows
-
-make it 2d graphical

@@ -157,7 +157,9 @@ with as many open as you like. Three of them deserve a word:
   its 77 conduit banks as runs, each with its rows as the model has them.
   Place the whole site, or Add a sub-model to whatever is on the drawing (a
   sub-model already there is refreshed in place, its banks with it). Placing
-  replaces the drawing after asking, and Undo brings the previous drawing back.
+  replaces the drawing after asking; a Wipe button at the top of the window
+  clears it first, also after asking, and Undo brings the previous drawing
+  back either way.
 - **Elevation** shows one face at a time: its runs with their level controls
   and the whole face at true scale, lid to base, with each level's depth marked,
   every conduit at its own depth and offset, and the boundary box its conduits
