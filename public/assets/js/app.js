@@ -946,26 +946,80 @@ function bankSpacing(G, H){
 }
 const levelsMeet = (G, H) => [...G.levels].some(l => H.levels.has(l));
 
-/** Plan keep-outs for a bank: the obstacles its runs go round. One a run
-    crosses over or under is no keep-out at all. */
+/** Everything a run may have to pass: the drawing's obstacles, and every
+    element of a static model — each of its manholes as a box between lid and
+    base, each of its conduit banks as its encasement along its route. They
+    carry a top and a bottom like any obstacle, so a run goes around them or,
+    when its panel says so, over or under. */
+let CROSS_CACHE = null;
+function staticCrossables(){
+  const out = [];
+  for (const c of state.chambers){
+    if (layerMode(c) !== 'static') continue;
+    const [zb, zl] = chamberZs(c);
+    out.push({uid:'mh-' + c.uid, name:`${c.ref} · static manhole`, src:'static', mh:c.uid, method:'around',
+              x:c.x, y:c.y, rot:c.rot, w:c.intX + 2*c.wall, d:c.intY + 2*c.wall,
+              zTop:zl, zBot:zb, buffer:c.buffer || 0});
+  }
+  for (const cn of state.connections){
+    if (layerMode(cn) !== 'static' || !cn.placed) continue;
+    const rt = cn.route;
+    if (!rt || !rt.ok || !rt.poly || rt.poly.length < 2) continue;
+    const sp = specOf(cn), E = runEncasement(cn), A = byUid(cn.a.mh);
+    if (!sp || !A) continue;
+    const zs = rt.profile && rt.profile.poly.length ? rt.profile.poly.map(p => p[1]) : [chamberZ0(A) - (cn.level|0)*runZSpace(cn)];
+    const hi = Math.max(...zs), lo = Math.min(...zs);
+    const S = Math.max(entryFor(cn,'a').S || 0, entryFor(cn,'b').S || 0);
+    out.push({uid:'cn-' + cn.uid, name:`${connLabel(cn)} · static conduits`, src:'static', method:'around',
+              line:rt.poly, ends:[cn.a.mh, cn.b.mh],
+              half: E ? E.halfW : (runCols(cn)-1)/2*S + sp.radius,
+              zTop: hi + (E ? E.zTop : sp.radius),
+              zBot: lo + (E ? E.zBot : -((runRows(cn)-1)*runZSpace(cn) + sp.radius)),
+              buffer: E ? 0 : sp.buffer});
+  }
+  return out;
+}
+function crossables(){ return CROSS_CACHE || (CROSS_CACHE = [...state.obstacles, ...staticCrossables()]); }
+const polyDist = (p, pts) => { let d = Infinity; for (let i = 0; i < pts.length-1; i++) d = Math.min(d, distToSeg(p, pts[i], pts[i+1])); return d; };
+/** What this bank must pass, its own two manholes left out and a static bank
+    clipped back where it shares one of them. */
+function bankCrossables(G){
+  const shares = u => u === G.start.mh || u === G.finish.mh;
+  const out = [];
+  for (const o of crossables()){
+    if (o.mh && shares(o.mh)) continue;
+    if (!o.line){ out.push(o); continue; }
+    const free = G.spec.stub + G.maxOff + G.maxRad + G.enc + o.half + Math.max(G.enc ? 0 : G.maxBuf, o.buffer);
+    const line = clipEnds(o.line, shares(o.ends[0]) ? free : 0, shares(o.ends[1]) ? free : 0);
+    if (line) out.push({...o, line});
+  }
+  return out;
+}
+const staticBank = G => G.members.some(cn => layerMode(cn) === 'static');
+const crossMargin = (G, o) => G.maxOff + G.maxRad + G.enc + (o.half || 0) + Math.max(G.enc ? 0 : G.maxBuf, o.buffer);
+
+/** Plan keep-outs for a bank: what its runs go round. One they cross over or
+    under is no keep-out at all. */
 function bankBlockers(G, banks){
   const out = [];
   const pad = G.maxOff + G.maxRad + G.enc;
-  for (const o of state.obstacles){
+  for (const o of bankCrossables(G)){
     if (bankMethod(G, o) !== 'around') continue;
-    out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
-              margin: pad + Math.max(G.enc ? 0 : G.maxBuf, o.buffer)});
+    if (o.line) out.push({type:'line', pts:o.line, margin: crossMargin(G, o), bb:polyBounds(o.line)});
+    else out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
+                   margin: pad + Math.max(G.enc ? 0 : G.maxBuf, o.buffer)});
   }
   for (const c of state.chambers){
     if (c.uid === G.start.mh || c.uid === G.finish.mh) continue;
-    if (!(state.avoidChambers || layerMode(c) === 'static')) continue;     // a static model's manholes are kept clear of whatever the setting
+    if (layerMode(c) === 'static') continue;            // a static manhole is one of the crossables above
+    if (!state.avoidChambers) continue;
     out.push({type:'box', cx:c.x, cy:c.y, rot:c.rot, hw:c.intX/2+c.wall, hh:c.intY/2+c.wall,
               margin: pad + Math.max(G.enc ? 0 : G.maxBuf, c.buffer)});
   }
   for (const H of banks){
     if (H === G || !H.anyPlaced || !H.route || !H.route.ok) continue;
-    if (!(state.avoidPipes || H.route.fixed)) continue;         // a static bank is kept clear of whatever the setting
-    if (!levelsMeet(G, H)) continue;
+    if (staticBank(H)) continue;                                          // a static bank is one of the crossables above
+    if (!state.avoidPipes || !levelsMeet(G, H)) continue;
       const margin = G.maxOff + H.maxOff + bankSpacing(G, H);
       const shares = u => u === G.start.mh || u === G.finish.mh;
       const free = Math.max(G.spec.stub, H.spec.stub) + margin;
@@ -977,7 +1031,8 @@ function bankBlockers(G, banks){
 }
 
 function bankSignature(G, banks){
-  const box = o => [o.x, o.y, o.w, o.d, o.rot, o.buffer, o.zTop, o.zBot, bankMethod(G, o)];
+  const box = o => [o.uid, o.line ? o.line.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)]) : [o.x, o.y, o.w, o.d, o.rot],
+                    o.half || 0, o.buffer, o.zTop, o.zBot, bankMethod(G, o)];
   const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace, c.zSpace, chamberZ0(c), chamberZs(c), c.win ? Object.values(c.win).map(w => w && w.h) : 0];
   const others = banks
     .filter(H => H !== G && H.anyPlaced && H.route && H.route.ok && (state.avoidPipes || H.route.fixed) && levelsMeet(G, H))
@@ -986,7 +1041,7 @@ function bankSignature(G, banks){
   return JSON.stringify([G.key, G.PS.map(Math.round), G.PE.map(Math.round), G.ends.map(e => e.cn.fixed ? [e.se, e.cn.fixedPath] : 0),
     G.ends.map(e => [Math.round(e.w0), Math.round(e.w1), Math.round(e.halfW)]), [...G.levels], G.spec, Math.round(G.maxOff), G.enc, G.zUp, G.zDn,
     state.avoidChambers, state.avoidPipes, ROUTE_QUICK, state.ground, state.cover, state.layers.map(l => [l.id, l.mode]),
-    state.obstacles.map(box), state.chambers.map(mh), others]);
+    crossables().map(box), state.chambers.map(mh), others]);
 }
 
 /* ==========================================================================
@@ -1024,17 +1079,19 @@ function pointAt(rt, s){
 /** Crossable obstacles the bank passes, each with the chainage interval over
     which any lane of the bank sits inside the obstacle's keep-out. */
 function routeCrossings(G, rt){
-  const P = rt.poly, {cum, k} = chainage(rt), reachBase = G.maxOff + G.maxRad + G.enc;
+  const P = rt.poly, {cum, k} = chainage(rt);
   const STEP = 25, out = [];
-  for (const o of state.obstacles){
+  for (const o of bankCrossables(G)){
     const method = bankMethod(G, o);
-    const reach = reachBase + Math.max(G.enc ? 0 : G.maxBuf, o.buffer);
+    if (method === 'around') continue;                  // the plan already goes round it
+    const reach = crossMargin(G, o);
     let s0 = Infinity, s1 = -Infinity;
     for (let i = 0; i < P.length-1; i++){
       const L = cum[i+1]-cum[i], n = Math.max(1, Math.ceil(L/STEP));
       for (let j = 0; j <= n; j++){
         const t = j/n, p = [P[i][0] + (P[i+1][0]-P[i][0])*t, P[i][1] + (P[i+1][1]-P[i][1])*t];
-        if (boxDist(p, o) < reach){ const s = cum[i] + L*t; s0 = Math.min(s0, s); s1 = Math.max(s1, s); }
+        const d = o.line ? polyDist(p, o.line) - o.half : boxDist(p, o);
+        if (d < reach){ const s = cum[i] + L*t; s0 = Math.min(s0, s); s1 = Math.max(s1, s); }
       }
     }
     if (s0 <= s1) out.push({o, method, s0: Math.max(0, (s0-STEP)*k), s1: Math.min(rt.length, (s1+STEP)*k)});
@@ -1358,7 +1415,7 @@ function deriveMembers(G){
     r.profile = pf;
     r.crossings = pf ? pf.crossings : [];
     r.leadLane = e === G.ends[0];        // the lane that carries the bank's crossing labels
-    for (const o of state.obstacles){
+    for (const o of crossables()){
       const want = runMethod(cn, o), got = bankMethod(G, o);
       if (want !== got) r.warnings.push({kind:'method', text:`${o.name} — this run asks for ${want}, but the bank it shares these faces with goes ${got}`});
     }
@@ -1371,6 +1428,7 @@ function deriveMembers(G){
 function recomputeRoutes(){
   let banks = null;
   for (let pass = 0; pass < 3; pass++){
+    CROSS_CACHE = null;                                 // static elements move with their routes
     banks = buildBanks();
     let changed = false;
     for (const G of banks){
@@ -1407,9 +1465,8 @@ function recomputeRoutes(){
   const live = banks.filter(G => G.anyPlaced && G.route && G.route.ok);
   for (let i = 0; i < live.length; i++) for (let j = i+1; j < live.length; j++){
     const G = live[i], H = live[j];
-    if (G.route.fixed && H.route.fixed) continue;                   // two static banks sit as modelled
-    if (!(state.avoidPipes || G.route.fixed || H.route.fixed)) continue;
-    if (!levelsMeet(G, H)) continue;
+    if (staticBank(G) || staticBank(H)) continue;    // a static bank is passed as an obstacle: its clearance is checked while routing
+    if (!state.avoidPipes || !levelsMeet(G, H)) continue;
     const margin = G.maxOff + H.maxOff + bankSpacing(G, H);
     const free = Math.max(G.spec.stub, H.spec.stub) + margin;
     const sh = (X, Y) => u => u === Y.start.mh || u === Y.finish.mh ? free : 0;
@@ -2765,7 +2822,7 @@ function renderRunProps(box, cn){
            <div class="derived"><span>Auto takes the side the next manhole lies on, or the side away from the face's other runs when it lies straight ahead.</span></div>`
         : '')) +
     cluster('runObs', 'Obstacles', obsSummary(cn),
-      state.obstacles.length ? state.obstacles.map(o => {
+      crossables().length ? crossables().map(o => {
         const chosen = cn.cross && METHODS.includes(cn.cross[o.uid]) ? cn.cross[o.uid] : '';
         const x = rt && rt.ok ? (rt.crossings || []).find(k => k.uid === o.uid) : null;
         const status = !rt || !rt.ok ? '' : x ? `${x.mode} · Z ${fmt(x.z)}` : (runMethod(cn, o) === 'around' ? 'kept clear' : 'not met');
@@ -2775,8 +2832,8 @@ function renderRunProps(box, cn){
             ${METHODS.map(m => `<option value="${m}"${chosen === m ? ' selected' : ''}>${m}</option>`).join('')}
           </select></div>
           <div class="row" style="margin-top:-4px"><label></label><span class="unit" style="width:auto;text-align:right;flex:1">${esc(status)}</span></div>`;
-      }).join('') + `<div class="derived"><span>How this run passes each obstacle. Runs sharing these two faces travel as one bank and follow the majority.</span></div>`
-      : `<div class="empty">No obstacles on the drawing.</div>`) +
+      }).join('') + `<div class="derived"><span>How this run passes each obstacle, and each manhole and conduit bank of a static model. Runs sharing these two faces travel as one bank and follow the majority.</span></div>`
+      : `<div class="empty">No obstacles on the drawing, and no static model to pass.</div>`) +
     cluster('runRt', 'Route',
       rt && rt.ok ? metres(rt.length3d || rt.length) + (rt.fixed ? ' · static' : (rt.turns.length ? ` · ${rt.turns.length} bend${rt.turns.length === 1 ? '' : 's'}` : ' · straight')
                     + (rt.profile && rt.profile.turns.length ? ` + ${rt.profile.turns.length} vertical` : '')) : 'no route',
@@ -2983,8 +3040,9 @@ function renderElevation(){
 }
 
 function obsSummary(cn){
-  const ov = state.obstacles.filter(o => cn.cross && METHODS.includes(cn.cross[o.uid])).map(o => `${cn.cross[o.uid]} ${o.name}`);
-  return ov.length ? ov.join(' · ') : (state.obstacles.length ? 'defaults' : 'none');
+  const all = crossables();
+  const ov = all.filter(o => cn.cross && METHODS.includes(cn.cross[o.uid])).map(o => `${cn.cross[o.uid]} ${o.name.replace(/ · static .*/, '')}`);
+  return ov.length ? ov.join(' · ') : (all.length ? 'defaults' : 'none');
 }
 function sectionSummary(rt){
   if (!rt || !rt.ok || !rt.profile) return '—';
@@ -3505,7 +3563,7 @@ document.getElementById('btnExport').onclick = () => {
               revitId: B?.revitId ?? undefined, revitUid: B?.revitUid ?? undefined},
         spec: sp ? sp.name : null,
         level: cn.level|0,
-        obstacleRules: (() => { const e = {}; for (const o of state.obstacles) if (cn.cross && METHODS.includes(cn.cross[o.uid])) e[o.name] = cn.cross[o.uid];
+        obstacleRules: (() => { const e = {}; for (const o of crossables()) if (cn.cross && METHODS.includes(cn.cross[o.uid])) e[o.name] = cn.cross[o.uid];
                                 return Object.keys(e).length ? e : undefined; })(),
         rows: runRows(cn), cols: runCols(cn), perRow: runRowsOf(cn), align: runAlignPref(cn), packedTo: runAlign(cn),
         static: cn.fixed ? true : undefined, path: cn.fixed && Array.isArray(cn.fixedPath) ? cn.fixedPath.map(q => q.map(v => Math.round(v*10)/10)) : undefined,
@@ -3576,6 +3634,7 @@ document.getElementById('fileIn').onchange = e => {
                 layer: layerById(cn.layer) ? cn.layer : undefined, encased: cn.encased === true ? true : undefined,
                 cross: Object.fromEntries(Object.entries(cn.obstacleRules || {}).map(([nm, m]) => {
                   const ob = state.obstacles.find(x => x.name === nm); return ob && METHODS.includes(m) ? [ob.uid, m] : null; }).filter(Boolean)),
+                crossNames: cn.obstacleRules && Object.keys(cn.obstacleRules).length ? {...cn.obstacleRules} : undefined,
                 specId: byName(cn.spec).id, route:null};
       }).filter(Boolean);
       if (!hadLayers){                                                  // an older file: its static models become static layers, the rest is the Drawing layer
@@ -3593,6 +3652,17 @@ document.getElementById('fileIn').onchange = e => {
       for (const cn of state.connections) if (!layerById(cn.layer)){ const A = byUid(cn.a.mh); cn.layer = A && layerById(A.layer) ? A.layer : DEFAULT_LAYER; }
       state.sel = null; state.editSpec = state.specs[0].id;
       renderSpecs(); renderSpecEdit(); renderSel(); renderConnections(); renderObstacles(); fitView();
+      /* the static elements exist only once their routes do: match the saved choices to them now */
+      let matched = false;
+      for (const cn of state.connections){
+        if (!cn.crossNames) continue;
+        for (const [nm, m] of Object.entries(cn.crossNames)){
+          const o = crossables().find(x => x.name === nm);
+          if (o && METHODS.includes(m)){ cn.cross = {...(cn.cross || {}), [o.uid]: m}; matched = true; }
+        }
+        delete cn.crossNames;
+      }
+      if (matched){ bankCache.clear(); renderSel(); renderConnections(); draw(); }
     } catch(err){ alert('That file is not a plan export. Expected JSON with a chambers array.'); }
     e.target.value = '';
   };

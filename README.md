@@ -251,17 +251,21 @@ A layer is dynamic or static. A dynamic layer is the tool's to route and its
 manholes can move. A static layer's manholes stay put at once, and its runs
 are fixed by the one Update routes button: a modelled path is kept, and any
 other run is laid without avoidance and then fixed as it stands, so dynamic
-runs keep clear of it: every element of a static model — its manholes, its
-conduit banks and their encasement — is a keep-out for every dynamic run,
-whatever the drawing's own avoidance switches say. Set a layer dynamic again
+runs keep clear of it: every element of a static model — each manhole as a box
+between its lid and its base, each conduit bank as its encasement along its
+route — is an obstacle for every dynamic run, listed in that run's Obstacles
+panel beside the drawing's own obstacles with the same around, over or under
+choice, and kept clear of whatever the drawing's avoidance switches say. Told
+to cross, a run dives under the bank or rides over it at its true depth, and
+says which; told to go around when there is no way around, it says so. Set a layer dynamic again
 and Update routes routes its runs afresh round everything static and
 encased. The setting only takes
 effect on Update, and a layer says how many of its runs are waiting for it.
 
 A static run — one placed from a model with its modelled centreline — is
 never routed at all: it sits on its path at its modelled depths, meets each
-face where the model put it, and is a keep-out for every dynamic run, which
-bends round it as it would round a placed bank. Its panel shows the run as
+face where the model put it, and is an obstacle for every dynamic run, which
+goes round it, or under or over it when that run's panel says so. Its panel shows the run as
 modelled and offers no fittings, spec or depth to change; the drawing's file
 carries the path, so the run comes back static.
 
