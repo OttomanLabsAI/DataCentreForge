@@ -1,5 +1,0 @@
-also, i need an option to load in the example statically, as in, no automated movement of conduits
-
-this is because, one design needs to be static and the other needs to work around it
-
-the user can load in multiple static models and multiple dynamic models. right now though, those are the only 2 models

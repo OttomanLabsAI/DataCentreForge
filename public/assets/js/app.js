@@ -83,7 +83,7 @@ const chamberZs = c => [Number.isFinite(c.zBase) ? c.zBase : -1800, Number.isFin
 function makeSpec(o = {}){
   return Object.assign({
     id:uid(), name:'New spec', colour:SPEC_COLOURS[state.specs.length % SPEC_COLOURS.length],
-    radius:150, bendR:600, stub:500, minLeg:500, buffer:300, spacing:300, warnAngle:45, angles:[22.5,45,90]
+    radius:150, bendR:600, stub:500, minLeg:500, buffer:300, spacing:300, warnAngle:45, angles:[22.5,45,90], enc:0
   }, o);
 }
 function nextRef(){
@@ -599,6 +599,20 @@ const runRowsOf = r => Array.isArray(r.perRow) && r.perRow.length
   ? r.perRow.map(n => Math.max(1, Math.round(Number(n)) || 1))
   : Array.from({length: Math.max(1, r.rows|0 || 1)}, () => Math.max(1, r.cols|0 || 1));
 const runCols = r => Math.max(...runRowsOf(r));
+/** A spec's encasement offset: how far the concrete box round the array stands beyond the conduits' outer diameter; 0 for none. */
+const encOf = sp => Math.max(0, Number(sp && sp.enc) || 0);
+/** The encasement box of a run, in section: a rectangle `off` beyond the outer
+    diameter, as wide as its widest row and as high as all its rows together. */
+function runEncasement(cn){
+  const sp = specOf(cn), off = encOf(sp);
+  if (!off) return null;
+  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
+  const S = Math.max(ea ? ea.S || 0 : 0, eb ? eb.S || 0 : 0);
+  const zPitch = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);
+  const W = (runCols(cn)-1)*S + 2*sp.radius + 2*off, H = (runRows(cn)-1)*zPitch + 2*sp.radius + 2*off;
+  return {off, W, H, halfW: W/2, zTop: sp.radius + off, zBot: -(runRows(cn)-1)*zPitch - sp.radius - off};
+}
 const runRows = r => runRowsOf(r).length;
 const runCount = r => runRowsOf(r).reduce((a, b) => a + b, 0);
 const arrayText = r => { const rows = runRowsOf(r); return rows.length === 1 ? `${rows[0]} wide` : rows.join(' + '); };
@@ -868,6 +882,7 @@ function buildBanks(){
       d0:[gS.n[0], gS.n[1]], d2:[-gE.n[0], -gE.n[1]],
       maxOff,
       maxRad: Math.max(...specs.map(sp => sp.radius)),
+      enc: Math.max(...specs.map(encOf)),                 // the encasement stands this far beyond the conduits
       maxBuf: Math.max(...specs.map(sp => sp.buffer)),
       levels: new Set(members.map(cn => cn.level|0)),
       zPitch, zUp, zDn,
@@ -893,11 +908,11 @@ function buildBanks(){
 /** Conduit-to-conduit spacing between two banks: buffers rule, unless they
     share a manhole — then that manhole's lateral spacing governs. */
 function bankSpacing(G, H){
-  let sPair = G.maxRad + H.maxRad + Math.max(G.maxBuf, H.maxBuf);
+  let sPair = G.maxRad + G.enc + H.maxRad + H.enc + Math.max(G.maxBuf, H.maxBuf);
   for (const u of [G.start.mh, G.finish.mh]){
     if (u !== H.start.mh && u !== H.finish.mh) continue;
     const c = byUid(u);
-    if (c) sPair = Math.min(sPair, Math.max(G.maxRad + H.maxRad, c.latSpace - 1));
+    if (c) sPair = Math.min(sPair, Math.max(G.maxRad + G.enc + H.maxRad + H.enc, c.latSpace - 1));
   }
   return sPair;
 }
@@ -907,7 +922,7 @@ const levelsMeet = (G, H) => [...G.levels].some(l => H.levels.has(l));
     crosses over or under is no keep-out at all. */
 function bankBlockers(G, banks){
   const out = [];
-  const pad = G.maxOff + G.maxRad;
+  const pad = G.maxOff + G.maxRad + G.enc;
   for (const o of state.obstacles){
     if (bankMethod(G, o) !== 'around') continue;
     out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
@@ -938,10 +953,10 @@ function bankSignature(G, banks){
   const mh  = c => [c.x, c.y, c.intX, c.intY, c.wall, c.rot, c.buffer, c.latSpace, c.zSpace, chamberZ0(c), chamberZs(c), c.win ? Object.values(c.win).map(w => w && w.h) : 0];
   const others = banks
     .filter(H => H !== G && H.anyPlaced && H.route && H.route.ok && (state.avoidPipes || H.route.fixed) && levelsMeet(G, H))
-    .map(H => [H.key, H.maxOff, H.maxRad, H.maxBuf, H.spec.stub,
+    .map(H => [H.key, H.maxOff, H.maxRad, H.enc, H.maxBuf, H.spec.stub,
                H.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]);
   return JSON.stringify([G.key, G.PS.map(Math.round), G.PE.map(Math.round), G.ends.map(e => e.cn.fixed ? [e.se, e.cn.fixedPath] : 0),
-    G.ends.map(e => [Math.round(e.w0), Math.round(e.w1), Math.round(e.halfW)]), [...G.levels], G.spec, Math.round(G.maxOff), G.zUp, G.zDn,
+    G.ends.map(e => [Math.round(e.w0), Math.round(e.w1), Math.round(e.halfW)]), [...G.levels], G.spec, Math.round(G.maxOff), G.enc, G.zUp, G.zDn,
     state.avoidChambers, state.avoidPipes, ROUTE_QUICK, state.ground, state.cover,
     state.obstacles.map(box), state.chambers.map(mh), others]);
 }
@@ -981,7 +996,7 @@ function pointAt(rt, s){
 /** Crossable obstacles the bank passes, each with the chainage interval over
     which any lane of the bank sits inside the obstacle's keep-out. */
 function routeCrossings(G, rt){
-  const P = rt.poly, {cum, k} = chainage(rt), reachBase = G.maxOff + G.maxRad;
+  const P = rt.poly, {cum, k} = chainage(rt), reachBase = G.maxOff + G.maxRad + G.enc;
   const STEP = 25, out = [];
   for (const o of state.obstacles){
     const method = bankMethod(G, o);
@@ -1095,11 +1110,11 @@ function solveProfile(G, rt, xs){
   const vs = {...G.spec, bendR: G.spec.bendR - G.maxOff + lift,
               stub: G.spec.stub - G.maxOff + lift, minLeg: G.spec.minLeg - G.maxOff + lift};
   const zones = bendZones(rt);
-  const ceiling = state.ground - state.cover - G.maxRad;      // highest the top lane may run
+  const ceiling = state.ground - state.cover - G.maxRad - G.enc;      // highest the top lane may run, its encasement under the cover
   const chord = s => zA + (zB-zA)*s/S, chordLen = Math.hypot(S, zB-zA);
   const info = xs.map(x => {
     const top = Math.max(x.o.zTop, x.o.zBot) + lift, bot = Math.min(x.o.zTop, x.o.zBot);
-    const margin = G.maxRad + Math.max(G.maxBuf, x.o.buffer);
+    const margin = G.maxRad + G.enc + Math.max(G.maxBuf, x.o.buffer);
     const needOver = top + margin + 1, needUnder = bot - margin - 1;     // a hair clear of the keep-out
     const clearOver  = x.method === 'over'  && chord(x.s0) >= needOver  && chord(x.s1) >= needOver;
     const clearUnder = x.method === 'under' && chord(x.s0) <= needUnder && chord(x.s1) <= needUnder;
@@ -1576,6 +1591,13 @@ function drawConnection(cn){
     lanes.push(routePathScreen(lane));
   }
   const d = lanes[Math.floor(cols/2)] || lanes[0];
+  const E = runEncasement(cn);
+  if (E){
+    const edges = [];
+    for (const w of [E.halfW, -E.halfW]){ try { edges.push(routePathScreen(offsetMember(rt, w, w))); } catch(_){} }
+    out.push(`<path d="${routePathScreen(rt)}" fill="none" stroke="${sp.colour}" stroke-width="${(E.W*s).toFixed(1)}" stroke-linejoin="round" stroke-linecap="butt" opacity=".11"/>`);
+    for (const ed of edges) out.push(`<path d="${ed}" fill="none" stroke="${edge}" stroke-width="1" stroke-dasharray="5 3" opacity=".6"/>`);
+  }
   if (on && sp.buffer > 0)
     out.push(`<path d="${lanes[Math.floor(cols/2)]}" fill="none" stroke="${sp.colour}" stroke-width="${2*(halfW+sp.radius+sp.buffer)*s}" stroke-linejoin="round" stroke-linecap="round" opacity=".09"/>`);
   for (const ld of lanes){
@@ -1649,31 +1671,42 @@ function proj(p){
 
 /** The 3D centreline(s) of a run: plan route with the section's depth at
     every chainage of either — one polyline per column and row of the array. */
+/** One line of a run in 3D: the plan centreline offset sideways by w (mm, left of travel), the section's depth at every chainage, shifted by dz. */
+function lane3d(cn, w, dz = 0){
+  const rt = cn.route, pf = rt.profile, A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  const zPitch = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);
+  const zFlat = chamberZ0(A) - (cn.level|0)*zPitch;
+  let lane = rt;
+  if (Math.abs(w) > 1e-6){ try { lane = offsetMember(rt, w, w); } catch(_){ lane = rt; } }
+  const {cum, k:kk} = chainage(lane), L = lane.length || 1, PS = pf ? (pf.S || L) : L;
+  const ss = cum.map(v => v*kk);
+  if (pf) for (const q of pf.poly) ss.push(q[0]*L/PS);
+  const sorted = [...new Set(ss.map(v => Math.round(v*10)/10))].filter(v => v >= 0 && v <= L + 1e-6).sort((a,b) => a-b);
+  return sorted.map(v => { const q = pointAt(lane, v); return [q[0], q[1], (pf ? profileZ(pf, v*PS/L) : zFlat) + dz]; });
+}
 function run3d(cn){
   const rt = cn.route, out = [];
   if (!rt || !rt.ok) return out;
-  const pf = rt.profile, A = byUid(cn.a.mh), B = byUid(cn.b.mh);
+  const A = byUid(cn.a.mh), B = byUid(cn.b.mh);
   const S = Math.max(entryFor(cn,'a').S || 0, entryFor(cn,'b').S || 0);
   const zPitch = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);
-  const zFlat = chamberZ0(A) - (cn.level|0)*zPitch;
   const RC = rowColumns(cn), lines = new Map();
   const lineAt = off => {                       // one centreline per column, shared by the rows that use it
-    if (lines.has(off)) return lines.get(off);
-    const w = off * S;
-    let lane = rt;
-    if (Math.abs(w) > 1e-6){ try { lane = offsetMember(rt, w, w); } catch(_){ lane = rt; } }
-    const {cum, k:kk} = chainage(lane), L = lane.length || 1, PS = pf ? (pf.S || L) : L;
-    const ss = cum.map(v => v*kk);
-    if (pf) for (const q of pf.poly) ss.push(q[0]*L/PS);
-    const sorted = [...new Set(ss.map(v => Math.round(v*10)/10))].filter(v => v >= 0 && v <= L + 1e-6).sort((a,b) => a-b);
-    const line = sorted.map(v => { const q = pointAt(lane, v); return [q[0], q[1], pf ? profileZ(pf, v*PS/L) : zFlat]; });
-    lines.set(off, line); return line;
+    if (!lines.has(off)) lines.set(off, lane3d(cn, off * S));
+    return lines.get(off);
   };
   for (let rI = 0; rI < RC.length; rI++) for (const off of RC[rI]){
     const line = lineAt(off);
     out.push(rI ? line.map(q => [q[0], q[1], q[2] - rI*zPitch]) : line);
   }
   return out;
+}
+
+/** The four long edges of a run's encasement box in 3D, or none without an encasement. */
+function encasement3d(cn){
+  const rt = cn.route, E = rt && rt.ok ? runEncasement(cn) : null;
+  if (!E) return [];
+  return [lane3d(cn, E.halfW, E.zTop), lane3d(cn, -E.halfW, E.zTop), lane3d(cn, E.halfW, E.zBot), lane3d(cn, -E.halfW, E.zBot)];
 }
 
 function drawingExtent(){
@@ -1810,6 +1843,15 @@ function draw3d(){
       continue;
     }
     const body = Math.max(1.5, 2*sp.radius*s), edge = on ? C.sel : sp.colour;
+    for (const pl of encasement3d(cn)){
+      const q = pl.map(proj);
+      for (let i = 0; i < q.length-1; i++){
+        const a = q[i], b = q[i+1];
+        if (Math.hypot(b[0]-a[0], b[1]-a[1]) < 0.05) continue;
+        prims.push({near:(a[2]+b[2])/2 + 0.5, pick:{kind:'conn', id:cn.uid}, seg:[a, b], tol:4,
+          svg: line(a, b, `stroke="${edge}" stroke-width="1" stroke-dasharray="5 3" opacity=".55"`)});
+      }
+    }
     for (const pl of run3d(cn)){
       const q = pl.map(proj);
       for (let i = 0; i < q.length-1; i++){
@@ -2383,9 +2425,11 @@ function renderSpecEdit(){
     cluster('spStr', 'Minimum straights', `≥${fmt(sp.stub)} · ≥${fmt(sp.minLeg)}`,
       numRow('sStub','off chamber face', sp.stub, 50, 'mm') +
       numRow('sLeg','between bends', sp.minLeg, 50, 'mm')) +
-    cluster('spSpc', 'Spacing & clearance', `clr ${fmt(sp.buffer)} · pitch ${fmt(sp.spacing || 300)}`,
+    cluster('spSpc', 'Spacing, clearance & encasement', `clr ${fmt(sp.buffer)} · pitch ${fmt(sp.spacing || 300)}${encOf(sp) ? ' · enc +' + fmt(encOf(sp)) : ''}`,
       numRow('sBuf','Clearance', sp.buffer, 50, 'mm') +
-      numRow('sSpc','Array spacing', sp.spacing || 300, 25, 'mm')) +
+      numRow('sSpc','Array spacing', sp.spacing || 300, 25, 'mm') +
+      numRow('sEnc','Encasement offset', encOf(sp), 25, 'mm') +
+      `<div class="derived"><span>The encasement is a rectangle round the whole array, this far beyond the conduits' outer diameter: as wide as the widest row, as high as all the rows. Zero means no encasement. Other runs and obstacles keep their clearance from the box.</span></div>`) +
     cluster('spRul', 'Fittings & warnings',
       sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' ') : 'straight only',
       numRow('sWarn','Warn above', sp.warnAngle, 5, '°') +
@@ -2396,6 +2440,7 @@ function renderSpecEdit(){
          <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
          <b>Clearance</b> ${fmt(sp.buffer)} each side — pairs keep the larger clearance<br>
          <b>Array pitch</b> ${fmt(sp.spacing || 300)} — faces snap to the largest pitch present<br>
+         <b>Encasement</b> ${encOf(sp) ? fmt(encOf(sp)) + ' beyond the outer diameter, round the whole array' : 'none'}<br>
          <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}</div>`);
 
   const bindS = (id, key, cast = Number) => {
@@ -2407,7 +2452,7 @@ function renderSpecEdit(){
     });
   };
   bindS('sName','name',String); bindS('sRad','radius'); bindS('sBend','bendR');
-  bindS('sStub','stub'); bindS('sLeg','minLeg'); bindS('sBuf','buffer'); bindS('sSpc','spacing'); bindS('sWarn','warnAngle');
+  bindS('sStub','stub'); bindS('sLeg','minLeg'); bindS('sBuf','buffer'); bindS('sSpc','spacing'); bindS('sEnc','enc'); bindS('sWarn','warnAngle');
   box.querySelectorAll('[data-col]').forEach(el => el.onclick = () => {
     sp.colour = el.dataset.col; renderSpecEdit(); specChanged();
   });
@@ -2425,6 +2470,7 @@ function specChanged(){
   if (sp && der) der.innerHTML =
     `<b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
      <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
+     <b>Encasement</b> ${encOf(sp) ? fmt(encOf(sp)) + ' beyond the outer diameter, round the whole array' : 'none'}<br>
      <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}`;
   renderSpecs(); renderSel(); renderConnections(); draw();
 }
@@ -2687,7 +2733,7 @@ function renderRunProps(box, cn){
                     + (rt.profile && rt.profile.turns.length ? ` + ${rt.profile.turns.length} vertical` : '')) : 'no route',
       `<div class="derived" style="border-top:none;margin-top:0;padding-top:2px">
          <b>Run</b> ${esc(connLabel(cn))}<br>
-         ${entryLine(cn)}${arrayLine(cn)}` +
+         ${entryLine(cn)}${arrayLine(cn)}${encLine(cn)}` +
          (rt && rt.ok && rt.fixed
            ? `<b>Static</b> placed as its model has it — it is never re-routed, and other runs keep clear of it<br>
               <b>Centreline</b> ${metres(rt.length)} in plan · ${metres(rt.length3d || rt.length)} laid · ${rt.pts.length} points`
@@ -2786,6 +2832,11 @@ function faceSectionSVG(L, wpx = 232, opt = {}){
     const zr = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);       // the run's row pitch, as the 3D view lays it
     const rp = Math.max(2.2, it.sp.radius*scale);
     const end = (it.cn.a.mh === c.uid && it.cn.a.face === L.g.face) ? 'a' : 'b', sgn = leftSign(it.cn, end, L.g, L.t), RC = rowColumns(it.cn);
+    const E = runEncasement(it.cn);
+    if (E){
+      const zt = z0 - gr.level*zr + E.zTop, zb2 = z0 - gr.level*zr + E.zBot;
+      el.push(`<rect x="${f1(X(it.centreOff - E.halfW))}" y="${f1(Y(zt))}" width="${f1(E.W*scale)}" height="${f1(Math.max(0, Y(zb2) - Y(zt)))}" fill="${it.sp.colour}" fill-opacity=".08" stroke="${on ? C.sel : it.sp.colour}" stroke-width="1" stroke-dasharray="4 3" opacity=".8"/>`);
+    }
     for (let rI = 0; rI < RC.length; rI++) for (const off of RC[rI]){
       const xo = it.centreOff + sgn*off*S, z = z0 - gr.level*zr - rI*zr;
       el.push(`<circle cx="${f1(X(xo))}" cy="${f1(Y(z))}" r="${f1(rp)}" fill="${on ? C.sel : 'none'}" fill-opacity="${on ? .25 : 0}" stroke="${on ? C.sel : it.sp.colour}" stroke-width="${on ? 2.2 : 1.6}"${opt.sel ? ` data-sel="${it.cn.uid}"` : ''}/>`);
@@ -2925,6 +2976,10 @@ function profileSVG(cn, wpx = 232){
   const cap = `${metres(rt.length3d || rt.length)} laid · ${pf.turns.length ? pf.turns.length + ' vertical bend' + (pf.turns.length === 1 ? '' : 's') : 'no vertical bends'} · Z ×${(sz/sx).toFixed(1)}`;
   el.push(`<text x="${wpx/2}" y="${hpx+capH-4}" fill="${C.inkFaint}" font-family="${C.mono}" font-size="9.5" text-anchor="middle">${cap}</text>`);
   return `<svg width="${wpx}" height="${hpx+capH}" style="display:block;margin:4px 0 2px">${el.join('')}</svg>`;
+}
+function encLine(cn){
+  const E = runEncasement(cn);
+  return E ? `<b>Encasement</b> ${fmt(E.W)} wide × ${fmt(E.H)} high, ${fmt(E.off)} beyond the conduits<br>` : '';
 }
 function arrayLine(cn){
   const ea = entryFor(cn,'a'), eb = entryFor(cn,'b');
@@ -3245,6 +3300,7 @@ document.getElementById('btnExport').onclick = () => {
                                 return Object.keys(e).length ? e : undefined; })(),
         rows: runRows(cn), cols: runCols(cn), perRow: runRowsOf(cn), align: runAlignPref(cn), packedTo: runAlign(cn),
         static: cn.fixed ? true : undefined, path: cn.fixed && Array.isArray(cn.fixedPath) ? cn.fixedPath.map(q => q.map(v => Math.round(v*10)/10)) : undefined,
+        encasement: (() => { const E = runEncasement(cn); return E ? {offset: E.off, width: Math.round(E.W), height: Math.round(E.H)} : undefined; })(),
         placed: cn.placed,
         route: rt && rt.ok ? {
           vertices: rt.pts.map(p => [Math.round(p[0]), Math.round(p[1])]),
@@ -3731,7 +3787,7 @@ new ResizeObserver(() => draw()).observe(STAGE);
    ========================================================================== */
 
 state.specs = [
-  makeSpec({name:'MV',        colour:'#e0655f', radius:100, bendR:1800, stub:600, minLeg:600, buffer:600, spacing:600, warnAngle:45, angles:[11.25,22.5,45]}),
+  makeSpec({name:'MV',        colour:'#e0655f', radius:100, bendR:1800, stub:600, minLeg:600, buffer:600, spacing:600, warnAngle:45, angles:[11.25,22.5,45], enc:100}),
   makeSpec({name:'LV',        colour:'#f0a35e', radius:75,  bendR:1200, stub:500, minLeg:500, buffer:300, spacing:450, warnAngle:45, angles:[11.25,22.5,45,90]}),
   makeSpec({name:'ELV',       colour:'#35c3e8', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, spacing:300, warnAngle:90, angles:[22.5,45,90]}),
   makeSpec({name:'FIBRE',     colour:'#6bd68a', radius:50,  bendR:900,  stub:400, minLeg:400, buffer:200, spacing:300, warnAngle:45, angles:[11.25,22.5,45,90]}),

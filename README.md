@@ -204,6 +204,14 @@ when it lies straight ahead, the side away from the face's other runs — or the
 left or right chosen on the run. The elevation and the 3D view draw exactly
 those conduits, and the drawing's file carries the rows and the side.
 
+A spec can carry an encasement offset — the MV spec has 100 mm by default —
+and every run on that spec then has an encasement box: a rectangle that far
+beyond the conduits' outer diameter, as wide as the array's widest row and as
+high as all its rows together. The plan draws it as a band with its two
+edges, the elevation as a box round the array, the 3D view as the box's four
+edges, and the run's panel and the file give its size. Other runs, obstacles
+and the ground cover keep their clearance from the box, not the conduits.
+
 A static run — one placed from a model with its modelled centreline — is
 never routed at all: it sits on its path at its modelled depths, meets each
 face where the model put it, and is a keep-out for every dynamic run, which
