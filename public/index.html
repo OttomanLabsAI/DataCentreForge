@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=2.26">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.27">
 </head>
 <body>
 
@@ -30,6 +30,7 @@
       <button data-win="runs" data-icon="runs"><span>Runs <em id="connCount"></em></span></button>
       <button data-win="obstacles" data-icon="obstacles"><span>Obstacles <em id="obsCount"></em></span></button>
       <button data-win="layers" data-icon="layers" title="Layers — like Revit worksets: each is static or dynamic, shown or hidden"><span>Layers <em id="layerCount"></em></span></button>
+      <button data-win="models" data-icon="models" title="Models — show or hide each model, or only its manholes, conduits, encasement or obstacles, and select a whole model"><span>Models</span></button>
       <button data-win="specs" data-icon="specs"><span>Specs</span></button>
       <button data-win="examples" data-icon="example" title="Example drawings to place"><span>Examples</span></button>
     </div><div class="rcap">Manage</div></div>
@@ -139,6 +140,13 @@
         <div class="note">Every chamber, run and obstacle belongs to a layer, like a Revit workset. A dynamic layer is routed by the tool and its manholes can move; a static layer stays as it is — its manholes stay put, modelled paths are kept, and anything else is laid without avoidance and then fixed — and dynamic runs keep clear of it. A layer's setting takes effect on Update routes. New elements go to the active layer.</div>
       </div>
     </section>
+    <section class="win" id="win-models" hidden>
+      <div class="winhead"><b>Models</b><span id="modelWho"></span><button data-close title="Close">×</button></div>
+      <div class="winbody">
+        <div id="modelList"></div>
+        <div class="note">Each model is a layer. Untick a model to hide all of it, or hide only its manholes, conduits, encasement or obstacles; Select takes everything shown on the model as the selection. A static model's manholes, conduits and encasement are keep-outs for every dynamic run, shown or hidden.</div>
+      </div>
+    </section>
     <section class="win resizable" id="win-elevation" hidden>
       <div class="winhead"><b>Elevation</b><span id="elevWho"></span><button data-close title="Close">×</button></div>
       <div class="winbody" id="elevBody"></div>
@@ -151,6 +159,6 @@
 </main>
 
 
-<script src="/assets/js/app.js?v=2.26"></script>
+<script src="/assets/js/app.js?v=2.27"></script>
 </body>
 </html>

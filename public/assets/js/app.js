@@ -93,7 +93,10 @@ const makeLayer = o => Object.assign({id:uid(), name:'Layer', mode:'dynamic', vi
 const layerById = id => state.layers.find(l => l.id === id) || null;
 const layerOf = el => (el && layerById(el.layer)) || layerById(DEFAULT_LAYER) || state.layers[0] || null;
 const layerMode = el => { const l = layerOf(el); return l && l.mode === 'static' ? 'static' : 'dynamic'; };
-const isVisible = el => { const l = layerOf(el); return !l || l.visible !== false; };
+const KIND = el => el && el.a && el.b ? 'runs' : (el && el.intX != null ? 'chambers' : 'obstacles');
+const isVisible = el => { const l = layerOf(el); if (!l || l.visible === false) return !l; return !l.show || l.show[KIND(el)] !== false; };
+/** A run's encasement shows with its run, unless the model hides its encasement. */
+const showEnc = cn => { const l = layerOf(cn); return isVisible(cn) && (!l || !l.show || l.show.encasement !== false); };
 const activeLayerId = () => layerById(state.activeLayer) ? state.activeLayer : DEFAULT_LAYER;
 /** The layer of this name, made when there is none; a mode given sets it. */
 function ensureLayer(name, mode){
@@ -946,12 +949,12 @@ function bankBlockers(G, banks){
     out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
               margin: pad + Math.max(G.enc ? 0 : G.maxBuf, o.buffer)});
   }
-  if (state.avoidChambers)
-    for (const c of state.chambers){
-      if (c.uid === G.start.mh || c.uid === G.finish.mh) continue;
-      out.push({type:'box', cx:c.x, cy:c.y, rot:c.rot, hw:c.intX/2+c.wall, hh:c.intY/2+c.wall,
-                margin: pad + Math.max(G.enc ? 0 : G.maxBuf, c.buffer)});
-    }
+  for (const c of state.chambers){
+    if (c.uid === G.start.mh || c.uid === G.finish.mh) continue;
+    if (!(state.avoidChambers || layerMode(c) === 'static')) continue;     // a static model's manholes are kept clear of whatever the setting
+    out.push({type:'box', cx:c.x, cy:c.y, rot:c.rot, hw:c.intX/2+c.wall, hh:c.intY/2+c.wall,
+              margin: pad + Math.max(G.enc ? 0 : G.maxBuf, c.buffer)});
+  }
   for (const H of banks){
     if (H === G || !H.anyPlaced || !H.route || !H.route.ok) continue;
     if (!(state.avoidPipes || H.route.fixed)) continue;         // a static bank is kept clear of whatever the setting
@@ -975,7 +978,7 @@ function bankSignature(G, banks){
                H.route.poly.map(p => [Math.round(p[0]/10), Math.round(p[1]/10)])]);
   return JSON.stringify([G.key, G.PS.map(Math.round), G.PE.map(Math.round), G.ends.map(e => e.cn.fixed ? [e.se, e.cn.fixedPath] : 0),
     G.ends.map(e => [Math.round(e.w0), Math.round(e.w1), Math.round(e.halfW)]), [...G.levels], G.spec, Math.round(G.maxOff), G.enc, G.zUp, G.zDn,
-    state.avoidChambers, state.avoidPipes, ROUTE_QUICK, state.ground, state.cover,
+    state.avoidChambers, state.avoidPipes, ROUTE_QUICK, state.ground, state.cover, state.layers.map(l => [l.id, l.mode]),
     state.obstacles.map(box), state.chambers.map(mh), others]);
 }
 
@@ -1610,7 +1613,7 @@ function drawConnection(cn){
     lanes.push(routePathScreen(lane));
   }
   const d = lanes[Math.floor(cols/2)] || lanes[0];
-  const E = runEncasement(cn);
+  const E = showEnc(cn) ? runEncasement(cn) : null;
   if (E){
     const edges = [];
     for (const w of [E.halfW, -E.halfW]){ try { edges.push(routePathScreen(offsetMember(rt, w, w))); } catch(_){} }
@@ -1723,7 +1726,7 @@ function run3d(cn){
 
 /** The four long edges of a run's encasement box in 3D, or none without an encasement. */
 function encasement3d(cn){
-  const rt = cn.route, E = rt && rt.ok ? runEncasement(cn) : null;
+  const rt = cn.route, E = rt && rt.ok && showEnc(cn) ? runEncasement(cn) : null;
   if (!E) return [];
   return [lane3d(cn, E.halfW, E.zTop), lane3d(cn, -E.halfW, E.zTop), lane3d(cn, E.halfW, E.zBot), lane3d(cn, -E.halfW, E.zBot)];
 }
@@ -1865,14 +1868,16 @@ function draw3d(){
       continue;
     }
     const body = Math.max(1.5, 2*sp.radius*s), edge = on ? C.sel : sp.colour;
-    for (const pl of encasement3d(cn)){
-      const q = pl.map(proj);
-      for (let i = 0; i < q.length-1; i++){
-        const a = q[i], b = q[i+1];
-        if (Math.hypot(b[0]-a[0], b[1]-a[1]) < 0.05) continue;
-        prims.push({near:(a[2]+b[2])/2 + 0.5, pick:{kind:'conn', id:cn.uid}, seg:[a, b], tol:4,
-          svg: line(a, b, `stroke="${edge}" stroke-width="1" stroke-dasharray="5 3" opacity=".55"`)});
-      }
+    const EL = encasement3d(cn);                       // the box as a solid: its four faces, segment by segment
+    if (EL.length === 4){
+      const [TL, TR, BL, BR] = EL.map(pl => pl.map(proj));
+      const n = Math.min(TL.length, TR.length, BL.length, BR.length);
+      for (let i = 0; i < n-1; i++)
+        for (const f of [[TL[i], TR[i], TR[i+1], TL[i+1]], [BL[i], BR[i], BR[i+1], BL[i+1]], [TL[i], BL[i], BL[i+1], TL[i+1]], [TR[i], BR[i], BR[i+1], TR[i+1]]]){
+          const near = f.reduce((a, v) => a + v[2], 0)/4;
+          prims.push({near: near + 0.5, pick:{kind:'conn', id:cn.uid}, poly:f,
+            svg:`<polygon points="${polyStr(f)}" fill="${sp.colour}" fill-opacity=".13" stroke="${edge}" stroke-width="0.8" stroke-linejoin="round" opacity=".75"/>`});
+        }
     }
     for (const pl of run3d(cn)){
       const q = pl.map(proj);
@@ -2867,7 +2872,7 @@ function faceSectionSVG(L, wpx = 232, opt = {}){
     const zr = Math.max(1, A ? A.zSpace : 0, B ? B.zSpace : 0);       // the run's row pitch, as the 3D view lays it
     const rp = Math.max(2.2, it.sp.radius*scale);
     const end = (it.cn.a.mh === c.uid && it.cn.a.face === L.g.face) ? 'a' : 'b', sgn = leftSign(it.cn, end, L.g, L.t), RC = rowColumns(it.cn);
-    const E = runEncasement(it.cn);
+    const E = showEnc(it.cn) ? runEncasement(it.cn) : null;
     if (E){
       const zt = z0 - gr.level*zr + E.zTop, zb2 = z0 - gr.level*zr + E.zBot;
       el.push(`<rect x="${f1(X(it.centreOff - E.halfW))}" y="${f1(Y(zt))}" width="${f1(E.W*scale)}" height="${f1(Math.max(0, Y(zb2) - Y(zt)))}" fill="${it.sp.colour}" fill-opacity=".08" stroke="${on ? C.sel : it.sp.colour}" stroke-width="1" stroke-dasharray="4 3" opacity=".8"/>`);
@@ -3108,6 +3113,7 @@ function renderLayers(){
         ${l.id === DEFAULT_LAYER ? '' : `<button class="mini x" data-ldel="${l.id}" title="Delete the layer — what is on it goes to the Drawing layer">×</button>`}</div></div>`;
   }).join('');
   const who = document.getElementById('layerWho'); if (who) who.textContent = `${state.layers.length} layer${state.layers.length === 1 ? '' : 's'}`;
+  renderModels();
   box.querySelectorAll('[data-lact]').forEach(el => el.onchange = () => { state.activeLayer = el.dataset.lact; renderLayers(); });
   box.querySelectorAll('[data-lname]').forEach(el => el.addEventListener('input', () => { const l = layerById(el.dataset.lname); if (l) l.name = el.value; }));
   box.querySelectorAll('[data-lvis]').forEach(el => el.onchange = () => { const l = layerById(el.dataset.lvis); if (l){ l.visible = el.checked; } renderSel(); draw(); });
@@ -3132,6 +3138,38 @@ function renderLayers(){
     state.layers = state.layers.filter(x => x.id !== id);
     if (state.activeLayer === id) state.activeLayer = DEFAULT_LAYER;
     renderSel(); renderConnections(); renderLayers(); draw();
+  });
+}
+/** Models: every layer as a model — show or hide it, or only its manholes, conduits, encasement or obstacles, and select all of it. */
+function renderModels(){
+  const box = document.getElementById('modelList');
+  if (!box) return;
+  const idOf = e => layerById(e.layer) ? e.layer : DEFAULT_LAYER;
+  const KINDS = [['chambers', 'manholes'], ['runs', 'conduits'], ['encasement', 'encasement'], ['obstacles', 'obstacles']];
+  box.innerHTML = state.layers.map(l => {
+    const nc = state.chambers.filter(e => idOf(e) === l.id).length, nr = state.connections.filter(e => idOf(e) === l.id).length;
+    const ne = state.connections.filter(e => idOf(e) === l.id && e.encased).length, no = state.obstacles.filter(e => idOf(e) === l.id).length;
+    const sh = l.show || {}, off = l.visible === false;
+    return `<div class="layer${off ? ' off' : ''}" data-model="${l.id}">
+      <div class="lrow"><label class="chk" style="flex:1"><input type="checkbox" data-mvis="${l.id}"${off ? '' : ' checked'}> <b>${esc(l.name)}</b></label>
+        <button class="mini" data-msel="${l.id}" title="Select everything shown on this model">Select</button></div>
+      <div class="lrow"><span class="meta">${l.mode === 'static' ? 'static' : 'dynamic'} · ${nc} manhole${nc === 1 ? '' : 's'} · ${nr} conduit run${nr === 1 ? '' : 's'}, ${ne} encased · ${no} obstacle${no === 1 ? '' : 's'}</span></div>
+      <div class="lrow">${KINDS.map(([k, nm]) => `<label class="chk"><input type="checkbox" data-mkind="${l.id}:${k}"${sh[k] !== false ? ' checked' : ''}${off ? ' disabled' : ''}> ${nm}</label>`).join('')}</div></div>`;
+  }).join('');
+  const who = document.getElementById('modelWho'); if (who) who.textContent = `${state.layers.length} model${state.layers.length === 1 ? '' : 's'}`;
+  box.querySelectorAll('[data-mvis]').forEach(el => el.onchange = () => { const l = layerById(el.dataset.mvis); if (l) l.visible = el.checked; renderLayers(); renderSel(); draw(); });
+  box.querySelectorAll('[data-mkind]').forEach(el => el.onchange = () => {
+    const [id, k] = el.dataset.mkind.split(':'), l = layerById(id); if (!l) return;
+    l.show = {...(l.show || {}), [k]: el.checked}; renderSel(); draw();
+  });
+  box.querySelectorAll('[data-msel]').forEach(el => el.onclick = () => {
+    const id = el.dataset.msel, l = layerById(id); if (!l) return;
+    const set = [...state.chambers.filter(e => idOf(e) === id && isVisible(e)).map(e => ({kind:'chamber', id:e.uid})),
+                 ...state.obstacles.filter(e => idOf(e) === id && isVisible(e)).map(e => ({kind:'obstacle', id:e.uid})),
+                 ...state.connections.filter(e => idOf(e) === id && isVisible(e)).map(e => ({kind:'conn', id:e.uid}))];
+    state.selSet = set; state.sel = set[0] || null; state.pending = null; setPendingStatus();
+    renderSel(); updateRibbon(); draw();
+    exStatus(set.length ? `${l.name} selected — ${set.length} element${set.length === 1 ? '' : 's'}` : `${l.name} has nothing shown to select`);
   });
 }
 document.getElementById('layerNew').onclick = () => {
@@ -3187,6 +3225,7 @@ const ICONS = {
   chamber:  '<rect x="4" y="4" width="16" height="16"/><rect x="8" y="8" width="8" height="8"/>',
   encase:   '<rect x="3" y="6" width="18" height="12" rx="1"/><circle cx="8" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="16" cy="12" r="2"/>',
   layers:   '<path d="M12 4l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/><path d="M3 17l9 5 9-5"/>',
+  models:   '<rect x="3" y="4" width="8" height="7"/><rect x="13" y="4" width="8" height="7"/><rect x="3" y="13" width="8" height="7"/><path d="M13 16.5h8M17 13v7"/>',
   obstacle: '<rect x="4" y="5" width="16" height="14"/><path d="M4 12l7-7M4 18l13-13M9 19l11-11M15 19l5-5"/>',
   cube:     '<path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z M12 12l8-4.5M12 12v9M12 12L4 7.5"/>',
   plan:     '<rect x="4" y="4" width="16" height="16"/><path d="M4 12h16M12 4v16"/>',
@@ -3321,7 +3360,7 @@ function spaceMenu(wp){
    ribbon lights the buttons that concern whatever is selected.
    ========================================================================== */
 
-const WINS = ['chambers', 'runs', 'obstacles', 'layers', 'specs', 'examples', 'drawing', 'file', 'elevation', 'view3d'];
+const WINS = ['chambers', 'runs', 'obstacles', 'layers', 'models', 'specs', 'examples', 'drawing', 'file', 'elevation', 'view3d'];
 let winZ = 30;
 const winEl = k => document.getElementById('win-' + k);
 /** A window opens in the first free slot from the right edge, so several
@@ -3345,6 +3384,7 @@ function openWin(k){
   if (k === 'view3d' && was){ state.view3d = true; state.pending = null; setPendingStatus(); fit3d(); }
   if (k === 'elevation' && was) renderElevation();
   if (k === 'layers') renderLayers();
+  if (k === 'models') renderModels();
   updateRibbon();
 }
 function closeWin(k){
@@ -3726,13 +3766,14 @@ function recreateRuns(src, opt = {}){
   for (const r of runs){
     const A = find(r.from), B = find(r.to);
     if (!A || !B || !FACES.includes(r.from.face) || !FACES.includes(r.to.face)){ missing++; continue; }
-    const sp = specForOD(r.od_mm, r.pitch_mm);
+    const sp = specForOD(r.od_mm, r.pitch_mm, r.enc_mm);
     const same = (x, mh, face) => x.mh === mh.uid && x.face === face;
     let cn = state.connections.find(c => (same(c.a, A, r.from.face) && same(c.b, B, r.to.face)) || (same(c.a, B, r.to.face) && same(c.b, A, r.from.face)));
     if (cn) kept++;
     else { cn = {uid:uid(), a:{mh:A.uid, face:r.from.face}, b:{mh:B.uid, face:r.to.face}, placed:true, route:null}; state.connections.push(cn); made++; }
     cn.perRow = runRowsOf(r); cn.align = ALIGNS.includes(r.align) ? r.align : 'auto';
     cn.level = Math.max(0, r.level|0); cn.specId = sp.id; cn.placed = true;
+    if (r.encased) cn.encased = true; else delete cn.encased;           // the encasement is modelled in with the run
     delete cn.rows; delete cn.cols;
     const path = Array.isArray(r.path_mm) && r.path_mm.length >= 2 ? r.path_mm.map(q => [Number(q[0]), Number(q[1]), Number(q[2]) || 0]) : null;
     const lay = layerOf(A); cn.layer = lay.id;
@@ -3744,11 +3785,11 @@ function recreateRuns(src, opt = {}){
 }
 /** The spec for a conduit of this outside diameter: the drawing's own when one
     matches, else a new one named for it, at the pitch the export laid it. */
-function specForOD(od, pitch){
+function specForOD(od, pitch, enc){
   const r = (Number(od) || 100)/2;
   let sp = state.specs.find(s => Math.abs(s.radius - r) <= 1);
-  if (sp) return sp;
-  sp = makeSpec({name:`FIBRE Ø${Math.round(r*2)}`, radius:r, bendR: r >= 50 ? 1200 : 900, stub:500, minLeg:500, buffer:250,
+  if (sp){ if (enc && !encOf(sp)) sp.enc = Math.max(0, Number(enc) || 0); return sp; }
+  sp = makeSpec({name:`FIBRE Ø${Math.round(r*2)}`, radius:r, bendR: r >= 50 ? 1200 : 900, stub:500, minLeg:500, buffer:250, enc: Math.max(0, Number(enc) || 0),
                  spacing: Math.max(Math.round(2*r + 50), Math.round(Number(pitch) || 0)), warnAngle:45, angles:[11.25,22.5,45,90]});
   state.specs.push(sp); renderSpecs(); renderSpecEdit();
   return sp;

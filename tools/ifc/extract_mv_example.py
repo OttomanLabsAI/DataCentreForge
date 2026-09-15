@@ -279,6 +279,7 @@ for key, members in sorted(banks.items(), key=lambda kv: (CH[kv[0][0][0]]['mark'
     od = Counter(od_of(r['r']) for r in members).most_common(1)[0][0]
     path, uniform = bank_path(members, a)
     out_runs.append({'from':{'id':a[0], 'face':a[1]}, 'to':{'id':b[0], 'face':b[1]}, 'perRow':per_row, 'align':align, 'level':level,
+                     'encased':True, 'enc_mm':100,           # the banks are concrete-encased: the box is modelled in with the run
                      'path_mm':[[round(v, 1) for v in q] for q in path],
                      'od_mm':od, 'pitch_mm':ZP if ca['kind'] != 'LVV' else 210, 'top_mm':[round(ra[0][0]), round(rb[0][0])],
                      'length_mm':round(sum(r['L'] for r in members)/len(members)), 'bends':Counter(r['bends'] for r in members).most_common(1)[0][0],

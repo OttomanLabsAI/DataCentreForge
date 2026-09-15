@@ -215,9 +215,12 @@ encased run's box is a rectangle that far beyond the conduits' outer
 diameter, as wide as the array's widest row and as high as all its rows
 together. The plan draws it as a band with its two edges, the elevation as a
 box round the array, the 3D view as the box's four edges, and the run's panel
-and the file give its size. Other runs avoid the box itself rather than the
-conduits and their clearance, obstacles and the ground cover allow for it, and
-an unencased neighbour keeps its own clearance from the box.
+and the file give its size; in 3D it is drawn as a solid box around the run.
+Other runs avoid the box itself rather than the conduits and their clearance,
+obstacles and the ground cover allow for it, and an unencased neighbour keeps
+its own clearance from the box. A model can carry its encasement with it: the
+MV export marks every bank as encased with its offset, so the model arrives
+with its boxes already on.
 
 ## Layers
 
@@ -228,12 +231,23 @@ deleted, which sends what was on it to the Drawing layer, and the selection
 can be moved to any of them. Each model placed from the Examples window or a
 Revit import lands on a layer of its own, static or dynamic as chosen.
 
+The Models window (also in Manage) shows the same layers as models. Each has
+a tick that hides the whole model and four more for its manholes, conduits,
+encasement and obstacles on their own, so a model's conduits can be studied
+with its chambers out of the way; hiding a model's conduits hides their
+encasement with them. Select takes everything shown on that model as the
+selection. Hiding changes nothing about routing: a static model stays a
+keep-out whether it is shown or not.
+
 A layer is dynamic or static. A dynamic layer is the tool's to route and its
 manholes can move. A static layer's manholes stay put at once, and its runs
 are fixed by the one Update routes button: a modelled path is kept, and any
 other run is laid without avoidance and then fixed as it stands, so dynamic
-runs keep clear of it. Set a layer dynamic again and Update routes routes its
-runs afresh round everything static and encased. The setting only takes
+runs keep clear of it: every element of a static model — its manholes, its
+conduit banks and their encasement — is a keep-out for every dynamic run,
+whatever the drawing's own avoidance switches say. Set a layer dynamic again
+and Update routes routes its runs afresh round everything static and
+encased. The setting only takes
 effect on Update, and a layer says how many of its runs are waiting for it.
 
 A static run — one placed from a model with its modelled centreline — is
