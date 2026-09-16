@@ -1,0 +1,7 @@
+the the LV example, use this ifc to place recreate the pipes
+
+also, when loading the example, let the user choose if they want the conduits modelled or not
+
+also, make the default obstruction method under
+
+i dont think the array spacing is working. check it

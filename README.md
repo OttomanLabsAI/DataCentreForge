@@ -22,7 +22,7 @@ prompt text/             provenance for the version in service (replaced each re
   <N>/ai model.txt       the model attribution for that version
   <N>/*.png              input images referenced by the prompt, where held
 tools/revit/             exporter script for Revit (not served)
-tools/ifc/               reads the fibre model's IFC into the MV example (not served)
+tools/ifc/               reads the site's IFCs into the MV and LV examples (not served)
 wrangler.jsonc           assets-only Workers config (no build step, no Worker script)
 package.json             wrangler devDependency + dev/deploy scripts
 ```
@@ -79,6 +79,14 @@ and a `runs` list with a `path_mm`, `pitch_mm` and `row_pitch_mm` per run; the
 tool honours all of them, and a run placed static keeps that path as its
 route.
 
+The LV model came both ways: its manholes from the Revit exporter, its
+conduits from the same model's IFC. `tools/ifc/extract_lv_runs.py` reads that
+IFC the same way and writes what it finds back into the export already kept
+with the site — the banks that join two of its chambers, and the true lid,
+base and conduit depths of the chambers it covers — leaving the manholes the
+exporter placed exactly as they were. Both readers key their chambers on the
+Revit element id, so a bank lands on the manhole the export already holds.
+
 Every manhole and obstacle keeps its Revit element id, unique id and source
 document. Importing a later export of the same model refreshes the matching
 elements in place — runs stay attached — adds what is new and keeps what the
@@ -101,11 +109,14 @@ selected set moves, nudges and deletes together. Pan with a middle- or
 right-button drag; zoom with the wheel, a touchpad pinch or two fingers.
 The Examples window places the exports kept in `public/examples/`: the LV
 model of 105 manholes at their true positions and rotations, carrying their
-Revit marks, types and element ids; the MV model read from its IFC — 23
-manholes, 44 vaults and 8 pull boxes, and the 77 conduit banks that join
-them, recreated as runs while its checkbox is ticked; and the DCBuild test
-model. The LV model's family exposes only its depth planes, so it borrows the
-DCBuild family's side planes for wall and size.
+Revit marks, types and element ids, with the 87 conduit banks its own IFC
+holds; the MV model read from its IFC — 23 manholes, 44 vaults and 8 pull
+boxes, and the 77 conduit banks that join them; and the DCBuild test model.
+Each model with conduits carries a checkbox beside it, so its banks are
+recreated as runs or left out, chosen before it is placed. The LV model's
+family exposes only its depth planes, so it borrows the DCBuild family's side
+planes for wall and size; the chambers its IFC covers carry their true lid,
+base and conduit depths.
 
 Hold ctrl (or ⌘) with shift while dragging and the line follows the grabbed
 chamber's own axes instead, along or across it however it is turned.
@@ -158,8 +169,10 @@ with as many open as you like. Three of them deserve a word:
 - **Examples** (in the Manage group) lists the drawings kept with the site:
   the LV site, the DCBuild test model and the demo drawing. The LV site is
   built from sub-models, one export per service: the LV model of 105 manholes
-  and the MV model of 75 chambers from the fibre IFC, whose checkbox recreates
-  its 77 conduit banks as runs, each with its rows as the model has them.
+  and 87 conduit banks, and the MV model of 75 chambers and 77 banks from the
+  fibre IFC. Each carries a checkbox that recreates its banks as runs, ticked
+  unless it is cleared before placing, each bank with its rows as the model
+  has them.
   Place the whole site, or Add a sub-model to whatever is on the drawing (a
   sub-model already there is refreshed in place, its banks with it). Each
   sub-model is placed dynamic or static, chosen beside its Add button: dynamic
@@ -198,10 +211,13 @@ others allow.
 
 A run's Array & level panel also sets the centres it is laid on: Spacing
 across and Spacing down. They are not a third set of numbers — across is the
-spec's array spacing, down is the Z spacing of the run's two manholes, the
-same values the Specs and Chambers windows hold, so either place can be used
-and both show the change. A face is laid on the largest across-spacing of the
-runs it carries, so runs sharing a face stay on one grid.
+spec's array spacing and the lateral spacing of the run's two manholes, down
+is those manholes' Z spacing, the same values the Specs and Chambers windows
+hold, and setting one here sets every place it lives, so what is typed is what
+the faces are laid on. A face is laid on the largest across-spacing of the
+runs it carries and never below its manhole's own lateral spacing, so runs
+sharing a face stay on one grid; where that holds a run wider than its spec
+asks, its panel and the spec both say so.
 
 A run's array is set up on a picture of its section: one circle per conduit,
 rows stacked as they sit, seen along the run from its first chamber so left is
@@ -255,7 +271,8 @@ runs keep clear of it: every element of a static model — each manhole as a box
 between its lid and its base, each conduit bank as its encasement along its
 route — is an obstacle for every dynamic run, listed in that run's Obstacles
 panel beside the drawing's own obstacles with the same around, over or under
-choice, and kept clear of whatever the drawing's avoidance switches say. Told
+choice — under unless it is changed, as everywhere else — and kept clear of
+whatever the drawing's avoidance switches say. Told
 to cross, a run dives under the bank or rides over it at its true depth, and
 says which; told to go around when there is no way around, it says so.
 
@@ -308,8 +325,8 @@ its bend list.
 ## Obstacles in three dimensions
 
 Every obstacle has a top, a bottom, and a default way for runs to pass it —
-around (its footprint is a keep-out), over or under — chosen in its panel,
-around unless changed. Each run's panel lists every obstacle with an around,
+under unless changed, or over, or around, which makes its footprint a plan
+keep-out — chosen in its panel. Each run's panel lists every obstacle with an around,
 over or under choice for that run alone, overriding the default. Runs sharing
 two faces travel as one bank and follow the majority choice; a run asking
 otherwise is told so. Over never rises into the ground cover set in the Drawing

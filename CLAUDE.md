@@ -21,7 +21,7 @@ public/            everything served
   examples/        the example Revit export placed by the Example button
 prompt text/       provenance for the version in service, replaced each release
 tools/revit/       Revit-side exporter script (not served)
-tools/ifc/         IFC reader that builds the MV example (not served)
+tools/ifc/         IFC readers that build the MV and LV examples (not served)
 .claude/skills/    the prompt-archive skill: how the provenance archive is kept
 wrangler.jsonc     assets-only config, no Worker script
 package.json       wrangler devDependency + dev/deploy scripts
@@ -160,3 +160,4 @@ files themselves are owner-supplied records — never edit, reformat, trim, or
 | v2.29 | A static model becomes a set of obstacles | Every manhole and conduit bank of a static model is now a proper obstacle for the runs of a dynamic one: each appears in a run's obstacle list with its own around, over or under, so a run can dive under a bank or ride over it at its true depth instead of simply being blocked. When it truly cannot pass, it names exactly what is in the way. |
 | v2.30 | A run lists only what stands in its way | A run's obstacle list now holds just the manholes and conduit banks it actually meets on its way, so a site of a hundred and fifty of them shows the handful that matter, and one control at the top sends all of them around, over or under together. |
 | v2.31 | Runs sit in the middle of their faces | Conduits now enter a manhole as centrally as the layout allows. A run slides along its face where that makes it dead straight, and otherwise only as far as an offset too wide for its bends demands — the middle of the wall, with the bend carrying the rest. Where a face carries several runs, one that must bend gives way to a neighbour that lines up, so a straight duct is never traded away for a centred one. |
+| v2.32 | The LV model brings its conduits too | The LV model now arrives with the 87 conduit banks its own IFC holds, each with the conduits in every row and the depth its chambers carry it at, and both models ask before placing whether their conduits should come with them. A run now passes whatever it meets underneath by default rather than detouring round it, and the array spacing typed on a run is the spacing the conduits are drawn on — it used to be quietly overruled by the manholes' own. |
