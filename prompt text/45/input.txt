@@ -1,0 +1,5 @@
+it should only list the things in its path
+
+also, there shoudl be a way of setting all of them in the list at once
+
+also, it shoudlhave the MH's likke you see and the MHx-MHy runs as obstacles

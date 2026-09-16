@@ -257,7 +257,15 @@ route — is an obstacle for every dynamic run, listed in that run's Obstacles
 panel beside the drawing's own obstacles with the same around, over or under
 choice, and kept clear of whatever the drawing's avoidance switches say. Told
 to cross, a run dives under the bank or rides over it at its true depth, and
-says which; told to go around when there is no way around, it says so. Set a layer dynamic again
+says which; told to go around when there is no way around, it says so.
+
+A run's Obstacles panel lists only what that run actually meets: whatever its
+route — or, while it has none, the straight line between its two entries —
+passes within its own width, the clearances and half a metre, plus anything
+it has already been given a choice for. Its own two manholes are never in the
+list. On a site of a hundred and fifty static elements a run typically meets
+a handful. A control at the top of the list sets every one of them at once,
+to around, over, under, or back to their defaults. Set a layer dynamic again
 and Update routes routes its runs afresh round everything static and
 encased. The setting only takes
 effect on Update, and a layer says how many of its runs are waiting for it.

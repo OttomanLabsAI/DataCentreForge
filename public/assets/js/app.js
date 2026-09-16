@@ -2822,7 +2822,9 @@ function renderRunProps(box, cn){
            <div class="derived"><span>Auto takes the side the next manhole lies on, or the side away from the face's other runs when it lies straight ahead.</span></div>`
         : '')) +
     cluster('runObs', 'Obstacles', obsSummary(cn),
-      crossables().length ? crossables().map(o => {
+      (met => met.length ? `<div class="row"><label for="qObsAll">All ${met.length} in its path</label>
+         <select id="qObsAll"><option value="">set them all…</option>
+           <option value="default">default — around</option>${METHODS.map(m => `<option value="${m}">${m}</option>`).join('')}</select></div>` + met.map(o => {
         const chosen = cn.cross && METHODS.includes(cn.cross[o.uid]) ? cn.cross[o.uid] : '';
         const x = rt && rt.ok ? (rt.crossings || []).find(k => k.uid === o.uid) : null;
         const status = !rt || !rt.ok ? '' : x ? `${x.mode} · Z ${fmt(x.z)}` : (runMethod(cn, o) === 'around' ? 'kept clear' : 'not met');
@@ -2832,8 +2834,8 @@ function renderRunProps(box, cn){
             ${METHODS.map(m => `<option value="${m}"${chosen === m ? ' selected' : ''}>${m}</option>`).join('')}
           </select></div>
           <div class="row" style="margin-top:-4px"><label></label><span class="unit" style="width:auto;text-align:right;flex:1">${esc(status)}</span></div>`;
-      }).join('') + `<div class="derived"><span>How this run passes each obstacle, and each manhole and conduit bank of a static model. Runs sharing these two faces travel as one bank and follow the majority.</span></div>`
-      : `<div class="empty">No obstacles on the drawing, and no static model to pass.</div>`) +
+      }).join('') + `<div class="derived"><span>Only what this run meets on its way: the obstacles, and the manholes and conduit banks of a static model, that its route or its straight line passes. Runs sharing these two faces travel as one bank and follow the majority.</span></div>`
+      : `<div class="empty">Nothing in this run's path — no obstacle and no static model on its way.</div>`)(runCrossables(cn))) +
     cluster('runRt', 'Route',
       rt && rt.ok ? metres(rt.length3d || rt.length) + (rt.fixed ? ' · static' : (rt.turns.length ? ` · ${rt.turns.length} bend${rt.turns.length === 1 ? '' : 's'}` : ' · straight')
                     + (rt.profile && rt.profile.turns.length ? ` + ${rt.profile.turns.length} vertical` : '')) : 'no route',
@@ -2904,8 +2906,18 @@ function renderRunProps(box, cn){
   box.querySelectorAll('[data-obs]').forEach(el => el.onchange = () => {
     cn.cross = cn.cross || {};
     if (el.value) cn.cross[el.dataset.obs] = el.value; else delete cn.cross[el.dataset.obs];
-    renderSel(); renderConnections(); draw();
+    bankCache.clear(); renderSel(); renderConnections(); draw();
   });
+  const allEl = document.getElementById('qObsAll');
+  if (allEl) allEl.onchange = () => {
+    const v = allEl.value;
+    if (!v) return;
+    cn.cross = cn.cross || {};
+    const met = runCrossables(cn);
+    for (const o of met){ if (v === 'default') delete cn.cross[o.uid]; else cn.cross[o.uid] = v; }
+    bankCache.clear(); renderSel(); renderConnections(); draw();
+    exStatus(v === 'default' ? `${met.length} back to their defaults on this run` : `${met.length} set to ${v} on this run`);
+  };
   document.getElementById('qEditSpec').onclick = () => {
     state.editSpec = cn.specId; renderSpecs(); renderSpecEdit();
     openWin('specs');
@@ -3039,10 +3051,41 @@ function renderElevation(){
   box.querySelectorAll('svg [data-sel]').forEach(k => k.addEventListener('click', e => { e.stopPropagation(); select('conn', k.dataset.sel); }));
 }
 
+/** What this run meets on its way: the obstacles, static manholes and static
+    conduit banks that lie within reach of its route — of the straight line
+    between its two entries while it has none — and anything it has already
+    been given a choice for. Its own two manholes are never in the way. */
+function runCrossables(cn){
+  const rt = cn.route, ea = entryFor(cn, 'a'), eb = entryFor(cn, 'b');
+  const line = rt && rt.ok ? rt.poly : (ea && eb ? [ea.point, eb.point] : null);
+  if (!line || line.length < 2) return [];
+  const sp = specOf(cn) || {}, E = runEncasement(cn);
+  const S = Math.max(ea ? ea.S || 0 : 0, eb ? eb.S || 0 : 0);
+  const own = E ? E.halfW : (runCols(cn)-1)/2*S + (sp.radius || 0);
+  const SLACK = 500, STEP = 250;
+  const near = o => {
+    const reach = own + (E ? 0 : (sp.buffer || 0)) + (o.half || 0) + (o.buffer || 0) + SLACK;
+    for (let i = 0; i < line.length-1; i++){
+      const L = Math.hypot(line[i+1][0]-line[i][0], line[i+1][1]-line[i][1]), n = Math.max(1, Math.ceil(L/STEP));
+      for (let j = 0; j <= n; j++){
+        const t = j/n, p = [line[i][0] + (line[i+1][0]-line[i][0])*t, line[i][1] + (line[i+1][1]-line[i][1])*t];
+        if ((o.line ? polyDist(p, o.line) - o.half : boxDist(p, o)) < reach) return true;
+      }
+    }
+    return false;
+  };
+  return crossables().filter(o => {
+    if (o.mh && (o.mh === cn.a.mh || o.mh === cn.b.mh)) return false;
+    if (o.ends && (o.ends.includes(cn.a.mh) || o.ends.includes(cn.b.mh)) && !o.line) return false;
+    if (cn.cross && METHODS.includes(cn.cross[o.uid])) return true;      // a choice already made stays in view
+    return near(o);
+  });
+}
 function obsSummary(cn){
-  const all = crossables();
+  const all = runCrossables(cn);
   const ov = all.filter(o => cn.cross && METHODS.includes(cn.cross[o.uid])).map(o => `${cn.cross[o.uid]} ${o.name.replace(/ · static .*/, '')}`);
-  return ov.length ? ov.join(' · ') : (all.length ? 'defaults' : 'none');
+  if (ov.length) return ov.join(' · ');
+  return all.length ? `${all.length} in its path` : 'nothing in its path';
 }
 function sectionSummary(rt){
   if (!rt || !rt.ok || !rt.profile) return '—';

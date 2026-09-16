@@ -1,3 +1,0 @@
-why does it not allow me to change the obstacle route when it knows there is an obstacle?
-
-i said that i want the other model encasements and manholes from static models to become obstacles for dynamic models
