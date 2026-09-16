@@ -1062,11 +1062,11 @@ const crossMargin = (G, o) => G.maxOff + G.maxRad + G.enc + (o.half || 0) + Math
 
 /** Plan keep-outs for a bank: what its runs go round. One they cross over or
     under is no keep-out at all. */
-function bankBlockers(G, banks){
+function bankBlockers(G, banks, round){
   const out = [];
   const pad = G.maxOff + G.maxRad + G.enc;
   for (const o of bankCrossables(G)){
-    if (bankMethod(G, o) !== 'around') continue;
+    if (bankMethod(G, o) !== 'around' && !(round && round.has(o.uid))) continue;
     if (o.line) out.push({type:'line', pts:o.line, margin: crossMargin(G, o), bb:polyBounds(o.line)});
     else out.push({type:'box', cx:o.x, cy:o.y, rot:o.rot, hw:o.w/2, hh:o.d/2,
                    margin: pad + Math.max(G.enc ? 0 : G.maxBuf, o.buffer)});
@@ -1140,11 +1140,11 @@ function pointAt(rt, s){
 }
 /** Crossable obstacles the bank passes, each with the chainage interval over
     which any lane of the bank sits inside the obstacle's keep-out. */
-function routeCrossings(G, rt){
+function routeCrossings(G, rt, round){
   const P = rt.poly, {cum, k} = chainage(rt);
   const STEP = 25, out = [];
   for (const o of bankCrossables(G)){
-    const method = bankMethod(G, o);
+    const method = round && round.has(o.uid) ? 'around' : bankMethod(G, o);
     if (method === 'around') continue;                  // the plan already goes round it
     const reach = crossMargin(G, o);
     let s0 = Infinity, s1 = -Infinity;
@@ -1263,8 +1263,10 @@ function solveProfile(G, rt, xs){
     const top = Math.max(x.o.zTop, x.o.zBot) + lift, bot = Math.min(x.o.zTop, x.o.zBot);
     const margin = G.maxRad + G.enc + Math.max(G.enc ? 0 : G.maxBuf, x.o.buffer);
     const needOver = top + margin + 1, needUnder = bot - margin - 1;     // a hair clear of the keep-out
-    const clearOver  = x.method === 'over'  && chord(x.s0) >= needOver  && chord(x.s1) >= needOver;
-    const clearUnder = x.method === 'under' && chord(x.s0) <= needUnder && chord(x.s1) <= needUnder;
+    /* Already clear of it, above or below, is no crossing at all — whichever way
+       the run is set to pass it. The method says how to deviate, not that it must. */
+    const clearOver  = chord(x.s0) >= needOver  && chord(x.s1) >= needOver;
+    const clearUnder = chord(x.s0) <= needUnder && chord(x.s1) <= needUnder;
     return {x, top, bot, margin, needOver, needUnder, free: clearOver || clearUnder,
             canOver: x.method === 'over' && needOver <= ceiling, canUnder: x.method === 'under'};
   });
@@ -1400,11 +1402,26 @@ function solveBank(G, banks){
       return {ok:false, msg:'blocked — no way round; choose over or under for an obstacle in the run\'s Obstacles list'};
     return rt;
   }
-  const pf = solveProfile(G, rt, routeCrossings(G, rt));
-  if (!pf.ok) return {ok:false, msg:pf.msg};
-  rt.profile = pf;
-  rt.crossings = pf.crossings;
-  return rt;
+  const xs = routeCrossings(G, rt);
+  const pf = solveProfile(G, rt, xs);
+  if (pf.ok){ rt.profile = pf; rt.crossings = pf.crossings; return rt; }
+  /* Neither over nor under will fit past something the plan walked into. A
+     detailer would step round it instead, so the plan is laid again with those
+     as keep-outs and the section tried afresh; the run says what it went round. */
+  const met = xs.filter(x => x.method !== 'around');
+  if (met.length){
+    const round = new Set(met.map(x => x.o.uid));
+    const rt2 = solveRoute(G.PS, G.d0, G.PE, G.d2, G.spec, bankBlockers(G, banks, round), {plan:true});
+    if (rt2.ok){
+      const pf2 = solveProfile(G, rt2, routeCrossings(G, rt2, round));
+      if (pf2.ok){
+        rt2.profile = pf2; rt2.crossings = pf2.crossings;
+        rt2.warnings.push({kind:'cross', text:`laid clear of ${met.map(x => x.o.name).join(', ')} in plan — there is no room to cross ${met.length === 1 ? 'it' : 'them'} here`});
+        return rt2;
+      }
+    }
+  }
+  return {ok:false, msg:pf.msg};
 }
 
 /** A member's route is the bank centreline shifted sideways, its offset
@@ -1462,7 +1479,7 @@ function deriveMembers(G){
     let r = offsetMember(G.route, e.w0, e.w1);
     if (e.se !== 'a') r = reversedRoute(r);
     r.fixed = !!G.route.fixed;
-    r.warnings = G.route.warnings.filter(w => w.kind === 'radius').map(w => ({...w}));
+    r.warnings = G.route.warnings.filter(w => w.kind === 'radius' || w.kind === 'cross').map(w => ({...w}));
     if (!r.fixed) r.turns.forEach((t, i) => {
       if (sp.warnAngle && Math.abs(t) > sp.warnAngle + 1e-6)
         r.warnings.push({kind:'angle', bend:i+1,
