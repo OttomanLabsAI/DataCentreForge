@@ -3958,7 +3958,7 @@ function recreateRuns(src, opt = {}){
   for (const r of runs){
     const A = find(r.from), B = find(r.to);
     if (!A || !B || !FACES.includes(r.from.face) || !FACES.includes(r.to.face)){ missing++; continue; }
-    const sp = specForOD(r.od_mm, r.pitch_mm, r.enc_mm);
+    const sp = specForOD(r.od_mm, r.pitch_mm, r.enc_mm, opt.service);
     const same = (x, mh, face) => x.mh === mh.uid && x.face === face;
     let cn = state.connections.find(c => (same(c.a, A, r.from.face) && same(c.b, B, r.to.face)) || (same(c.a, B, r.to.face) && same(c.b, A, r.from.face)));
     if (cn) kept++;
@@ -3976,12 +3976,13 @@ function recreateRuns(src, opt = {}){
   return {made, kept, missing, listed: runs.length};
 }
 /** The spec for a conduit of this outside diameter: the drawing's own when one
-    matches, else a new one named for it, at the pitch the export laid it. */
-function specForOD(od, pitch, enc){
+    matches, else a new one named for the model it came from, at the pitch the
+    export laid it. */
+function specForOD(od, pitch, enc, service){
   const r = (Number(od) || 100)/2;
   let sp = state.specs.find(s => Math.abs(s.radius - r) <= 1);
   if (sp){ if (enc && !encOf(sp)) sp.enc = Math.max(0, Number(enc) || 0); return sp; }
-  sp = makeSpec({name:`FIBRE Ø${Math.round(r*2)}`, radius:r, bendR: r >= 50 ? 1200 : 900, stub:500, minLeg:500, buffer:250, enc: Math.max(0, Number(enc) || 0),
+  sp = makeSpec({name:`${service || 'FIBRE'} Ø${Math.round(r*2)}`, radius:r, bendR: r >= 50 ? 1200 : 900, stub:500, minLeg:500, buffer:250, enc: Math.max(0, Number(enc) || 0),
                  spacing: Math.max(Math.round(2*r + 50), Math.round(Number(pitch) || 0)), warnAngle:45, angles:[11.25,22.5,45,90]});
   state.specs.push(sp); renderSpecs(); renderSpecEdit();
   return sp;
@@ -4007,15 +4008,15 @@ const EXAMPLES = [
   {id:'site', name:'LV site',
    blurb:'A live data-centre site, one sub-model per service. Place the whole site, or add a sub-model to the drawing as it stands. Each sub-model is dynamic — the tool routes its runs and its manholes can move — or static: placed as modelled, its manholes stay put, its conduits keep their modelled routes, and dynamic runs keep clear of them.',
    models:[
-     {id:'lv', name:'LV', count:'105 manholes', file:'/examples/lv-manholes.json',
-      blurb:'The LV model: every manhole of its chamber family at its true position and rotation, with marks, types and Revit ids. The family carries only depth planes, so wall and size are borrowed from the DCBuild family.'},
+     {id:'lv', name:'LV', count:'105 manholes · 87 conduit banks', file:'/examples/lv-manholes.json', runs:true,
+      blurb:'The LV model: every manhole of its chamber family at its true position and rotation, with marks, types and Revit ids. The family carries only depth planes, so wall and size are borrowed from the DCBuild family. Its conduits come from the model\u2019s own IFC — the banks that join two of its chambers, on the Ø114 and Ø51 ducts it uses — and the chambers the IFC covers carry their true lid, base and conduit depths.'},
      {id:'mv', name:'MV', count:'23 manholes · 44 vaults · 8 pull boxes · 77 conduit banks', file:'/examples/mv-manholes.json', runs:true,
       blurb:'The MV model, read from its IFC: the fibre manholes, vaults and pull boxes at their true positions, sizes and depths, and the conduit banks that join two of them — each with the number of conduits in every row, on the Ø128, Ø114 and Ø51 ducts the model uses. Banks that leave the model with an open end are not recreated.'}
    ]},
   {id:'dcbuild', name:'DCBuild test model', count:'3 manholes', file:'/examples/dcbuild-manholes.json',
    blurb:'The three manholes of the DCBuild test project, read from a family that names the full set of side and depth planes.'},
   {id:'demo', name:'Demo drawing', count:'3 chambers · 1 obstacle · 3 runs', file:null,
-   blurb:'The drawing the tool opens with: two chambers joined by a pair of placed runs skirting an obstacle, and a third chamber turned 45°.'}
+   blurb:'The drawing the tool opens with: two chambers joined by a pair of placed runs passing under an obstacle, and a third chamber turned 45°.'}
 ];
 let DEMO_DOC = null;
 const exRuns = {};                                                  // the conduit checkboxes, by site:model — on unless unticked
@@ -4046,7 +4047,7 @@ function placeExample(id){
   if (x.models){
     Promise.all(x.models.map(m => fetchJSON(m.file)))            // everything fetched first, so a failure places nothing
       .then(srcs => { srcs.forEach((src, i) => applyRevitImport(src, {...(i ? {add:true} : {}), fixed: modeOf(x.id, x.models[i].id) === 'static', layer: x.models[i].name}));
-                      const rs = x.models.map((m, i) => m.runs && wantRuns(x.id, m.id) ? recreateRuns(srcs[i], {fixed: modeOf(x.id, m.id) === 'static'}) : null).filter(Boolean);
+                      const rs = x.models.map((m, i) => m.runs && wantRuns(x.id, m.id) ? recreateRuns(srcs[i], {fixed: modeOf(x.id, m.id) === 'static', service: m.name}) : null).filter(Boolean);
                       exStatus(`example placed — ${x.name} · ${state.chambers.length} manholes` + runsNote(rs)); })
       .catch(err => alert('The example could not be loaded: ' + err.message));
     return;
@@ -4067,7 +4068,7 @@ function addModel(exId, mId){
   fetchJSON(m.file)
     .then(src => { const before = state.chambers.length; const fixed = modeOf(exId, mId) === 'static';
                    applyRevitImport(src, {add:true, fixed, layer: m.name}); const n = state.chambers.length - before;
-                   const rs = m.runs && wantRuns(exId, mId) ? [recreateRuns(src, {fixed})] : [];
+                   const rs = m.runs && wantRuns(exId, mId) ? [recreateRuns(src, {fixed, service: m.name})] : [];
                    exStatus((n > 0 ? `${m.name} added — ${n} manholes · ${state.chambers.length} on the drawing`
                                    : `${m.name} refreshed in place · ${state.chambers.length} manholes on the drawing`) + runsNote(rs)); })
     .catch(err => alert('The sub-model could not be loaded: ' + err.message));

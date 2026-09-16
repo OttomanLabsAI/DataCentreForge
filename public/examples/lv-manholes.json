@@ -1,139 +1,7889 @@
 {
-  "units": "mm",
-  "source": "AMS01-EX-GLT-XX-EX-E-XXX-3DM-060001.rvt",
-  "note": "Example placements from a live data-centre model: the 105 manholes of the MV Chamber family at their true positions and rotations. The family in that model carries only its depth planes, so the side planes here are the DCBuild family's.",
-  "families": [
+ "units": "mm",
+ "source": "AMS01-EX-GLT-XX-EX-E-XXX-3DM-060001.rvt",
+ "note": "Example placements from a live data-centre model: the 105 manholes of the MV Chamber family at their true positions and rotations. The family in that model carries only its depth planes, so the side planes here are the DCBuild family's. Its conduits come from the model's own IFC: 87 banks joining two chambers, each with the number of conduits in every row and its centreline as modelled, and the 79 chambers the IFC covers carry their true lid, base and conduit depths. 316 conduit runs leave the model with one end in the open and are not listed.",
+ "families": [
+  {
+   "family": "MV Chamber",
+   "planes": [
     {
-      "family": "MV Chamber",
-      "planes": [
-        {"origin_mm": [-1000.0, 2000.0, 1200.0], "name": "a1", "normal": [1.0, 0.0, 0.0], "offset_mm": -1000.0, "axis": "a"},
-        {"origin_mm": [-900.0, 2000.0, 1200.0], "name": "a2", "normal": [1.0, 0.0, 0.0], "offset_mm": -900.0, "axis": "a"},
-        {"origin_mm": [-400.0, 2000.0, 1200.0], "name": "a3", "normal": [1.0, 0.0, 0.0], "offset_mm": -400.0, "axis": "a"},
-        {"origin_mm": [-300.0, 2000.0, 1200.0], "name": "a4", "normal": [1.0, 0.0, 0.0], "offset_mm": -300.0, "axis": "a"},
-        {"origin_mm": [0.0, 0.0, 0.0], "name": "a5", "normal": [1.0, 0.0, -0.0], "offset_mm": 0.0, "axis": "a"},
-        {"origin_mm": [900.0, 2000.0, 1200.0], "name": "a6", "normal": [1.0, 0.0, -0.0], "offset_mm": 900.0, "axis": "a"},
-        {"origin_mm": [1000.0, 2000.0, 1200.0], "name": "a7", "normal": [1.0, 0.0, 0.0], "offset_mm": 1000.0, "axis": "a"},
-        {"origin_mm": [2000.0, -1000.0, 1200.0], "name": "b1", "normal": [0.0, -1.0, 0.0], "offset_mm": 1000.0, "axis": "b"},
-        {"origin_mm": [2000.0, -900.0, 1200.0], "name": "b2", "normal": [0.0, -1.0, 0.0], "offset_mm": 900.0, "axis": "b"},
-        {"origin_mm": [0.0, 0.0, 0.0], "name": "b3", "normal": [0.0, -1.0, 0.0], "offset_mm": 0.0, "axis": "b"},
-        {"origin_mm": [2000.0, 300.0, 1200.0], "name": "b4", "normal": [0.0, -1.0, 0.0], "offset_mm": -300.0, "axis": "b"},
-        {"origin_mm": [2000.0, 400.0, 1200.0], "name": "b5", "normal": [0.0, -1.0, 0.0], "offset_mm": -400.0, "axis": "b"},
-        {"origin_mm": [2000.0, 900.0, 1200.0], "name": "b6", "normal": [0.0, -1.0, 0.0], "offset_mm": -900.0, "axis": "b"},
-        {"origin_mm": [2000.0, 1000.0, 1200.0], "name": "b7", "normal": [0.0, -1.0, 0.0], "offset_mm": -1000.0, "axis": "b"},
-        {"origin_mm": [-792.5, -1524.0, 350.0], "name": "z1", "axis": "z", "normal": [0.0, 0.0, 1.0], "offset_mm": 350.0},
-        {"origin_mm": [-792.5, -1524.0, 150.0], "name": "z2", "axis": "z", "normal": [0.0, 0.0, 1.0], "offset_mm": 150.0},
-        {"origin_mm": [-792.5, -1524.0, 0.0], "name": "z3", "axis": "z", "normal": [0.0, 0.0, 1.0], "offset_mm": 0.0},
-        {"origin_mm": [-792.5, -1524.0, -150.0], "name": "z4", "axis": "z", "normal": [0.0, 0.0, 1.0], "offset_mm": -150.0},
-        {"origin_mm": [-792.5, -1524.0, -1850.0], "name": "z5", "axis": "z", "normal": [0.0, 0.0, 1.0], "offset_mm": -1850.0},
-        {"origin_mm": [-792.5, -1524.0, -2000.0], "name": "z6", "axis": "z", "normal": [0.0, 0.0, 1.0], "offset_mm": -2000.0}
-      ],
-      "instances": [
-        {"id": 2756201, "mark": "MV-FA4", "type": "Glent Typical", "origin_mm": [-1552.07, 1970.0, -441.9], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": false},
-        {"id": 2756245, "mark": "MV-FB12", "type": "Glent Typical", "origin_mm": [56019.41, 9555.97, -369.9], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756277, "mark": "LV25/Z1", "type": "GLT LV Typical", "origin_mm": [4150.85, 14571.05, -385.0], "rotation_deg": -90.0, "family_x_axis": [-0.0, -1.0, 0.0], "family_y_axis": [1.0, -0.0, 0.0], "mirrored": false},
-        {"id": 2756282, "mark": "LV2/Z2", "type": "GLT LV Typical", "origin_mm": [17786.69, -4278.06, -273.92], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756283, "mark": "LV3/Z1", "type": "GLT LV Typical", "origin_mm": [90764.33, -4278.06, -360.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756285, "mark": "LV5/Z1", "type": "GLT LV Typical", "origin_mm": [177187.0, -4278.06, -360.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756286, "mark": "LV6/Z1", "type": "GLT LV Typical", "origin_mm": [218627.0, -4278.06, -415.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756413, "mark": "MV-FB11", "type": "Glent Typical", "origin_mm": [7628.41, 9555.89, -417.9], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756567, "mark": "LV20/Z1", "type": "GLT LV Typical", "origin_mm": [89969.2, 13398.55, -339.99], "rotation_deg": 90.0, "family_x_axis": [0.0, 1.0, 0.0], "family_y_axis": [-1.0, 0.0, 0.0], "mirrored": false},
-        {"id": 2756568, "mark": "MV-FA3", "type": "Glent Typical", "origin_mm": [-20261.67, 18730.06, -397.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 2756621, "mark": "LV11/Z3", "type": "GLT LV Typical", "origin_mm": [-15610.1, 30717.21, -525.0], "rotation_deg": -57.122, "family_x_axis": [0.542856, -0.839826, 0.0], "family_y_axis": [0.839826, 0.542856, -0.0], "mirrored": false},
-        {"id": 2756623, "mark": "LV10/Z3", "type": "GLT LV Typical", "origin_mm": [-31352.94, 55072.15, -390.0], "rotation_deg": -57.122, "family_x_axis": [0.542856, -0.839826, 0.0], "family_y_axis": [0.839826, 0.542856, -0.0], "mirrored": false},
-        {"id": 2756624, "mark": "LV8/Z3", "type": "GLT LV Typical", "origin_mm": [-11793.02, 44502.77, -345.0], "rotation_deg": 122.878, "family_x_axis": [-0.542856, 0.839826, 0.0], "family_y_axis": [-0.839826, -0.542856, 0.0], "mirrored": false},
-        {"id": 2756627, "mark": "LV9/Z3", "type": "GLT LV Typical", "origin_mm": [-22105.38, 60765.84, -545.0], "rotation_deg": -147.122, "family_x_axis": [-0.839826, -0.542856, 0.0], "family_y_axis": [0.542856, -0.839826, 0.0], "mirrored": false},
-        {"id": 2756634, "mark": "LV5/Z3", "type": "GLT LV Typical", "origin_mm": [-1009.92, 73472.64, -345.0], "rotation_deg": 179.962, "family_x_axis": [-1.0, 0.000664, 0.0], "family_y_axis": [-0.000664, -1.0, 0.0], "mirrored": false},
-        {"id": 2756641, "mark": "LV19/Z3", "type": "GLT LV Typical", "origin_mm": [-18337.07, 90496.24, -548.0], "rotation_deg": 122.878, "family_x_axis": [-0.542856, 0.839826, 0.0], "family_y_axis": [-0.839826, -0.542856, 0.0], "mirrored": false},
-        {"id": 2756644, "mark": "LV15/Z1", "type": "GLT LV Typical", "origin_mm": [129279.29, 8336.08, -340.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756646, "mark": "LV11/Z1", "type": "GLT LV Typical", "origin_mm": [177187.0, 8342.54, -355.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756651, "mark": "LV5/Z2", "type": "GLT LV Typical", "origin_mm": [201283.39, 163629.46, -298.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756652, "mark": "LV8/Z2", "type": "LV Vault 2x2 x 2", "origin_mm": [104885.83, 163443.61, -310.0], "rotation_deg": -90.0, "family_x_axis": [-0.0, -1.0, 0.0], "family_y_axis": [1.0, -0.0, 0.0], "mirrored": false},
-        {"id": 2756653, "mark": "LV14/Z2", "type": "LV Vault 2x2 x 2", "origin_mm": [104879.02, 145797.27, -463.99], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756657, "mark": "LV12/Z2", "type": "GLT LV Typical", "origin_mm": [129483.39, 148297.94, -436.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756658, "mark": "LV15/Z2", "type": "LV Vault 1,5x1,5", "origin_mm": [105199.53, 130047.81, -1179.61], "rotation_deg": 90.0, "family_x_axis": [0.0, 1.0, 0.0], "family_y_axis": [-1.0, 0.0, 0.0], "mirrored": false},
-        {"id": 2756661, "mark": "LV18/Z2", "type": "GLT LV Typical", "origin_mm": [47541.99, 148079.04, -435.0], "rotation_deg": 90.0, "family_x_axis": [0.0, 1.0, 0.0], "family_y_axis": [-1.0, 0.0, 0.0], "mirrored": false},
-        {"id": 2756664, "mark": "LV20/Z2", "type": "GLT LV Typical", "origin_mm": [22153.14, 148079.04, -311.99], "rotation_deg": 90.0, "family_x_axis": [0.0, 1.0, 0.0], "family_y_axis": [-1.0, 0.0, 0.0], "mirrored": false},
-        {"id": 2756668, "mark": "LV25/Z3", "type": "GLT LV Typical", "origin_mm": [-17881.27, 148079.04, -292.99], "rotation_deg": 0.0, "family_x_axis": [1.0, 0.0, 0.0], "family_y_axis": [-0.0, 1.0, 0.0], "mirrored": false},
-        {"id": 2756669, "mark": "LV24/Z3", "type": "GLT LV Typical", "origin_mm": [-28625.66, 149745.47, -418.99], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2756671, "mark": "LV34/Z3", "type": "GLT LV Typical", "origin_mm": [-108771.45, 163312.22, -298.0], "rotation_deg": -90.0, "family_x_axis": [-0.0, -1.0, 0.0], "family_y_axis": [1.0, -0.0, 0.0], "mirrored": false},
-        {"id": 2756679, "mark": "LV30/Z3", "type": "GLT LV Typical", "origin_mm": [-77514.06, 157157.85, -379.99], "rotation_deg": -57.993, "family_x_axis": [0.530017, -0.847987, 0.0], "family_y_axis": [0.847987, 0.530017, -0.0], "mirrored": false},
-        {"id": 2756682, "mark": "LV22/Z3", "type": "GLT LV Typical", "origin_mm": [-18080.83, 131156.95, -424.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 2756699, "mark": "LV13/Z3", "type": "GLT LV Typical", "origin_mm": [-31965.34, 89708.55, -446.76], "rotation_deg": -57.122, "family_x_axis": [0.542856, -0.839826, 0.0], "family_y_axis": [0.839826, 0.542856, -0.0], "mirrored": false},
-        {"id": 2756701, "mark": "MV-FB1", "type": "Glent Typical", "origin_mm": [-49831.83, 75726.65, -490.0], "rotation_deg": 33.0, "family_x_axis": [0.838671, 0.544639, 0.0], "family_y_axis": [-0.544639, 0.838671, 0.0], "mirrored": false},
-        {"id": 2756722, "mark": "LV12/Z3", "type": "GLT LV Typical", "origin_mm": [-46358.36, 79903.75, -532.0], "rotation_deg": -57.122, "family_x_axis": [0.542856, -0.839826, 0.0], "family_y_axis": [0.839826, 0.542856, -0.0], "mirrored": false},
-        {"id": 2756728, "mark": "LV29/Z3", "type": "GLT LV Typical", "origin_mm": [-67276.9, 140990.26, -359.99], "rotation_deg": -57.122, "family_x_axis": [0.542856, -0.839826, 0.0], "family_y_axis": [0.839826, 0.542856, -0.0], "mirrored": false},
-        {"id": 2756790, "mark": "LV18/Z3", "type": "GLT LV Typical", "origin_mm": [-36927.43, 119256.23, -564.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 2757008, "mark": "LV16/Z1", "type": "GLT LV Typical", "origin_mm": [109313.84, 8546.05, -351.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2757054, "mark": "LV7/Z2", "type": "GLT LV Typical", "origin_mm": [153783.39, 163629.46, -337.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 2895876, "mark": "LV10/Z2", "type": "GLT LV Typical", "origin_mm": [153783.39, 151375.88, -260.0], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": false},
-        {"id": 2899874, "mark": "LV19/Z2", "type": "GLT LV Typical", "origin_mm": [47541.99, 150961.7, -365.99], "rotation_deg": -90.0, "family_x_axis": [0.0, -1.0, 0.0], "family_y_axis": [1.0, 0.0, 0.0], "mirrored": true},
-        {"id": 2900244, "mark": "LV13/Z1", "type": "GLT LV Typical", "origin_mm": [146879.29, 8348.9, -229.99], "rotation_deg": 0.0, "family_x_axis": [1.0, 0.0, 0.0], "family_y_axis": [0.0, 1.0, 0.0], "mirrored": false},
-        {"id": 2900297, "mark": "LV14/Z1", "type": "GLT LV Typical", "origin_mm": [146879.29, 14842.22, -389.99], "rotation_deg": 0.0, "family_x_axis": [1.0, 0.0, 0.0], "family_y_axis": [0.0, 1.0, 0.0], "mirrored": false},
-        {"id": 2903964, "mark": "LV23/Z1", "type": "GLT LV Typical", "origin_mm": [39969.2, 15033.55, -345.0], "rotation_deg": 0.0, "family_x_axis": [1.0, 0.0, 0.0], "family_y_axis": [0.0, 1.0, 0.0], "mirrored": false},
-        {"id": 2930864, "mark": "LV4/Z3", "type": "GLT LV Typical", "origin_mm": [-1009.92, 86408.78, -345.0], "rotation_deg": 90.0, "family_x_axis": [-0.0, 1.0, 0.0], "family_y_axis": [-1.0, -0.0, 0.0], "mirrored": false},
-        {"id": 2932864, "mark": "LV17/Z3", "type": "GLT LV Typical", "origin_mm": [-44969.76, 131698.32, -564.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 2933273, "mark": "LV26/Z3", "type": "GLT LV Typical", "origin_mm": [-40416.18, 149460.07, -417.0], "rotation_deg": 32.88, "family_x_axis": [0.839813, 0.542876, 0.0], "family_y_axis": [-0.542876, 0.839813, 0.0], "mirrored": true},
-        {"id": 3180427, "mark": "MV-FA1", "type": "Glent Typical", "origin_mm": [-55531.2, 73341.11, -423.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 3280105, "mark": "MV-FA5", "type": "Glent Typical", "origin_mm": [52514.41, 1970.0, -444.4], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": false},
-        {"id": 3280138, "mark": "MV-FB5", "type": "Glent Typical", "origin_mm": [52514.41, 7253.47, -344.9], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": false},
-        {"id": 3280301, "mark": "MV-FB3", "type": "Glent Typical", "origin_mm": [-12354.6, 17932.92, -409.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 3280325, "mark": "MV-FA12", "type": "Glent Typical", "origin_mm": [-12737.65, 35614.15, -420.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3280497, "mark": "MV-FA7", "type": "Glent Typical", "origin_mm": [132760.0, 6280.5, -368.9], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3288877, "mark": "LV15/Z3", "type": "GLT LV Typical", "origin_mm": [-57012.42, 123914.04, -406.99], "rotation_deg": -57.122, "family_x_axis": [0.542856, -0.839826, 0.0], "family_y_axis": [0.839826, 0.542856, -0.0], "mirrored": false},
-        {"id": 3355995, "mark": "LV6/Z2", "type": "GLT LV Typical", "origin_mm": [176783.39, 163629.46, -298.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3360009, "mark": "LV21/Z1", "type": "GLT LV Typical", "origin_mm": [64969.2, 13398.55, -339.99], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": false},
-        {"id": 3377793, "mark": "LV4/Z1", "type": "GLT LV Typical", "origin_mm": [104587.0, -4278.06, -317.5], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3383587, "mark": "LV27/Z3", "type": "GLT LV Typical", "origin_mm": [-55634.33, 148196.94, -501.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 3390058, "mark": "MV-FA11", "type": "Glent Typical", "origin_mm": [-38891.28, 52536.18, -438.0], "rotation_deg": 122.878, "family_x_axis": [-0.542856, 0.839826, 0.0], "family_y_axis": [-0.839826, -0.542856, 0.0], "mirrored": false},
-        {"id": 3390059, "mark": "MV-FB2", "type": "Glent Typical", "origin_mm": [-35374.5, 53551.38, -485.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 3390060, "mark": "MV-FA2", "type": "Glent Typical", "origin_mm": [-37910.82, 46031.1, -402.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 3390061, "mark": "MV-FB9", "type": "Glent Typical", "origin_mm": [-29826.6, 49951.14, -524.0], "rotation_deg": -147.0, "family_x_axis": [-0.838671, -0.544639, 0.0], "family_y_axis": [0.544639, -0.838671, 0.0], "mirrored": false},
-        {"id": 3403867, "mark": "LV3/Z2", "type": "GLT LV Typical", "origin_mm": [230615.02, 138629.46, -415.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3403949, "mark": "LV2/Z2", "type": "GLT LV Typical", "origin_mm": [228380.64, 110720.49, -415.0], "rotation_deg": -94.861, "family_x_axis": [-0.084742, -0.996403, 0.0], "family_y_axis": [0.996403, -0.084742, 0.0], "mirrored": false},
-        {"id": 3404055, "mark": "LV1/Z2", "type": "GLT LV Typical", "origin_mm": [226286.64, 86098.92, -415.0], "rotation_deg": 175.139, "family_x_axis": [-0.996403, 0.084742, 0.0], "family_y_axis": [-0.084742, -0.996403, 0.0], "mirrored": false},
-        {"id": 3404448, "mark": "LV9/Z1", "type": "GLT LV Typical", "origin_mm": [223747.61, 56223.54, -415.0], "rotation_deg": 175.139, "family_x_axis": [-0.996403, 0.084742, 0.0], "family_y_axis": [-0.084742, -0.996403, 0.0], "mirrored": false},
-        {"id": 3404480, "mark": "LV8/Z1", "type": "GLT LV Typical", "origin_mm": [220961.26, 23482.51, -415.0], "rotation_deg": -4.861, "family_x_axis": [0.996403, -0.084742, 0.0], "family_y_axis": [0.084742, 0.996403, -0.0], "mirrored": false},
-        {"id": 3410509, "mark": "LV22/Z1", "type": "GLT LV Typical", "origin_mm": [39969.2, 13398.55, -345.0], "rotation_deg": 0.0, "family_x_axis": [1.0, 0.0, 0.0], "family_y_axis": [0.0, 1.0, 0.0], "mirrored": false},
-        {"id": 3419413, "mark": "LV6/Z3", "type": "GLT LV Typical", "origin_mm": [-1009.92, 53718.58, -350.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3424506, "mark": "LV23/Z3", "type": "GLT LV Typical", "origin_mm": [-6372.18, 115973.93, -440.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3426499, "mark": "LV28/Z3", "type": "GLT LV Typical", "origin_mm": [-59749.48, 145536.94, -530.0], "rotation_deg": -57.122, "family_x_axis": [0.542856, -0.839826, 0.0], "family_y_axis": [0.839826, 0.542856, -0.0], "mirrored": false},
-        {"id": 3427039, "mark": "LV16/Z3", "type": "GLT LV Typical", "origin_mm": [-49085.81, 129037.74, -530.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 3427738, "mark": "LV21/Z3", "type": "GLT LV Typical", "origin_mm": [-11220.19, 71749.23, -530.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 3427801, "mark": "LV20/Z3", "type": "GLT LV Typical", "origin_mm": [-21864.34, 88216.24, -552.0], "rotation_deg": 32.878, "family_x_axis": [0.839826, 0.542856, 0.0], "family_y_axis": [-0.542856, 0.839826, 0.0], "mirrored": false},
-        {"id": 3428913, "mark": "LV1/Z3", "type": "GLT LV Typical", "origin_mm": [-1130.55, 148079.04, -350.99], "rotation_deg": -180.0, "family_x_axis": [-1.0, -0.0, 0.0], "family_y_axis": [0.0, -1.0, 0.0], "mirrored": false},
-        {"id": 3429241, "mark": "LV13/Z2", "type": "GLT LV Typical", "origin_mm": [112996.04, 145797.27, -400.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3429977, "mark": "LV16/Z2", "type": "GLT LV Typical", "origin_mm": [91245.48, 148297.94, -330.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3431417, "mark": "LV17/Z2", "type": "GLT LV Typical", "origin_mm": [75654.17, 148297.94, -436.0], "rotation_deg": 90.0, "family_x_axis": [0.0, 1.0, 0.0], "family_y_axis": [-1.0, 0.0, 0.0], "mirrored": false},
-        {"id": 3474975, "mark": "MV-FA8", "type": "Glent Typical", "origin_mm": [186151.2, 6280.5, -319.9], "rotation_deg": 90.0, "family_x_axis": [0.0, 1.0, 0.0], "family_y_axis": [-1.0, 0.0, 0.0], "mirrored": false},
-        {"id": 3482917, "mark": "MV-FB13", "type": "Glent Typical", "origin_mm": [94327.47, 9558.31, -362.73], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": true},
-        {"id": 3483028, "mark": "MV-FB6", "type": "Glent Typical", "origin_mm": [97832.47, 7253.47, -345.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, 0.0], "mirrored": true},
-        {"id": 3495350, "mark": "MV-FB4", "type": "Glent Typical", "origin_mm": [11133.41, 7255.5, -361.9], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, 0.0], "mirrored": true},
-        {"id": 3496258, "mark": "LV10/Z1", "type": "GLT LV Typical", "origin_mm": [188517.58, 8397.03, -300.0], "rotation_deg": -180.0, "family_x_axis": [-1.0, -0.0, 0.0], "family_y_axis": [0.0, -1.0, 0.0], "mirrored": true},
-        {"id": 3496775, "mark": "LV24/Z1", "type": "GLT LV Typical", "origin_mm": [14650.85, 14571.05, -345.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, 0.0], "mirrored": true},
-        {"id": 3499292, "mark": "LV7/Z1", "type": "GLT LV Typical", "origin_mm": [219865.75, 8315.95, -395.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3499527, "mark": "MV-FA10", "type": "Glent Typical", "origin_mm": [-53393.86, 74722.68, -469.0], "rotation_deg": -147.121, "family_x_axis": [-0.839822, -0.542862, 0.0], "family_y_axis": [0.542862, -0.839822, 0.0], "mirrored": true},
-        {"id": 3501284, "mark": "LV7/Z3", "type": "GLT LV Typical", "origin_mm": [-1009.92, 45873.93, -350.0], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": true},
-        {"id": 3501644, "mark": "LV3/Z3", "type": "GLT LV Typical", "origin_mm": [-1009.92, 115973.93, -345.0], "rotation_deg": -90.0, "family_x_axis": [-0.0, -1.0, 0.0], "family_y_axis": [1.0, -0.0, 0.0], "mirrored": true},
-        {"id": 3501663, "mark": "LV2/Z3", "type": "GLT LV Typical", "origin_mm": [-1130.55, 136086.47, -365.06], "rotation_deg": 90.0, "family_x_axis": [-0.0, 1.0, 0.0], "family_y_axis": [-1.0, -0.0, 0.0], "mirrored": true},
-        {"id": 3502442, "mark": "LV12/Z1", "type": "GLT LV Typical", "origin_mm": [164159.29, 8342.54, -355.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3506282, "mark": "LV33/Z3", "type": "GLT LV Typical", "origin_mm": [-100801.48, 142656.82, -395.08], "rotation_deg": 33.0, "family_x_axis": [0.838671, 0.544639, 0.0], "family_y_axis": [-0.544639, 0.838671, 0.0], "mirrored": false},
-        {"id": 3508033, "mark": "LV4/Z2", "type": "GLT LV Typical", "origin_mm": [230615.3, 163629.46, -395.0], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": false},
-        {"id": 3524777, "mark": "LV18/Z1", "type": "GLT LV Typical", "origin_mm": [103175.73, 31433.64, -1195.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3524806, "mark": "LV19/Z1", "type": "GLT LV Typical", "origin_mm": [103175.73, 47453.04, -1850.0], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3526414, "mark": "LV17/Z1", "type": "GLT LV Typical", "origin_mm": [103175.73, 13691.05, -390.0], "rotation_deg": 90.0, "family_x_axis": [-0.0, 1.0, 0.0], "family_y_axis": [-1.0, -0.0, 0.0], "mirrored": false},
-        {"id": 3526533, "mark": "MV-FA6", "type": "Glent Typical", "origin_mm": [113014.41, 1970.0, -444.9], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": false},
-        {"id": 3526557, "mark": "MV-FB14", "type": "Glent Typical", "origin_mm": [98930.11, 16999.57, -434.9], "rotation_deg": -0.0, "family_x_axis": [1.0, -0.0, 0.0], "family_y_axis": [0.0, 1.0, -0.0], "mirrored": false},
-        {"id": 3526574, "mark": "MV-FB7", "type": "Glent Typical", "origin_mm": [105170.73, 16999.6, -451.0], "rotation_deg": -90.0, "family_x_axis": [-0.0, -1.0, 0.0], "family_y_axis": [1.0, -0.0, 0.0], "mirrored": true},
-        {"id": 3531028, "mark": "LV9/Z2", "type": "GLT LV Typical", "origin_mm": [42993.37, 163629.46, -323.0], "rotation_deg": 90.0, "family_x_axis": [-0.0, 1.0, 0.0], "family_y_axis": [-1.0, -0.0, 0.0], "mirrored": true},
-        {"id": 3531623, "mark": "LV11/Z2", "type": "GLT LV Typical", "origin_mm": [153783.39, 148297.94, -365.0], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": true},
-        {"id": 3533661, "mark": "LV14/Z3", "type": "GLT LV Typical", "origin_mm": [-47880.18, 109786.01, -413.99], "rotation_deg": 122.878, "family_x_axis": [-0.542856, 0.839826, 0.0], "family_y_axis": [-0.839826, -0.542856, 0.0], "mirrored": true},
-        {"id": 3534922, "mark": "LV32/Z3", "type": "GLT LV Typical", "origin_mm": [-98268.89, 144301.5, -394.99], "rotation_deg": -57.0, "family_x_axis": [0.544639, -0.838671, 0.0], "family_y_axis": [0.838671, 0.544639, -0.0], "mirrored": false},
-        {"id": 3536529, "mark": "LV31/Z3", "type": "GLT LV Typical", "origin_mm": [-81919.54, 152992.37, -379.99], "rotation_deg": -57.993, "family_x_axis": [0.530017, -0.847987, 0.0], "family_y_axis": [0.847987, 0.530017, -0.0], "mirrored": true},
-        {"id": 3539291, "mark": "LV1/Z1", "type": "GLT LV Typical", "origin_mm": [4150.85, -4278.06, -285.0], "rotation_deg": 180.0, "family_x_axis": [-1.0, 0.0, 0.0], "family_y_axis": [-0.0, -1.0, 0.0], "mirrored": true},
-        {"id": 3557581, "mark": "MV-FB10", "type": "Glent Typical", "origin_mm": [-11966.27, 22384.37, -521.0], "rotation_deg": -147.0, "family_x_axis": [-0.838671, -0.544639, 0.0], "family_y_axis": [0.544639, -0.838671, 0.0], "mirrored": true},
-        {"id": 3566453, "mark": "MV-FA9", "type": "Glent Typical", "origin_mm": [195148.7, 14245.5, -358.9], "rotation_deg": 90.0, "family_x_axis": [0.0, 1.0, 0.0], "family_y_axis": [-1.0, 0.0, 0.0], "mirrored": true},
-        {"id": 3571833, "mark": "MV-FB15", "type": "Glent Typical", "origin_mm": [-47697.41, 77112.75, -562.0], "rotation_deg": -147.0, "family_x_axis": [-0.838671, -0.544639, 0.0], "family_y_axis": [0.544639, -0.838671, 0.0], "mirrored": true}
-      ]
+     "origin_mm": [
+      -1000.0,
+      2000.0,
+      1200.0
+     ],
+     "name": "a1",
+     "normal": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "offset_mm": -1000.0,
+     "axis": "a"
+    },
+    {
+     "origin_mm": [
+      -900.0,
+      2000.0,
+      1200.0
+     ],
+     "name": "a2",
+     "normal": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "offset_mm": -900.0,
+     "axis": "a"
+    },
+    {
+     "origin_mm": [
+      -400.0,
+      2000.0,
+      1200.0
+     ],
+     "name": "a3",
+     "normal": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "offset_mm": -400.0,
+     "axis": "a"
+    },
+    {
+     "origin_mm": [
+      -300.0,
+      2000.0,
+      1200.0
+     ],
+     "name": "a4",
+     "normal": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "offset_mm": -300.0,
+     "axis": "a"
+    },
+    {
+     "origin_mm": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "name": "a5",
+     "normal": [
+      1.0,
+      0.0,
+      -0.0
+     ],
+     "offset_mm": 0.0,
+     "axis": "a"
+    },
+    {
+     "origin_mm": [
+      900.0,
+      2000.0,
+      1200.0
+     ],
+     "name": "a6",
+     "normal": [
+      1.0,
+      0.0,
+      -0.0
+     ],
+     "offset_mm": 900.0,
+     "axis": "a"
+    },
+    {
+     "origin_mm": [
+      1000.0,
+      2000.0,
+      1200.0
+     ],
+     "name": "a7",
+     "normal": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "offset_mm": 1000.0,
+     "axis": "a"
+    },
+    {
+     "origin_mm": [
+      2000.0,
+      -1000.0,
+      1200.0
+     ],
+     "name": "b1",
+     "normal": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "offset_mm": 1000.0,
+     "axis": "b"
+    },
+    {
+     "origin_mm": [
+      2000.0,
+      -900.0,
+      1200.0
+     ],
+     "name": "b2",
+     "normal": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "offset_mm": 900.0,
+     "axis": "b"
+    },
+    {
+     "origin_mm": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "name": "b3",
+     "normal": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "offset_mm": 0.0,
+     "axis": "b"
+    },
+    {
+     "origin_mm": [
+      2000.0,
+      300.0,
+      1200.0
+     ],
+     "name": "b4",
+     "normal": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "offset_mm": -300.0,
+     "axis": "b"
+    },
+    {
+     "origin_mm": [
+      2000.0,
+      400.0,
+      1200.0
+     ],
+     "name": "b5",
+     "normal": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "offset_mm": -400.0,
+     "axis": "b"
+    },
+    {
+     "origin_mm": [
+      2000.0,
+      900.0,
+      1200.0
+     ],
+     "name": "b6",
+     "normal": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "offset_mm": -900.0,
+     "axis": "b"
+    },
+    {
+     "origin_mm": [
+      2000.0,
+      1000.0,
+      1200.0
+     ],
+     "name": "b7",
+     "normal": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "offset_mm": -1000.0,
+     "axis": "b"
+    },
+    {
+     "origin_mm": [
+      -792.5,
+      -1524.0,
+      350.0
+     ],
+     "name": "z1",
+     "axis": "z",
+     "normal": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "offset_mm": 350.0
+    },
+    {
+     "origin_mm": [
+      -792.5,
+      -1524.0,
+      150.0
+     ],
+     "name": "z2",
+     "axis": "z",
+     "normal": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "offset_mm": 150.0
+    },
+    {
+     "origin_mm": [
+      -792.5,
+      -1524.0,
+      0.0
+     ],
+     "name": "z3",
+     "axis": "z",
+     "normal": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "offset_mm": 0.0
+    },
+    {
+     "origin_mm": [
+      -792.5,
+      -1524.0,
+      -150.0
+     ],
+     "name": "z4",
+     "axis": "z",
+     "normal": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "offset_mm": -150.0
+    },
+    {
+     "origin_mm": [
+      -792.5,
+      -1524.0,
+      -1850.0
+     ],
+     "name": "z5",
+     "axis": "z",
+     "normal": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "offset_mm": -1850.0
+    },
+    {
+     "origin_mm": [
+      -792.5,
+      -1524.0,
+      -2000.0
+     ],
+     "name": "z6",
+     "axis": "z",
+     "normal": [
+      0.0,
+      0.0,
+      1.0
+     ],
+     "offset_mm": -2000.0
     }
-  ]
+   ],
+   "instances": [
+    {
+     "id": 2756201,
+     "mark": "MV-FA4",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -1552.07,
+      1970.0,
+      -441.9
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 2756245,
+     "mark": "MV-FB12",
+     "type": "Glent Typical",
+     "origin_mm": [
+      56019.41,
+      9555.97,
+      -369.9
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 2756277,
+     "mark": "LV25/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      4150.85,
+      14571.05,
+      -385.0
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -30,
+     "base_mm": -2665,
+     "z0_mm": -707
+    },
+    {
+     "id": 2756282,
+     "mark": "LV2/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      17786.69,
+      -4278.06,
+      -273.92
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 81,
+     "base_mm": -1759,
+     "z0_mm": -812
+    },
+    {
+     "id": 2756283,
+     "mark": "LV3/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      90764.33,
+      -4278.06,
+      -360.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -5,
+     "base_mm": -1755,
+     "z0_mm": -710
+    },
+    {
+     "id": 2756285,
+     "mark": "LV5/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      177187.0,
+      -4278.06,
+      -360.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -5,
+     "base_mm": -1740,
+     "z0_mm": -816
+    },
+    {
+     "id": 2756286,
+     "mark": "LV6/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      218627.0,
+      -4278.06,
+      -415.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -60,
+     "base_mm": -1810,
+     "z0_mm": -782
+    },
+    {
+     "id": 2756413,
+     "mark": "MV-FB11",
+     "type": "Glent Typical",
+     "origin_mm": [
+      7628.41,
+      9555.89,
+      -417.9
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 2756567,
+     "mark": "LV20/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      89969.2,
+      13398.55,
+      -339.99
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 15,
+     "base_mm": -2150,
+     "z0_mm": -865
+    },
+    {
+     "id": 2756568,
+     "mark": "MV-FA3",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -20261.67,
+      18730.06,
+      -397.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 2756621,
+     "mark": "LV11/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -15610.1,
+      30717.21,
+      -525.0
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -170,
+     "base_mm": -2015,
+     "z0_mm": -1000
+    },
+    {
+     "id": 2756623,
+     "mark": "LV10/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -31352.94,
+      55072.15,
+      -390.0
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -155,
+     "base_mm": -1915,
+     "z0_mm": -809
+    },
+    {
+     "id": 2756624,
+     "mark": "LV8/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -11793.02,
+      44502.77,
+      -345.0
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -95,
+     "base_mm": -2245,
+     "z0_mm": -812
+    },
+    {
+     "id": 2756627,
+     "mark": "LV9/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -22105.38,
+      60765.84,
+      -545.0
+     ],
+     "rotation_deg": -147.122,
+     "family_x_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -190,
+     "base_mm": -2140,
+     "z0_mm": -897
+    },
+    {
+     "id": 2756634,
+     "mark": "LV5/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -1009.92,
+      73472.64,
+      -345.0
+     ],
+     "rotation_deg": 179.962,
+     "family_x_axis": [
+      -1.0,
+      0.000664,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.000664,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 10,
+     "base_mm": -2610,
+     "z0_mm": -677
+    },
+    {
+     "id": 2756641,
+     "mark": "LV19/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -18337.07,
+      90496.24,
+      -548.0
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -193,
+     "base_mm": -2033,
+     "z0_mm": -871
+    },
+    {
+     "id": 2756644,
+     "mark": "LV15/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      129279.29,
+      8336.08,
+      -340.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 15,
+     "base_mm": -1735,
+     "z0_mm": -845
+    },
+    {
+     "id": 2756646,
+     "mark": "LV11/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      177187.0,
+      8342.54,
+      -355.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 0,
+     "base_mm": -1890,
+     "z0_mm": -876
+    },
+    {
+     "id": 2756651,
+     "mark": "LV5/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      201283.39,
+      163629.46,
+      -298.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 57,
+     "base_mm": -1783,
+     "z0_mm": -706
+    },
+    {
+     "id": 2756652,
+     "mark": "LV8/Z2",
+     "type": "LV Vault 2x2 x 2",
+     "origin_mm": [
+      104885.83,
+      163443.61,
+      -310.0
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 45,
+     "base_mm": -1825,
+     "z0_mm": -574
+    },
+    {
+     "id": 2756653,
+     "mark": "LV14/Z2",
+     "type": "LV Vault 2x2 x 2",
+     "origin_mm": [
+      104879.02,
+      145797.27,
+      -463.99
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -109,
+     "base_mm": -2464,
+     "z0_mm": -730
+    },
+    {
+     "id": 2756657,
+     "mark": "LV12/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      129483.39,
+      148297.94,
+      -436.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -81,
+     "base_mm": -1806,
+     "z0_mm": -736
+    },
+    {
+     "id": 2756658,
+     "mark": "LV15/Z2",
+     "type": "LV Vault 1,5x1,5",
+     "origin_mm": [
+      105199.53,
+      130047.81,
+      -1179.61
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -825,
+     "base_mm": -2425,
+     "z0_mm": -1612
+    },
+    {
+     "id": 2756661,
+     "mark": "LV18/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      47541.99,
+      148079.04,
+      -435.0
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -80,
+     "base_mm": -1920,
+     "z0_mm": -834
+    },
+    {
+     "id": 2756664,
+     "mark": "LV20/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      22153.14,
+      148079.04,
+      -311.99
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 43,
+     "base_mm": -1902,
+     "z0_mm": -707
+    },
+    {
+     "id": 2756668,
+     "mark": "LV25/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -17881.27,
+      148079.04,
+      -292.99
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 62,
+     "base_mm": -2293,
+     "z0_mm": -769
+    },
+    {
+     "id": 2756669,
+     "mark": "LV24/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -28625.66,
+      149745.47,
+      -418.99
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -64,
+     "base_mm": -2114,
+     "z0_mm": -791
+    },
+    {
+     "id": 2756671,
+     "mark": "LV34/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -108771.45,
+      163312.22,
+      -298.0
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 57,
+     "base_mm": -1783,
+     "z0_mm": -923
+    },
+    {
+     "id": 2756679,
+     "mark": "LV30/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -77514.06,
+      157157.85,
+      -379.99
+     ],
+     "rotation_deg": -57.993,
+     "family_x_axis": [
+      0.530017,
+      -0.847987,
+      0.0
+     ],
+     "family_y_axis": [
+      0.847987,
+      0.530017,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -25,
+     "base_mm": -1985,
+     "z0_mm": -828
+    },
+    {
+     "id": 2756682,
+     "mark": "LV22/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -18080.83,
+      131156.95,
+      -424.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -69,
+     "base_mm": -2099,
+     "z0_mm": -806
+    },
+    {
+     "id": 2756699,
+     "mark": "LV13/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -31965.34,
+      89708.55,
+      -446.76
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -92,
+     "base_mm": -1752,
+     "z0_mm": -807
+    },
+    {
+     "id": 2756701,
+     "mark": "MV-FB1",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -49831.83,
+      75726.65,
+      -490.0
+     ],
+     "rotation_deg": 33.0,
+     "family_x_axis": [
+      0.838671,
+      0.544639,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.544639,
+      0.838671,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 2756722,
+     "mark": "LV12/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -46358.36,
+      79903.75,
+      -532.0
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -177,
+     "base_mm": -2017,
+     "z0_mm": -888
+    },
+    {
+     "id": 2756728,
+     "mark": "LV29/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -67276.9,
+      140990.26,
+      -359.99
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -5,
+     "base_mm": -1845,
+     "z0_mm": -707
+    },
+    {
+     "id": 2756790,
+     "mark": "LV18/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -36927.43,
+      119256.23,
+      -564.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -209,
+     "base_mm": -2099,
+     "z0_mm": -871
+    },
+    {
+     "id": 2757008,
+     "mark": "LV16/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      109313.84,
+      8546.05,
+      -351.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 4,
+     "base_mm": -1776,
+     "z0_mm": -707
+    },
+    {
+     "id": 2757054,
+     "mark": "LV7/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      153783.39,
+      163629.46,
+      -337.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 18,
+     "base_mm": -1822,
+     "z0_mm": -663
+    },
+    {
+     "id": 2895876,
+     "mark": "LV10/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      153783.39,
+      151375.88,
+      -260.0
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 95,
+     "base_mm": -2010,
+     "z0_mm": -663
+    },
+    {
+     "id": 2899874,
+     "mark": "LV19/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      47541.99,
+      150961.7,
+      -365.99
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": -11,
+     "base_mm": -2054,
+     "z0_mm": -767
+    },
+    {
+     "id": 2900244,
+     "mark": "LV13/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      146879.29,
+      8348.9,
+      -229.99
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 125,
+     "base_mm": -1885,
+     "z0_mm": -815
+    },
+    {
+     "id": 2900297,
+     "mark": "LV14/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      146879.29,
+      14842.22,
+      -389.99
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -35,
+     "base_mm": -1675,
+     "z0_mm": -766
+    },
+    {
+     "id": 2903964,
+     "mark": "LV23/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      39969.2,
+      15033.55,
+      -345.0
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 10,
+     "base_mm": -2040,
+     "z0_mm": -621
+    },
+    {
+     "id": 2930864,
+     "mark": "LV4/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -1009.92,
+      86408.78,
+      -345.0
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      -0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      -0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 10,
+     "base_mm": -1830,
+     "z0_mm": -707
+    },
+    {
+     "id": 2932864,
+     "mark": "LV17/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -44969.76,
+      131698.32,
+      -564.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -209,
+     "base_mm": -1969,
+     "z0_mm": -957
+    },
+    {
+     "id": 2933273,
+     "mark": "LV26/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -40416.18,
+      149460.07,
+      -417.0
+     ],
+     "rotation_deg": 32.88,
+     "family_x_axis": [
+      0.839813,
+      0.542876,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542876,
+      0.839813,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": -62,
+     "base_mm": -2117,
+     "z0_mm": -916
+    },
+    {
+     "id": 3180427,
+     "mark": "MV-FA1",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -55531.2,
+      73341.11,
+      -423.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3280105,
+     "mark": "MV-FA5",
+     "type": "Glent Typical",
+     "origin_mm": [
+      52514.41,
+      1970.0,
+      -444.4
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3280138,
+     "mark": "MV-FB5",
+     "type": "Glent Typical",
+     "origin_mm": [
+      52514.41,
+      7253.47,
+      -344.9
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3280301,
+     "mark": "MV-FB3",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -12354.6,
+      17932.92,
+      -409.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3280325,
+     "mark": "MV-FA12",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -12737.65,
+      35614.15,
+      -420.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3280497,
+     "mark": "MV-FA7",
+     "type": "Glent Typical",
+     "origin_mm": [
+      132760.0,
+      6280.5,
+      -368.9
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3288877,
+     "mark": "LV15/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -57012.42,
+      123914.04,
+      -406.99
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -52,
+     "base_mm": -1827,
+     "z0_mm": -760
+    },
+    {
+     "id": 3355995,
+     "mark": "LV6/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      176783.39,
+      163629.46,
+      -298.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 57,
+     "base_mm": -1783,
+     "z0_mm": -706
+    },
+    {
+     "id": 3360009,
+     "mark": "LV21/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      64969.2,
+      13398.55,
+      -339.99
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 15,
+     "base_mm": -1825,
+     "z0_mm": -817
+    },
+    {
+     "id": 3377793,
+     "mark": "LV4/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      104587.0,
+      -4278.06,
+      -317.5
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 37,
+     "base_mm": -1753,
+     "z0_mm": -845
+    },
+    {
+     "id": 3383587,
+     "mark": "LV27/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -55634.33,
+      148196.94,
+      -501.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -146,
+     "base_mm": -1986,
+     "z0_mm": -966
+    },
+    {
+     "id": 3390058,
+     "mark": "MV-FA11",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -38891.28,
+      52536.18,
+      -438.0
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3390059,
+     "mark": "MV-FB2",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -35374.5,
+      53551.38,
+      -485.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3390060,
+     "mark": "MV-FA2",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -37910.82,
+      46031.1,
+      -402.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3390061,
+     "mark": "MV-FB9",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -29826.6,
+      49951.14,
+      -524.0
+     ],
+     "rotation_deg": -147.0,
+     "family_x_axis": [
+      -0.838671,
+      -0.544639,
+      0.0
+     ],
+     "family_y_axis": [
+      0.544639,
+      -0.838671,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3403867,
+     "mark": "LV3/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      230615.02,
+      138629.46,
+      -415.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -60,
+     "base_mm": -1900,
+     "z0_mm": -977
+    },
+    {
+     "id": 3403949,
+     "mark": "LV2/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      228380.64,
+      110720.49,
+      -415.0
+     ],
+     "rotation_deg": -94.861,
+     "family_x_axis": [
+      -0.084742,
+      -0.996403,
+      0.0
+     ],
+     "family_y_axis": [
+      0.996403,
+      -0.084742,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -60,
+     "base_mm": -1840,
+     "z0_mm": -977
+    },
+    {
+     "id": 3404055,
+     "mark": "LV1/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      226286.64,
+      86098.92,
+      -415.0
+     ],
+     "rotation_deg": 175.139,
+     "family_x_axis": [
+      -0.996403,
+      0.084742,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.084742,
+      -0.996403,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -60,
+     "base_mm": -1840,
+     "z0_mm": -977
+    },
+    {
+     "id": 3404448,
+     "mark": "LV9/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      223747.61,
+      56223.54,
+      -415.0
+     ],
+     "rotation_deg": 175.139,
+     "family_x_axis": [
+      -0.996403,
+      0.084742,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.084742,
+      -0.996403,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -60,
+     "base_mm": -1840,
+     "z0_mm": -977
+    },
+    {
+     "id": 3404480,
+     "mark": "LV8/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      220961.26,
+      23482.51,
+      -415.0
+     ],
+     "rotation_deg": -4.861,
+     "family_x_axis": [
+      0.996403,
+      -0.084742,
+      0.0
+     ],
+     "family_y_axis": [
+      0.084742,
+      0.996403,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -60,
+     "base_mm": -1840,
+     "z0_mm": -977
+    },
+    {
+     "id": 3410509,
+     "mark": "LV22/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      39969.2,
+      13398.55,
+      -345.0
+     ],
+     "rotation_deg": 0.0,
+     "family_x_axis": [
+      1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 10,
+     "base_mm": -2040,
+     "z0_mm": -872
+    },
+    {
+     "id": 3419413,
+     "mark": "LV6/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -1009.92,
+      53718.58,
+      -350.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 5,
+     "base_mm": -2005,
+     "z0_mm": -707
+    },
+    {
+     "id": 3424506,
+     "mark": "LV23/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -6372.18,
+      115973.93,
+      -440.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -85,
+     "base_mm": -1665,
+     "z0_mm": -806
+    },
+    {
+     "id": 3426499,
+     "mark": "LV28/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -59749.48,
+      145536.94,
+      -530.0
+     ],
+     "rotation_deg": -57.122,
+     "family_x_axis": [
+      0.542856,
+      -0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      0.839826,
+      0.542856,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -175,
+     "base_mm": -2015,
+     "z0_mm": -916
+    },
+    {
+     "id": 3427039,
+     "mark": "LV16/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -49085.81,
+      129037.74,
+      -530.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -175,
+     "base_mm": -1970,
+     "z0_mm": -916
+    },
+    {
+     "id": 3427738,
+     "mark": "LV21/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -11220.19,
+      71749.23,
+      -530.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -175,
+     "base_mm": -2565,
+     "z0_mm": -958
+    },
+    {
+     "id": 3427801,
+     "mark": "LV20/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -21864.34,
+      88216.24,
+      -552.0
+     ],
+     "rotation_deg": 32.878,
+     "family_x_axis": [
+      0.839826,
+      0.542856,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -197,
+     "base_mm": -2037,
+     "z0_mm": -947
+    },
+    {
+     "id": 3428913,
+     "mark": "LV1/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -1130.55,
+      148079.04,
+      -350.99
+     ],
+     "rotation_deg": -180.0,
+     "family_x_axis": [
+      -1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 4,
+     "base_mm": -2138,
+     "z0_mm": -707
+    },
+    {
+     "id": 3429241,
+     "mark": "LV13/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      112996.04,
+      145797.27,
+      -400.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -45,
+     "base_mm": -1843,
+     "z0_mm": -736
+    },
+    {
+     "id": 3429977,
+     "mark": "LV16/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      91245.48,
+      148297.94,
+      -330.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 25,
+     "base_mm": -1815,
+     "z0_mm": -707
+    },
+    {
+     "id": 3431417,
+     "mark": "LV17/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      75654.17,
+      148297.94,
+      -436.0
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -81,
+     "base_mm": -1806,
+     "z0_mm": -944
+    },
+    {
+     "id": 3474975,
+     "mark": "MV-FA8",
+     "type": "Glent Typical",
+     "origin_mm": [
+      186151.2,
+      6280.5,
+      -319.9
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3482917,
+     "mark": "MV-FB13",
+     "type": "Glent Typical",
+     "origin_mm": [
+      94327.47,
+      9558.31,
+      -362.73
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": true
+    },
+    {
+     "id": 3483028,
+     "mark": "MV-FB6",
+     "type": "Glent Typical",
+     "origin_mm": [
+      97832.47,
+      7253.47,
+      -345.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": true
+    },
+    {
+     "id": 3495350,
+     "mark": "MV-FB4",
+     "type": "Glent Typical",
+     "origin_mm": [
+      11133.41,
+      7255.5,
+      -361.9
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": true
+    },
+    {
+     "id": 3496258,
+     "mark": "LV10/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      188517.58,
+      8397.03,
+      -300.0
+     ],
+     "rotation_deg": -180.0,
+     "family_x_axis": [
+      -1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": 55,
+     "base_mm": -1985,
+     "z0_mm": -882
+    },
+    {
+     "id": 3496775,
+     "mark": "LV24/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      14650.85,
+      14571.05,
+      -345.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": 10,
+     "base_mm": -2040,
+     "z0_mm": -841
+    },
+    {
+     "id": 3499292,
+     "mark": "LV7/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      219865.75,
+      8315.95,
+      -395.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -40,
+     "base_mm": -1835,
+     "z0_mm": -940
+    },
+    {
+     "id": 3499527,
+     "mark": "MV-FA10",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -53393.86,
+      74722.68,
+      -469.0
+     ],
+     "rotation_deg": -147.121,
+     "family_x_axis": [
+      -0.839822,
+      -0.542862,
+      0.0
+     ],
+     "family_y_axis": [
+      0.542862,
+      -0.839822,
+      0.0
+     ],
+     "mirrored": true
+    },
+    {
+     "id": 3501284,
+     "mark": "LV7/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -1009.92,
+      45873.93,
+      -350.0
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": 5,
+     "base_mm": -1835,
+     "z0_mm": -707
+    },
+    {
+     "id": 3501644,
+     "mark": "LV3/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -1009.92,
+      115973.93,
+      -345.0
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": 10,
+     "base_mm": -1830,
+     "z0_mm": -707
+    },
+    {
+     "id": 3501663,
+     "mark": "LV2/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -1130.55,
+      136086.47,
+      -365.06
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      -0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      -0.0,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": -10,
+     "base_mm": -1850,
+     "z0_mm": -753
+    },
+    {
+     "id": 3502442,
+     "mark": "LV12/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      164159.29,
+      8342.54,
+      -355.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": 0,
+     "base_mm": -1890,
+     "z0_mm": -842
+    },
+    {
+     "id": 3506282,
+     "mark": "LV33/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -100801.48,
+      142656.82,
+      -395.08
+     ],
+     "rotation_deg": 33.0,
+     "family_x_axis": [
+      0.838671,
+      0.544639,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.544639,
+      0.838671,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -40,
+     "base_mm": -1880,
+     "z0_mm": -915
+    },
+    {
+     "id": 3508033,
+     "mark": "LV4/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      230615.3,
+      163629.46,
+      -395.0
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -40,
+     "base_mm": -2750,
+     "z0_mm": -742
+    },
+    {
+     "id": 3524777,
+     "mark": "LV18/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      103175.73,
+      31433.64,
+      -1195.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -840,
+     "base_mm": -3245,
+     "z0_mm": -2007
+    },
+    {
+     "id": 3524806,
+     "mark": "LV19/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      103175.73,
+      47453.04,
+      -1850.0
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -1495,
+     "base_mm": -3235,
+     "z0_mm": -2217
+    },
+    {
+     "id": 3526414,
+     "mark": "LV17/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      103175.73,
+      13691.05,
+      -390.0
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      -0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      -0.0,
+      0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -35,
+     "base_mm": -1875,
+     "z0_mm": -917
+    },
+    {
+     "id": 3526533,
+     "mark": "MV-FA6",
+     "type": "Glent Typical",
+     "origin_mm": [
+      113014.41,
+      1970.0,
+      -444.9
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3526557,
+     "mark": "MV-FB14",
+     "type": "Glent Typical",
+     "origin_mm": [
+      98930.11,
+      16999.57,
+      -434.9
+     ],
+     "rotation_deg": -0.0,
+     "family_x_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      0.0,
+      1.0,
+      -0.0
+     ],
+     "mirrored": false
+    },
+    {
+     "id": 3526574,
+     "mark": "MV-FB7",
+     "type": "Glent Typical",
+     "origin_mm": [
+      105170.73,
+      16999.6,
+      -451.0
+     ],
+     "rotation_deg": -90.0,
+     "family_x_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      1.0,
+      -0.0,
+      0.0
+     ],
+     "mirrored": true
+    },
+    {
+     "id": 3531028,
+     "mark": "LV9/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      42993.37,
+      163629.46,
+      -323.0
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      -0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      -0.0,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": 32,
+     "base_mm": -1883,
+     "z0_mm": -697
+    },
+    {
+     "id": 3531623,
+     "mark": "LV11/Z2",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      153783.39,
+      148297.94,
+      -365.0
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": -10,
+     "base_mm": -1661,
+     "z0_mm": -702
+    },
+    {
+     "id": 3533661,
+     "mark": "LV14/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -47880.18,
+      109786.01,
+      -413.99
+     ],
+     "rotation_deg": 122.878,
+     "family_x_axis": [
+      -0.542856,
+      0.839826,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.839826,
+      -0.542856,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": -59,
+     "base_mm": -1899,
+     "z0_mm": -763
+    },
+    {
+     "id": 3534922,
+     "mark": "LV32/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -98268.89,
+      144301.5,
+      -394.99
+     ],
+     "rotation_deg": -57.0,
+     "family_x_axis": [
+      0.544639,
+      -0.838671,
+      0.0
+     ],
+     "family_y_axis": [
+      0.838671,
+      0.544639,
+      -0.0
+     ],
+     "mirrored": false,
+     "lid_mm": -40,
+     "base_mm": -1885,
+     "z0_mm": -700
+    },
+    {
+     "id": 3536529,
+     "mark": "LV31/Z3",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      -81919.54,
+      152992.37,
+      -379.99
+     ],
+     "rotation_deg": -57.993,
+     "family_x_axis": [
+      0.530017,
+      -0.847987,
+      0.0
+     ],
+     "family_y_axis": [
+      0.847987,
+      0.530017,
+      -0.0
+     ],
+     "mirrored": true,
+     "lid_mm": -25,
+     "base_mm": -1898,
+     "z0_mm": -807
+    },
+    {
+     "id": 3539291,
+     "mark": "LV1/Z1",
+     "type": "GLT LV Typical",
+     "origin_mm": [
+      4150.85,
+      -4278.06,
+      -285.0
+     ],
+     "rotation_deg": 180.0,
+     "family_x_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -0.0,
+      -1.0,
+      0.0
+     ],
+     "mirrored": true,
+     "lid_mm": 70,
+     "base_mm": -2665,
+     "z0_mm": -812
+    },
+    {
+     "id": 3557581,
+     "mark": "MV-FB10",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -11966.27,
+      22384.37,
+      -521.0
+     ],
+     "rotation_deg": -147.0,
+     "family_x_axis": [
+      -0.838671,
+      -0.544639,
+      0.0
+     ],
+     "family_y_axis": [
+      0.544639,
+      -0.838671,
+      0.0
+     ],
+     "mirrored": true
+    },
+    {
+     "id": 3566453,
+     "mark": "MV-FA9",
+     "type": "Glent Typical",
+     "origin_mm": [
+      195148.7,
+      14245.5,
+      -358.9
+     ],
+     "rotation_deg": 90.0,
+     "family_x_axis": [
+      0.0,
+      1.0,
+      0.0
+     ],
+     "family_y_axis": [
+      -1.0,
+      0.0,
+      0.0
+     ],
+     "mirrored": true
+    },
+    {
+     "id": 3571833,
+     "mark": "MV-FB15",
+     "type": "Glent Typical",
+     "origin_mm": [
+      -47697.41,
+      77112.75,
+      -562.0
+     ],
+     "rotation_deg": -147.0,
+     "family_x_axis": [
+      -0.838671,
+      -0.544639,
+      0.0
+     ],
+     "family_y_axis": [
+      0.544639,
+      -0.838671,
+      0.0
+     ],
+     "mirrored": true
+    }
+   ],
+   "spacing_mm": {
+    "lateral": 210,
+    "vertical": 240
+   }
+  }
+ ],
+ "runs": [
+  {
+   "from": {
+    "id": 2756277,
+    "face": "A"
+   },
+   "to": {
+    "id": 3496775,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     4743.3,
+     14445.7,
+     -1017.2
+    ],
+    [
+     14058.3,
+     14445.7,
+     -1017.2
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 9315,
+   "bends": 0,
+   "ifc_ids": [
+    2945510,
+    2945516,
+    2945522,
+    2945528,
+    3262172,
+    3262173
+   ]
+  },
+  {
+   "from": {
+    "id": 2756277,
+    "face": "B"
+   },
+   "to": {
+    "id": 3539291,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 4,
+   "path_mm": [
+    [
+     4236.6,
+     13978.5,
+     -1882.9
+    ],
+    [
+     4236.6,
+     -3685.6,
+     -1882.9
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1740,
+    -1740
+   ],
+   "length_mm": 17664,
+   "bends": 0,
+   "ifc_ids": [
+    3225498,
+    3227324,
+    3227330,
+    3227336,
+    3227342,
+    3227348
+   ]
+  },
+  {
+   "from": {
+    "id": 2756277,
+    "face": "C"
+   },
+   "to": {
+    "id": 2756621,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     3558.3,
+     14550.2,
+     -814.3
+    ],
+    [
+     -4315.8,
+     14550.2,
+     -814.3
+    ],
+    [
+     -5155.6,
+     15007.3,
+     -814.3
+    ],
+    [
+     -13198.9,
+     27450.7,
+     -814.3
+    ],
+    [
+     -13406.6,
+     27772.1,
+     -890.4
+    ],
+    [
+     -13848.7,
+     28456.0,
+     -1227.7
+    ],
+    [
+     -14056.4,
+     28777.4,
+     -1303.8
+    ],
+    [
+     -15077.0,
+     30356.3,
+     -1303.8
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 209,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -720,
+    -1200
+   ],
+   "length_mm": 25452,
+   "bends": 3,
+   "ifc_ids": [
+    3229391,
+    3231671,
+    3231683,
+    3231689,
+    3460935,
+    3461030,
+    3461037,
+    3461051,
+    3461056,
+    3461072,
+    3461077,
+    3800805,
+    3800807,
+    3800809,
+    3800811,
+    3800814,
+    3800816,
+    3800818,
+    3800820,
+    3800826,
+    3800828,
+    3800830,
+    3800832,
+    3800836,
+    3800838,
+    3800840,
+    3800844,
+    3800846
+   ]
+  },
+  {
+   "from": {
+    "id": 2756282,
+    "face": "B"
+   },
+   "to": {
+    "id": 2756283,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     18379.2,
+     -4363.4,
+     -994.4
+    ],
+    [
+     90171.8,
+     -4363.4,
+     -994.4
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 71793,
+   "bends": 0,
+   "ifc_ids": [
+    2942750,
+    2942756,
+    2942762,
+    2942768,
+    3262373,
+    3262374
+   ]
+  },
+  {
+   "from": {
+    "id": 2756282,
+    "face": "D"
+   },
+   "to": {
+    "id": 3539291,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     17194.2,
+     -4363.4,
+     -916.6
+    ],
+    [
+     4743.3,
+     -4363.4,
+     -916.6
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 12451,
+   "bends": 0,
+   "ifc_ids": [
+    3698272,
+    3698330,
+    3698372,
+    3698465,
+    3698519,
+    3698540
+   ]
+  },
+  {
+   "from": {
+    "id": 2756283,
+    "face": "B"
+   },
+   "to": {
+    "id": 3377793,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     91356.8,
+     -4363.4,
+     -988.0
+    ],
+    [
+     103994.5,
+     -4363.4,
+     -988.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 12638,
+   "bends": 0,
+   "ifc_ids": [
+    2942715,
+    2942721,
+    2942727,
+    2942733,
+    3262371,
+    3262372
+   ]
+  },
+  {
+   "from": {
+    "id": 2756285,
+    "face": "A"
+   },
+   "to": {
+    "id": 2756646,
+    "face": "C"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     177166.6,
+     -3685.6,
+     -906.8
+    ],
+    [
+     177166.6,
+     7750.0,
+     -906.8
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 11436,
+   "bends": 0,
+   "ifc_ids": [
+    2943048,
+    2943069,
+    2943075,
+    2943081
+   ]
+  },
+  {
+   "from": {
+    "id": 2756285,
+    "face": "B"
+   },
+   "to": {
+    "id": 2756286,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     177779.5,
+     -4363.4,
+     -920.5
+    ],
+    [
+     218034.5,
+     -4363.4,
+     -920.5
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 40255,
+   "bends": 0,
+   "ifc_ids": [
+    2942538,
+    2942544,
+    2942550,
+    2942556,
+    3262367,
+    3262368
+   ]
+  },
+  {
+   "from": {
+    "id": 2756285,
+    "face": "D"
+   },
+   "to": {
+    "id": 3377793,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     176594.5,
+     -4363.4,
+     -988.0
+    ],
+    [
+     105179.5,
+     -4363.4,
+     -988.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 71415,
+   "bends": 0,
+   "ifc_ids": [
+    3377968,
+    3377996,
+    3378036,
+    3378154,
+    3378167,
+    3378180
+   ]
+  },
+  {
+   "from": {
+    "id": 2756286,
+    "face": "A"
+   },
+   "to": {
+    "id": 2756286,
+    "face": "A"
+   },
+   "perRow": [
+    1
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     218141.4,
+     -3685.6,
+     -782.3
+    ],
+    [
+     218141.4,
+     -1381.6,
+     -782.3
+    ],
+    [
+     218096.4,
+     -1144.2,
+     -782.3
+    ],
+    [
+     217915.4,
+     -963.2,
+     -782.3
+    ],
+    [
+     217710.7,
+     -839.2,
+     -782.3
+    ],
+    [
+     214894.8,
+     -839.2,
+     -782.3
+    ],
+    [
+     214541.4,
+     -839.2,
+     -418.7
+    ],
+    [
+     214541.4,
+     -839.2,
+     93.3
+    ],
+    [
+     214541.4,
+     -786.4,
+     -108.3
+    ],
+    [
+     214541.4,
+     -768.5,
+     -363.7
+    ],
+    [
+     214673.2,
+     -754.5,
+     -564.6
+    ],
+    [
+     214854.2,
+     -741.8,
+     -745.2
+    ],
+    [
+     215094.8,
+     -739.2,
+     -782.3
+    ],
+    [
+     217654.7,
+     -739.2,
+     -782.3
+    ],
+    [
+     217905.1,
+     -752.9,
+     -782.3
+    ],
+    [
+     218086.1,
+     -933.9,
+     -782.3
+    ],
+    [
+     218241.4,
+     -1125.6,
+     -782.3
+    ],
+    [
+     218241.4,
+     -3685.6,
+     -782.3
+    ]
+   ],
+   "od_mm": 52,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 12062,
+   "bends": 4,
+   "ifc_ids": [
+    3765378,
+    3765379,
+    3765380,
+    3765382,
+    3765383,
+    3765385,
+    3765386,
+    3765387,
+    3765388,
+    3801068
+   ]
+  },
+  {
+   "from": {
+    "id": 2756286,
+    "face": "A"
+   },
+   "to": {
+    "id": 3499292,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     218712.3,
+     -3685.6,
+     -1045.0
+    ],
+    [
+     218712.3,
+     -2860.3,
+     -1045.0
+    ],
+    [
+     218746.6,
+     -2688.1,
+     -1045.0
+    ],
+    [
+     219875.0,
+     36.2,
+     -1045.0
+    ],
+    [
+     219951.1,
+     418.9,
+     -1045.0
+    ],
+    [
+     219951.1,
+     7723.5,
+     -1045.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 11079,
+   "bends": 2,
+   "ifc_ids": [
+    3499347,
+    3499348,
+    3499349,
+    3499350,
+    3499351,
+    3499352,
+    3623755,
+    3623757,
+    3623760,
+    3623764,
+    3623768,
+    3623772,
+    3623774,
+    3623776,
+    3623778,
+    3623780,
+    3623784,
+    3623788,
+    3623792,
+    3623796,
+    3623800,
+    3709783,
+    3709790,
+    3709792,
+    3709812,
+    3709814,
+    3709816,
+    3709818,
+    3709820,
+    3709822
+   ]
+  },
+  {
+   "from": {
+    "id": 2756567,
+    "face": "A"
+   },
+   "to": {
+    "id": 3360009,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     89376.7,
+     13285.7,
+     -970.3
+    ],
+    [
+     65561.7,
+     13285.7,
+     -970.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 23815,
+   "bends": 0,
+   "ifc_ids": [
+    3375913,
+    3375963,
+    3376019,
+    3376084,
+    3376152,
+    3376214
+   ]
+  },
+  {
+   "from": {
+    "id": 2756567,
+    "face": "C"
+   },
+   "to": {
+    "id": 3526414,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 2,
+   "path_mm": [
+    [
+     90561.7,
+     13546.0,
+     -1385.7
+    ],
+    [
+     93321.7,
+     13546.0,
+     -1385.7
+    ],
+    [
+     93516.8,
+     13546.0,
+     -1366.5
+    ],
+    [
+     94648.7,
+     13546.0,
+     -1141.3
+    ],
+    [
+     94843.8,
+     13546.0,
+     -1122.1
+    ],
+    [
+     102583.2,
+     13546.0,
+     -1122.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1260,
+    -1020
+   ],
+   "length_mm": 11654,
+   "bends": 2,
+   "ifc_ids": [
+    2945370,
+    2945376,
+    2945382,
+    2945388,
+    3262164,
+    3262165,
+    3435190,
+    3435200,
+    3435242,
+    3435251,
+    3435429,
+    3435438,
+    3435622,
+    3435631,
+    3435665,
+    3435674,
+    3435702,
+    3435711,
+    3723541,
+    3723549,
+    3980461,
+    3980463,
+    3980476,
+    3980478,
+    3980480,
+    3980482,
+    3980484,
+    3980486,
+    3980488,
+    3980490
+   ]
+  },
+  {
+   "from": {
+    "id": 2756621,
+    "face": "D"
+   },
+   "to": {
+    "id": 2756623,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -15861.9,
+     31376.1,
+     -1160.7
+    ],
+    [
+     -30908.5,
+     54653.9,
+     -1160.6
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1080,
+    -1080
+   ],
+   "length_mm": 27718,
+   "bends": 0,
+   "ifc_ids": [
+    3231695,
+    3393633,
+    3393669,
+    3393810,
+    3393867,
+    3405898
+   ]
+  },
+  {
+   "from": {
+    "id": 2756623,
+    "face": "A"
+   },
+   "to": {
+    "id": 2756627,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -30771.2,
+     55263.6,
+     -1001.6
+    ],
+    [
+     -22648.2,
+     60514.2,
+     -1001.6
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 9672,
+   "bends": 0,
+   "ifc_ids": [
+    2960823,
+    2960829,
+    2960835,
+    2960841,
+    3499105,
+    3499106
+   ]
+  },
+  {
+   "from": {
+    "id": 2756623,
+    "face": "D"
+   },
+   "to": {
+    "id": 2756722,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     -31471.4,
+     55710.0,
+     -1074.0
+    ],
+    [
+     -44727.8,
+     76218.2,
+     -1074.0
+    ],
+    [
+     -44871.6,
+     76581.0,
+     -1074.0
+    ],
+    [
+     -44983.0,
+     77189.0,
+     -1074.0
+    ],
+    [
+     -45126.8,
+     77551.7,
+     -1074.0
+    ],
+    [
+     -46240.4,
+     79274.5,
+     -1074.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 209,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 27089,
+   "bends": 2,
+   "ifc_ids": [
+    2756786,
+    2960767,
+    2960773,
+    2960779,
+    3504740,
+    3504742,
+    3504744,
+    3504746,
+    3504748,
+    3504750,
+    3504752,
+    3504754,
+    3504756,
+    3504758,
+    3504760,
+    3504762,
+    3504764,
+    3504766,
+    3504768,
+    3504770
+   ]
+  },
+  {
+   "from": {
+    "id": 2756624,
+    "face": "B"
+   },
+   "to": {
+    "id": 2756627,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 2,
+   "path_mm": [
+    [
+     -12004.2,
+     44714.6,
+     -1380.2
+    ],
+    [
+     -21977.2,
+     60143.2,
+     -1380.2
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1260,
+    -1260
+   ],
+   "length_mm": 18371,
+   "bends": 0,
+   "ifc_ids": [
+    2756865,
+    3004058,
+    3004064,
+    3004070
+   ]
+  },
+  {
+   "from": {
+    "id": 2756624,
+    "face": "C"
+   },
+   "to": {
+    "id": 3501284,
+    "face": "B"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -11140.2,
+     44576.5,
+     -827.4
+    ],
+    [
+     -9369.2,
+     45721.3,
+     -827.4
+    ],
+    [
+     -8826.3,
+     45881.4,
+     -827.4
+    ],
+    [
+     -1602.4,
+     45881.4,
+     -827.4
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 9333,
+   "bends": 1,
+   "ifc_ids": [
+    3003973,
+    3003983,
+    3431968,
+    3431975,
+    3432002,
+    3432009,
+    3502145,
+    3502146,
+    3502147,
+    3502148,
+    3502150,
+    3502151
+   ]
+  },
+  {
+   "from": {
+    "id": 2756634,
+    "face": "A"
+   },
+   "to": {
+    "id": 3419413,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     -1332.0,
+     72880.1,
+     -1026.1
+    ],
+    [
+     -1332.0,
+     54311.1,
+     -1026.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 105,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 18569,
+   "bends": 0,
+   "ifc_ids": [
+    2947543,
+    2947730,
+    2947736,
+    2947742,
+    2947748,
+    2947754
+   ]
+  },
+  {
+   "from": {
+    "id": 2756634,
+    "face": "B"
+   },
+   "to": {
+    "id": 3427738,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 4,
+   "path_mm": [
+    [
+     -1602.4,
+     73512.0,
+     -1812.1
+    ],
+    [
+     -8124.5,
+     73512.0,
+     -1812.1
+    ],
+    [
+     -8667.4,
+     73351.8,
+     -1812.1
+    ],
+    [
+     -10700.9,
+     72037.4,
+     -1812.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1680,
+    -1680
+   ],
+   "length_mm": 8944,
+   "bends": 1,
+   "ifc_ids": [
+    2959022,
+    2959032,
+    2959042,
+    2959052,
+    3263613,
+    3263617,
+    3428243,
+    3428253,
+    3428284,
+    3428291,
+    3428318,
+    3428325,
+    3428352,
+    3428359,
+    3428379,
+    3428386,
+    3428400,
+    3428407
+   ]
+  },
+  {
+   "from": {
+    "id": 2756634,
+    "face": "C"
+   },
+   "to": {
+    "id": 2930864,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -1332.0,
+     74065.2,
+     -930.1
+    ],
+    [
+     -1332.0,
+     85816.3,
+     -930.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 11751,
+   "bends": 0,
+   "ifc_ids": [
+    2947640,
+    2947765,
+    2947771,
+    2947777,
+    2947783,
+    2947789
+   ]
+  },
+  {
+   "from": {
+    "id": 2756641,
+    "face": "A"
+   },
+   "to": {
+    "id": 3427801,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -18894.1,
+     90266.6,
+     -1156.1
+    ],
+    [
+     -21426.2,
+     88629.8,
+     -1156.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 209,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 3015,
+   "bends": 0,
+   "ifc_ids": [
+    3428076,
+    3428077,
+    3428078,
+    3428079,
+    3428080,
+    3428081
+   ]
+  },
+  {
+   "from": {
+    "id": 2756641,
+    "face": "B"
+   },
+   "to": {
+    "id": 2756790,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -18565.5,
+     91054.1,
+     -976.1
+    ],
+    [
+     -36512.5,
+     118818.9,
+     -976.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 33060,
+   "bends": 0,
+   "ifc_ids": [
+    2756853,
+    2959618,
+    2959624,
+    2959630,
+    2959636,
+    2959642
+   ]
+  },
+  {
+   "from": {
+    "id": 2756644,
+    "face": "B"
+   },
+   "to": {
+    "id": 2900244,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     129871.8,
+     8378.7,
+     -950.0
+    ],
+    [
+     146286.8,
+     8378.7,
+     -950.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 16415,
+   "bends": 0,
+   "ifc_ids": [
+    2945300,
+    2945306,
+    2945312,
+    2945318,
+    3262160,
+    3262161
+   ]
+  },
+  {
+   "from": {
+    "id": 2756644,
+    "face": "D"
+   },
+   "to": {
+    "id": 2757008,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     128686.8,
+     8519.2,
+     -970.3
+    ],
+    [
+     109906.3,
+     8519.2,
+     -970.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 18780,
+   "bends": 0,
+   "ifc_ids": [
+    2945335,
+    2945341,
+    2945347,
+    2945353,
+    3262162,
+    3262163
+   ]
+  },
+  {
+   "from": {
+    "id": 2756646,
+    "face": "B"
+   },
+   "to": {
+    "id": 3496258,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     177779.5,
+     8338.7,
+     -987.2
+    ],
+    [
+     187925.1,
+     8338.7,
+     -987.2
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 10146,
+   "bends": 0,
+   "ifc_ids": [
+    2945230,
+    2945236,
+    2945242,
+    2945248,
+    3262156,
+    3262157
+   ]
+  },
+  {
+   "from": {
+    "id": 2756646,
+    "face": "D"
+   },
+   "to": {
+    "id": 3502442,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     176594.5,
+     8378.7,
+     -1125.5
+    ],
+    [
+     164751.8,
+     8378.7,
+     -1125.5
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1020,
+    -1020
+   ],
+   "length_mm": 11843,
+   "bends": 0,
+   "ifc_ids": [
+    2945265,
+    2945271,
+    2945277,
+    2945283,
+    3262158,
+    3262159
+   ]
+  },
+  {
+   "from": {
+    "id": 2756651,
+    "face": "B"
+   },
+   "to": {
+    "id": 3508033,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     201875.9,
+     163852.0,
+     -915.8
+    ],
+    [
+     222342.4,
+     163852.0,
+     -915.8
+    ],
+    [
+     222725.1,
+     163852.0,
+     -991.9
+    ],
+    [
+     224572.8,
+     163852.0,
+     -1757.3
+    ],
+    [
+     224955.4,
+     163852.0,
+     -1833.4
+    ],
+    [
+     230022.8,
+     163852.0,
+     -1833.4
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -720,
+    -1560
+   ],
+   "length_mm": 27534,
+   "bends": 2,
+   "ifc_ids": [
+    3357924,
+    3357998,
+    3358221,
+    3358331,
+    3505401,
+    3505403,
+    3505405,
+    3505407,
+    3505413,
+    3505415,
+    3505417,
+    3505419,
+    3505425,
+    3505427,
+    3505429,
+    3505431,
+    3505437,
+    3505439,
+    3505441,
+    3505443,
+    3531430,
+    3531431,
+    3531753,
+    3531766,
+    3531768,
+    3531777,
+    3531810,
+    3531817,
+    3531819,
+    3531826
+   ]
+  },
+  {
+   "from": {
+    "id": 2756651,
+    "face": "D"
+   },
+   "to": {
+    "id": 3355995,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     200690.9,
+     163892.0,
+     -915.8
+    ],
+    [
+     177375.9,
+     163892.0,
+     -915.8
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 23315,
+   "bends": 0,
+   "ifc_ids": [
+    2952042,
+    2952101,
+    2952199,
+    2952267,
+    3531400,
+    3531401
+   ]
+  },
+  {
+   "from": {
+    "id": 2756652,
+    "face": "A"
+   },
+   "to": {
+    "id": 2757054,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     105735.8,
+     163852.0,
+     -917.1
+    ],
+    [
+     153190.9,
+     163852.0,
+     -917.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 47455,
+   "bends": 0,
+   "ifc_ids": [
+    2954177,
+    2954275,
+    2954367,
+    2954468,
+    3531190,
+    3972323
+   ]
+  },
+  {
+   "from": {
+    "id": 2756652,
+    "face": "B"
+   },
+   "to": {
+    "id": 2756653,
+    "face": "A"
+   },
+   "perRow": [
+    6
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     104933.7,
+     162593.6,
+     -757.2
+    ],
+    [
+     104933.7,
+     146647.3,
+     -757.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 15946,
+   "bends": 0,
+   "ifc_ids": [
+    3222024,
+    3222038,
+    3222052,
+    3222066,
+    3263087,
+    3263094
+   ]
+  },
+  {
+   "from": {
+    "id": 2756652,
+    "face": "C"
+   },
+   "to": {
+    "id": 3531028,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     104035.8,
+     163892.0,
+     -1017.1
+    ],
+    [
+     43585.9,
+     163892.0,
+     -1017.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 60450,
+   "bends": 0,
+   "ifc_ids": [
+    2954918,
+    2955022,
+    2955135,
+    2955221,
+    3531094,
+    3531095
+   ]
+  },
+  {
+   "from": {
+    "id": 2756653,
+    "face": "B"
+   },
+   "to": {
+    "id": 3429241,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     105729.0,
+     145872.3,
+     -978.9
+    ],
+    [
+     112403.5,
+     145872.3,
+     -978.9
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 6675,
+   "bends": 0,
+   "ifc_ids": [
+    3429901,
+    3429902,
+    3429903,
+    3429904,
+    3429905,
+    3429906
+   ]
+  },
+  {
+   "from": {
+    "id": 2756653,
+    "face": "C"
+   },
+   "to": {
+    "id": 2756658,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 4,
+   "path_mm": [
+    [
+     105084.7,
+     144947.3,
+     -1719.2
+    ],
+    [
+     105084.7,
+     130647.8,
+     -1719.2
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1620,
+    -1620
+   ],
+   "length_mm": 14299,
+   "bends": 0,
+   "ifc_ids": [
+    2756991,
+    2950281,
+    2950287,
+    2950299,
+    2950305,
+    2950311
+   ]
+  },
+  {
+   "from": {
+    "id": 2756653,
+    "face": "D"
+   },
+   "to": {
+    "id": 3429977,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     104029.0,
+     145872.3,
+     -943.7
+    ],
+    [
+     92533.0,
+     145872.3,
+     -943.7
+    ],
+    [
+     91533.0,
+     146872.3,
+     -943.7
+    ],
+    [
+     91533.0,
+     147705.4,
+     -943.7
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 12329,
+   "bends": 1,
+   "ifc_ids": [
+    2948812,
+    2948841,
+    2948847,
+    2948853,
+    2948859,
+    2948865,
+    3430693,
+    3430700,
+    3430737,
+    3430744,
+    3430758,
+    3430765,
+    3430831,
+    3430838,
+    3430924,
+    3430931,
+    3430945,
+    3430952
+   ]
+  },
+  {
+   "from": {
+    "id": 2756657,
+    "face": "B"
+   },
+   "to": {
+    "id": 3531623,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     130075.9,
+     148458.8,
+     -906.0
+    ],
+    [
+     153190.9,
+     148458.8,
+     -906.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 23115,
+   "bends": 0,
+   "ifc_ids": [
+    2949126,
+    2949132,
+    2949138,
+    2949144,
+    3370437,
+    3370438
+   ]
+  },
+  {
+   "from": {
+    "id": 2756657,
+    "face": "D"
+   },
+   "to": {
+    "id": 3429241,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     128890.9,
+     148623.8,
+     -946.4
+    ],
+    [
+     114205.9,
+     148623.8,
+     -946.4
+    ],
+    [
+     113205.9,
+     147623.8,
+     -946.4
+    ],
+    [
+     113205.9,
+     146389.8,
+     -946.4
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 15919,
+   "bends": 1,
+   "ifc_ids": [
+    2949069,
+    2949155,
+    2949161,
+    2949167,
+    2949173,
+    2949179,
+    3429336,
+    3429343,
+    3429492,
+    3429499,
+    3429526,
+    3429533,
+    3429565,
+    3429572,
+    3429614,
+    3429621,
+    3429635,
+    3429642
+   ]
+  },
+  {
+   "from": {
+    "id": 2756661,
+    "face": "A"
+   },
+   "to": {
+    "id": 2756664,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     46949.5,
+     148406.2,
+     -1043.8
+    ],
+    [
+     22745.6,
+     148406.2,
+     -1043.8
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 24204,
+   "bends": 0,
+   "ifc_ids": [
+    2948801,
+    2948876,
+    2948882,
+    2948888,
+    2948894,
+    2948900
+   ]
+  },
+  {
+   "from": {
+    "id": 2756661,
+    "face": "B"
+   },
+   "to": {
+    "id": 2899874,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     47523.4,
+     148671.5,
+     -1088.9
+    ],
+    [
+     47523.4,
+     150369.2,
+     -1088.9
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 1698,
+   "bends": 0,
+   "ifc_ids": [
+    3465398,
+    3465399,
+    3465400,
+    3465401,
+    3465402,
+    3465403
+   ]
+  },
+  {
+   "from": {
+    "id": 2756661,
+    "face": "C"
+   },
+   "to": {
+    "id": 3431417,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     48134.5,
+     148306.3,
+     -1049.3
+    ],
+    [
+     75061.7,
+     148306.3,
+     -1049.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 26927,
+   "bends": 0,
+   "ifc_ids": [
+    3977138,
+    3977173,
+    3977193,
+    3977315,
+    3977350,
+    3977376
+   ]
+  },
+  {
+   "from": {
+    "id": 2756664,
+    "face": "A"
+   },
+   "to": {
+    "id": 3428913,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     21560.6,
+     148041.5,
+     -832.2
+    ],
+    [
+     -538.0,
+     148041.5,
+     -832.2
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 22099,
+   "bends": 0,
+   "ifc_ids": [
+    3442395,
+    3442423,
+    3442565,
+    3442578,
+    3501856,
+    3501857
+   ]
+  },
+  {
+   "from": {
+    "id": 2756668,
+    "face": "B"
+   },
+   "to": {
+    "id": 3428913,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 3,
+   "path_mm": [
+    [
+     -17288.8,
+     148256.5,
+     -1496.3
+    ],
+    [
+     -12322.6,
+     148256.5,
+     -1496.3
+    ],
+    [
+     -11939.9,
+     148256.5,
+     -1420.2
+    ],
+    [
+     -10661.0,
+     148256.5,
+     -890.4
+    ],
+    [
+     -10278.3,
+     148256.5,
+     -814.3
+    ],
+    [
+     -1723.0,
+     148256.5,
+     -814.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1380,
+    -720
+   ],
+   "length_mm": 14906,
+   "bends": 2,
+   "ifc_ids": [
+    2756886,
+    2951077,
+    2951083,
+    2951089,
+    3263199,
+    3263207,
+    3662576,
+    3662578,
+    3662581,
+    3662583,
+    3662585,
+    3662587,
+    3662589,
+    3662591,
+    3662593,
+    3662595,
+    3662597,
+    3662599,
+    3662601,
+    3662603,
+    3662605,
+    3662607,
+    3662609,
+    3662611,
+    3662613,
+    3662615,
+    3662617,
+    3662619,
+    3662621,
+    3662623
+   ]
+  },
+  {
+   "from": {
+    "id": 2756668,
+    "face": "D"
+   },
+   "to": {
+    "id": 2756669,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -18473.8,
+     148276.5,
+     -896.0
+    ],
+    [
+     -18838.1,
+     148276.5,
+     -896.0
+    ],
+    [
+     -19220.8,
+     148352.7,
+     -896.0
+    ],
+    [
+     -22779.8,
+     149826.9,
+     -896.0
+    ],
+    [
+     -23162.5,
+     149903.0,
+     -896.0
+    ],
+    [
+     -28033.2,
+     149903.0,
+     -896.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 9087,
+   "bends": 2,
+   "ifc_ids": [
+    3501986,
+    3501990,
+    3501994,
+    3501998,
+    3502002,
+    3502006,
+    3662714,
+    3662716,
+    3662719,
+    3662721,
+    3662723,
+    3662725,
+    3662727,
+    3662729,
+    3662731,
+    3662733,
+    3662735,
+    3662737,
+    3662739,
+    3662741,
+    3662743,
+    3662745,
+    3662747,
+    3662749,
+    3662751,
+    3662753,
+    3662755,
+    3662757,
+    3662759,
+    3662761
+   ]
+  },
+  {
+   "from": {
+    "id": 2756669,
+    "face": "C"
+   },
+   "to": {
+    "id": 2756682,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 2,
+   "path_mm": [
+    [
+     -28363.6,
+     149153.0,
+     -1391.0
+    ],
+    [
+     -28363.6,
+     147799.3,
+     -1391.0
+    ],
+    [
+     -28203.4,
+     147256.4,
+     -1391.0
+    ],
+    [
+     -23071.2,
+     139316.6,
+     -1391.0
+    ],
+    [
+     -22965.3,
+     139152.8,
+     -1371.8
+    ],
+    [
+     -21760.1,
+     137288.4,
+     -930.2
+    ],
+    [
+     -21654.2,
+     137124.6,
+     -911.0
+    ],
+    [
+     -18202.2,
+     131784.0,
+     -911.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1260,
+    -780
+   ],
+   "length_mm": 19430,
+   "bends": 3,
+   "ifc_ids": [
+    3440096,
+    3440146,
+    3440212,
+    3440233,
+    3613630,
+    3613668,
+    3613694,
+    3613832,
+    3613863,
+    3613930,
+    3613946,
+    3774902,
+    3971506,
+    3971511,
+    3971515,
+    3971519,
+    3971523,
+    3971527,
+    3971531,
+    3971535,
+    3971546,
+    3971548,
+    3971550,
+    3971552,
+    3971554,
+    3971556,
+    3971558,
+    3971580
+   ]
+  },
+  {
+   "from": {
+    "id": 2756669,
+    "face": "D"
+   },
+   "to": {
+    "id": 2933273,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 2,
+   "path_mm": [
+    [
+     -29218.2,
+     149968.0,
+     -1313.0
+    ],
+    [
+     -38931.3,
+     149968.0,
+     -1313.0
+    ],
+    [
+     -39474.2,
+     149807.8,
+     -1313.0
+    ],
+    [
+     -39799.5,
+     149597.5,
+     -1313.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1200,
+    -1200
+   ],
+   "length_mm": 10101,
+   "bends": 1,
+   "ifc_ids": [
+    2933789,
+    3380886,
+    3380896,
+    3441155,
+    3441156,
+    3441157,
+    3441709,
+    3441710,
+    3441711,
+    3441713,
+    3441714,
+    3441715
+   ]
+  },
+  {
+   "from": {
+    "id": 2756671,
+    "face": "B"
+   },
+   "to": {
+    "id": 3506282,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -108895.4,
+     162719.7,
+     -1028.1
+    ],
+    [
+     -108895.4,
+     155176.7,
+     -1028.1
+    ],
+    [
+     -108735.3,
+     154633.8,
+     -1028.1
+    ],
+    [
+     -101233.8,
+     143082.5,
+     -1028.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 21316,
+   "bends": 1,
+   "ifc_ids": [
+    2956292,
+    2956726,
+    2956736,
+    2957428,
+    2957430,
+    2957436,
+    2957446,
+    2957448,
+    2957454,
+    2957464,
+    2957466,
+    2957472,
+    3263381,
+    3263382,
+    3263383,
+    3263393,
+    3263394,
+    3263399
+   ]
+  },
+  {
+   "from": {
+    "id": 2756679,
+    "face": "A"
+   },
+   "to": {
+    "id": 3383587,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     -76941.9,
+     157360.4,
+     -1223.6
+    ],
+    [
+     -75944.7,
+     158005.0,
+     -1223.6
+    ],
+    [
+     -75191.8,
+     158142.9,
+     -1223.6
+    ],
+    [
+     -60168.6,
+     154916.3,
+     -1223.6
+    ],
+    [
+     -59538.8,
+     154481.4,
+     -1223.6
+    ],
+    [
+     -55844.7,
+     148766.5,
+     -1223.6
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 23358,
+   "bends": 2,
+   "ifc_ids": [
+    3382149,
+    3382256,
+    3382405,
+    3382430,
+    3383839,
+    3383983,
+    3383992,
+    3383997,
+    3384098,
+    3384179,
+    3384203,
+    3384926,
+    3384975,
+    3384977,
+    3385025,
+    3385032,
+    3385122,
+    3385129,
+    3385230,
+    3385240,
+    3385242,
+    3385247,
+    3385390,
+    3385397,
+    3385399,
+    3385404,
+    3385420,
+    3385427,
+    3385429,
+    3385437
+   ]
+  },
+  {
+   "from": {
+    "id": 2756679,
+    "face": "B"
+   },
+   "to": {
+    "id": 2756728,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     -77184.5,
+     156665.1,
+     -1115.3
+    ],
+    [
+     -73276.6,
+     150412.8,
+     -1115.3
+    ],
+    [
+     -73068.8,
+     150091.4,
+     -1039.2
+    ],
+    [
+     -72880.6,
+     149800.3,
+     -895.6
+    ],
+    [
+     -72672.9,
+     149478.9,
+     -819.5
+    ],
+    [
+     -67534.2,
+     141529.1,
+     -819.5
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1020,
+    -720
+   ],
+   "length_mm": 17214,
+   "bends": 2,
+   "ifc_ids": [
+    3469514,
+    3469548,
+    3469613,
+    3469638,
+    3469691,
+    3469698,
+    3469861,
+    3469874,
+    3469876,
+    3469883,
+    3469901,
+    3469908,
+    3469910,
+    3469918,
+    3469933,
+    3469940,
+    3470156,
+    3470165,
+    3470196,
+    3470203,
+    3470205,
+    3470210,
+    3470227,
+    3470234,
+    3470236,
+    3470241,
+    3470338,
+    3470345,
+    3470347,
+    3470352
+   ]
+  },
+  {
+   "from": {
+    "id": 2756679,
+    "face": "C"
+   },
+   "to": {
+    "id": 3536529,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -77898.8,
+     156655.5,
+     -1037.6
+    ],
+    [
+     -78968.4,
+     155987.0,
+     -1037.6
+    ],
+    [
+     -79412.7,
+     155363.9,
+     -1037.6
+    ],
+    [
+     -79612.8,
+     154496.7,
+     -1037.6
+    ],
+    [
+     -80057.2,
+     153873.5,
+     -1037.6
+    ],
+    [
+     -81290.0,
+     153103.0,
+     -1037.6
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 3605,
+   "bends": 2,
+   "ifc_ids": [
+    3515650,
+    3515654,
+    3515658,
+    3515662,
+    3535596,
+    3535598,
+    3535601,
+    3535603,
+    3535605,
+    3535607,
+    3535609,
+    3535611,
+    3535621,
+    3535623,
+    3535625,
+    3535627,
+    3535629,
+    3535631,
+    3535633,
+    3535635,
+    3536550,
+    3536551,
+    3536552,
+    3536553,
+    3536555,
+    3536556,
+    3536558,
+    3536559,
+    3536561,
+    3536562
+   ]
+  },
+  {
+   "from": {
+    "id": 2756682,
+    "face": "C"
+   },
+   "to": {
+    "id": 3424506,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -17572.3,
+     130780.1,
+     -911.0
+    ],
+    [
+     -8450.3,
+     116668.0,
+     -911.0
+    ],
+    [
+     -7610.5,
+     116210.8,
+     -911.0
+    ],
+    [
+     -6964.7,
+     116210.8,
+     -911.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 17450,
+   "bends": 1,
+   "ifc_ids": [
+    2756771,
+    2958254,
+    3613225,
+    3613260,
+    3650846,
+    3650852,
+    3650924,
+    3650929,
+    3650953,
+    3650958,
+    3650985,
+    3650992
+   ]
+  },
+  {
+   "from": {
+    "id": 2756682,
+    "face": "D"
+   },
+   "to": {
+    "id": 2756790,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 2,
+   "path_mm": [
+    [
+     -18710.1,
+     131039.0,
+     -1340.3
+    ],
+    [
+     -36433.1,
+     119582.9,
+     -1340.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1260,
+    -1260
+   ],
+   "length_mm": 21103,
+   "bends": 0,
+   "ifc_ids": [
+    2757045,
+    2958381,
+    2958387,
+    2958393
+   ]
+  },
+  {
+   "from": {
+    "id": 2756699,
+    "face": "C"
+   },
+   "to": {
+    "id": 2756722,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -32348.6,
+     89210.0,
+     -995.4
+    ],
+    [
+     -45974.9,
+     80402.1,
+     -995.4
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 16225,
+   "bends": 0,
+   "ifc_ids": [
+    2756857,
+    2960710,
+    2960716,
+    2960722
+   ]
+  },
+  {
+   "from": {
+    "id": 2756699,
+    "face": "D"
+   },
+   "to": {
+    "id": 3533661,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -32367.8,
+     90186.7,
+     -977.5
+    ],
+    [
+     -39324.4,
+     100949.0,
+     -977.5
+    ],
+    [
+     -39954.3,
+     101383.9,
+     -977.5
+    ],
+    [
+     -42138.3,
+     101852.9,
+     -977.5
+    ],
+    [
+     -42768.1,
+     102287.8,
+     -977.5
+    ],
+    [
+     -47371.4,
+     109409.3,
+     -977.5
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 23529,
+   "bends": 2,
+   "ifc_ids": [
+    3299016,
+    3299018,
+    3299020,
+    3299022,
+    3299026,
+    3299028,
+    3299030,
+    3299034,
+    3299036,
+    3299038,
+    3299042,
+    3299044,
+    3299046,
+    3299050,
+    3299052,
+    3299054,
+    3299058,
+    3299060,
+    3299062,
+    3299064
+   ]
+  },
+  {
+   "from": {
+    "id": 2756728,
+    "face": "B"
+   },
+   "to": {
+    "id": 3288877,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -66899.1,
+     140529.0,
+     -968.5
+    ],
+    [
+     -66623.6,
+     140102.8,
+     -968.5
+    ],
+    [
+     -66479.8,
+     139740.1,
+     -968.5
+    ],
+    [
+     -66325.2,
+     138895.7,
+     -968.5
+    ],
+    [
+     -66181.4,
+     138533.0,
+     -968.5
+    ],
+    [
+     -57136.1,
+     124539.6,
+     -968.5
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 209,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 18028,
+   "bends": 2,
+   "ifc_ids": [
+    3007051,
+    3007354,
+    3380007,
+    3380021,
+    3380023,
+    3380030,
+    3380119,
+    3380126,
+    3380128,
+    3380133,
+    3380218,
+    3380225,
+    3380227,
+    3380232,
+    3380283,
+    3380290,
+    3380292,
+    3380297,
+    3380351,
+    3380358,
+    3380360,
+    3380365,
+    3380421,
+    3380430,
+    3380432,
+    3380437,
+    3785514,
+    3785567,
+    3785737,
+    3785775
+   ]
+  },
+  {
+   "from": {
+    "id": 2756790,
+    "face": "A"
+   },
+   "to": {
+    "id": 2932864,
+    "face": "C"
+   },
+   "perRow": [
+    5
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     -37243.5,
+     119757.4,
+     -1024.4
+    ],
+    [
+     -44642.7,
+     131204.2,
+     -1024.4
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 204,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1020,
+    -1020
+   ],
+   "length_mm": 13630,
+   "bends": 0,
+   "ifc_ids": [
+    2959281,
+    2959287,
+    2959293,
+    2959299,
+    2959305
+   ]
+  },
+  {
+   "from": {
+    "id": 2757008,
+    "face": "A"
+   },
+   "to": {
+    "id": 3526414,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     109441.3,
+     9138.5,
+     -1022.4
+    ],
+    [
+     109441.3,
+     10006.1,
+     -1022.4
+    ],
+    [
+     109148.4,
+     10713.2,
+     -1022.4
+    ],
+    [
+     106584.8,
+     13276.8,
+     -1022.4
+    ],
+    [
+     105877.7,
+     13569.7,
+     -1022.3
+    ],
+    [
+     103768.2,
+     13569.7,
+     -1022.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 6603,
+   "bends": 2,
+   "ifc_ids": [
+    3473735,
+    3473736,
+    3473737,
+    3473738,
+    3473739,
+    3473740,
+    3473801,
+    3473816,
+    3473818,
+    3473831,
+    3473927,
+    3473934,
+    3473936,
+    3473941,
+    3474048,
+    3474055,
+    3474057,
+    3474062,
+    3474077,
+    3474086,
+    3474088,
+    3474093,
+    3474120,
+    3474127,
+    3474129,
+    3474134,
+    3474148,
+    3474155,
+    3474157,
+    3474162
+   ]
+  },
+  {
+   "from": {
+    "id": 2757054,
+    "face": "B"
+   },
+   "to": {
+    "id": 3355995,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     154375.9,
+     163852.0,
+     -917.1
+    ],
+    [
+     176190.9,
+     163852.0,
+     -917.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 21815,
+   "bends": 0,
+   "ifc_ids": [
+    2953624,
+    2953676,
+    2953829,
+    2954002,
+    3531368,
+    3531369
+   ]
+  },
+  {
+   "from": {
+    "id": 2757054,
+    "face": "C"
+   },
+   "to": {
+    "id": 2895876,
+    "face": "C"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     153746.9,
+     163037.0,
+     -663.0
+    ],
+    [
+     153746.9,
+     151968.4,
+     -663.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -660,
+    -660
+   ],
+   "length_mm": 11069,
+   "bends": 0,
+   "ifc_ids": [
+    2757056,
+    2950768,
+    2950780,
+    2953518
+   ]
+  },
+  {
+   "from": {
+    "id": 2895876,
+    "face": "A"
+   },
+   "to": {
+    "id": 3531623,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     153783.4,
+     150783.4,
+     -857.0
+    ],
+    [
+     153783.4,
+     148890.4,
+     -857.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 1893,
+   "bends": 0,
+   "ifc_ids": [
+    2757058,
+    2950789,
+    2950795,
+    2950801,
+    3222328,
+    3222329
+   ]
+  },
+  {
+   "from": {
+    "id": 2900244,
+    "face": "A"
+   },
+   "to": {
+    "id": 2900297,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     146744.3,
+     8941.4,
+     -920.3
+    ],
+    [
+     146744.3,
+     14249.7,
+     -920.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -840,
+    -840
+   ],
+   "length_mm": 5308,
+   "bends": 0,
+   "ifc_ids": [
+    2901325,
+    2919228,
+    3462897,
+    3462898,
+    3462915,
+    3462916
+   ]
+  },
+  {
+   "from": {
+    "id": 2900244,
+    "face": "B"
+   },
+   "to": {
+    "id": 3502442,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     147471.8,
+     8378.7,
+     -1120.0
+    ],
+    [
+     163566.8,
+     8378.7,
+     -1120.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1020,
+    -1020
+   ],
+   "length_mm": 16095,
+   "bends": 0,
+   "ifc_ids": [
+    3502553,
+    3502555,
+    3502557,
+    3502559,
+    3502561,
+    3502563
+   ]
+  },
+  {
+   "from": {
+    "id": 2903964,
+    "face": "C"
+   },
+   "to": {
+    "id": 3410509,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     40094.5,
+     14441.0,
+     -977.1
+    ],
+    [
+     40094.5,
+     13991.0,
+     -977.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 450,
+   "bends": 0,
+   "ifc_ids": [
+    3225061,
+    3227130,
+    3227136,
+    3227142,
+    3227148,
+    3227154
+   ]
+  },
+  {
+   "from": {
+    "id": 2930864,
+    "face": "B"
+   },
+   "to": {
+    "id": 3501644,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -1154.0,
+     87001.3,
+     -916.1
+    ],
+    [
+     -1154.0,
+     115381.4,
+     -916.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 28380,
+   "bends": 0,
+   "ifc_ids": [
+    2947653,
+    2947800,
+    2947806,
+    2947812,
+    2947818,
+    2947824
+   ]
+  },
+  {
+   "from": {
+    "id": 2932864,
+    "face": "D"
+   },
+   "to": {
+    "id": 3427039,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     -45547.6,
+     131500.9,
+     -1215.9
+    ],
+    [
+     -48668.5,
+     129483.6,
+     -1215.9
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 3716,
+   "bends": 0,
+   "ifc_ids": [
+    3427213,
+    3427286,
+    3427299,
+    3427377
+   ]
+  },
+  {
+   "from": {
+    "id": 2933273,
+    "face": "A"
+   },
+   "to": {
+    "id": 3383587,
+    "face": "B"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -40760.4,
+     149943.1,
+     -1004.4
+    ],
+    [
+     -42098.0,
+     152012.4,
+     -1004.4
+    ],
+    [
+     -42727.9,
+     152447.2,
+     -1004.4
+    ],
+    [
+     -47038.1,
+     153372.9,
+     -1004.4
+    ],
+    [
+     -47790.9,
+     153235.0,
+     -1004.4
+    ],
+    [
+     -55122.1,
+     148496.0,
+     -1004.4
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1020,
+    -1020
+   ],
+   "length_mm": 15602,
+   "bends": 2,
+   "ifc_ids": [
+    3381674,
+    3381675,
+    3381677,
+    3383332,
+    3384406,
+    3384441,
+    3384488,
+    3440360,
+    3441419,
+    3441484,
+    3441486,
+    3441507,
+    3441534,
+    3441559,
+    3441642,
+    3441644,
+    3441665,
+    3441667,
+    3441686,
+    3441688
+   ]
+  },
+  {
+   "from": {
+    "id": 3288877,
+    "face": "A"
+   },
+   "to": {
+    "id": 3427039,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     -56595.1,
+     124359.9,
+     -1020.5
+    ],
+    [
+     -49663.7,
+     128840.3,
+     -1020.5
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 8253,
+   "bends": 0,
+   "ifc_ids": [
+    2958547,
+    2958568,
+    2958574,
+    2958580
+   ]
+  },
+  {
+   "from": {
+    "id": 3288877,
+    "face": "B"
+   },
+   "to": {
+    "id": 3533661,
+    "face": "B"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -56492.8,
+     123544.4,
+     -868.5
+    ],
+    [
+     -48003.9,
+     110411.6,
+     -868.5
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 15638,
+   "bends": 0,
+   "ifc_ids": [
+    3007368,
+    3007382,
+    3007396,
+    3007410
+   ]
+  },
+  {
+   "from": {
+    "id": 3360009,
+    "face": "B"
+   },
+   "to": {
+    "id": 3410509,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     64376.7,
+     13524.7,
+     -977.1
+    ],
+    [
+     40561.7,
+     13524.7,
+     -977.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 209,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 23815,
+   "bends": 0,
+   "ifc_ids": [
+    2945405,
+    2945411,
+    2945417,
+    2945423,
+    3262166,
+    3262167
+   ]
+  },
+  {
+   "from": {
+    "id": 3383587,
+    "face": "D"
+   },
+   "to": {
+    "id": 3426499,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     -56228.2,
+     148024.2,
+     -1219.2
+    ],
+    [
+     -59349.1,
+     146007.0,
+     -1219.2
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1140,
+    -1140
+   ],
+   "length_mm": 3716,
+   "bends": 0,
+   "ifc_ids": [
+    3427418,
+    3427419,
+    3427420,
+    3427421
+   ]
+  },
+  {
+   "from": {
+    "id": 3403867,
+    "face": "A"
+   },
+   "to": {
+    "id": 3508033,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     230740.4,
+     139222.0,
+     -1118.1
+    ],
+    [
+     230740.4,
+     163037.0,
+     -1118.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1020,
+    -1020
+   ],
+   "length_mm": 23815,
+   "bends": 0,
+   "ifc_ids": [
+    2941000,
+    2941006,
+    2941012,
+    2941018,
+    3262592,
+    3262593
+   ]
+  },
+  {
+   "from": {
+    "id": 3403867,
+    "face": "C"
+   },
+   "to": {
+    "id": 3403949,
+    "face": "D"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     230700.4,
+     138037.0,
+     -1084.3
+    ],
+    [
+     230696.8,
+     136946.6,
+     -1084.3
+    ],
+    [
+     228515.9,
+     111303.6,
+     -1084.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 26741,
+   "bends": 1,
+   "ifc_ids": [
+    2999196,
+    2999252,
+    2999332,
+    2999447,
+    3262630,
+    3262631,
+    3468474,
+    3468481,
+    3468503,
+    3468510,
+    3468524,
+    3468531,
+    3468683,
+    3468690,
+    3468720,
+    3468749,
+    3468756,
+    3623626
+   ]
+  },
+  {
+   "from": {
+    "id": 3403949,
+    "face": "B"
+   },
+   "to": {
+    "id": 3404055,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     228415.5,
+     110122.9,
+     -1084.3
+    ],
+    [
+     226421.9,
+     86682.1,
+     -1084.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 23525,
+   "bends": 0,
+   "ifc_ids": [
+    3712096,
+    3712148,
+    3712203,
+    3712676,
+    3712710,
+    3712753
+   ]
+  },
+  {
+   "from": {
+    "id": 3404055,
+    "face": "A"
+   },
+   "to": {
+    "id": 3404448,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     226321.5,
+     85501.3,
+     -1084.3
+    ],
+    [
+     223881.1,
+     56806.8,
+     -1084.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 28798,
+   "bends": 0,
+   "ifc_ids": [
+    3711293,
+    3711494,
+    3711546,
+    3711846,
+    3711880,
+    3711914
+   ]
+  },
+  {
+   "from": {
+    "id": 3404448,
+    "face": "A"
+   },
+   "to": {
+    "id": 3404480,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     223780.7,
+     55626.1,
+     -1084.3
+    ],
+    [
+     221096.5,
+     24065.6,
+     -1084.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 31674,
+   "bends": 0,
+   "ifc_ids": [
+    3710837,
+    3710856,
+    3710890,
+    3711122,
+    3711162,
+    3711199
+   ]
+  },
+  {
+   "from": {
+    "id": 3404480,
+    "face": "C"
+   },
+   "to": {
+    "id": 3499292,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     220996.1,
+     22884.9,
+     -1082.3
+    ],
+    [
+     219951.1,
+     10559.4,
+     -1082.3
+    ],
+    [
+     219951.1,
+     8908.5,
+     -1082.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 13944,
+   "bends": 1,
+   "ifc_ids": [
+    3468024,
+    3468034,
+    3468050,
+    3468060,
+    3468074,
+    3468081,
+    3468353,
+    3468363,
+    3468383,
+    3468413,
+    3468420,
+    3623458,
+    3710434,
+    3710474,
+    3710508,
+    3710533,
+    3710561,
+    3710586
+   ]
+  },
+  {
+   "from": {
+    "id": 3410509,
+    "face": "D"
+   },
+   "to": {
+    "id": 3496775,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     39376.7,
+     13524.9,
+     -1283.9
+    ],
+    [
+     31313.5,
+     13524.9,
+     -1283.9
+    ],
+    [
+     30606.4,
+     13817.8,
+     -1283.9
+    ],
+    [
+     30271.4,
+     14152.8,
+     -1283.9
+    ],
+    [
+     29564.3,
+     14445.7,
+     -1283.9
+    ],
+    [
+     15243.3,
+     14445.7,
+     -1283.9
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 209,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -1200,
+    -1200
+   ],
+   "length_mm": 22858,
+   "bends": 2,
+   "ifc_ids": [
+    2945452,
+    3262168,
+    3411429,
+    3411430,
+    3411432,
+    3411434,
+    3465070,
+    3465077,
+    3465079,
+    3465088,
+    3465104,
+    3465111,
+    3465113,
+    3465120,
+    3465129,
+    3465136,
+    3465138,
+    3465145,
+    3465194,
+    3465201,
+    3465203,
+    3465210,
+    3465250,
+    3465257,
+    3465259,
+    3465266,
+    3465284,
+    3465291,
+    3465293,
+    3465300
+   ]
+  },
+  {
+   "from": {
+    "id": 3419413,
+    "face": "C"
+   },
+   "to": {
+    "id": 3501284,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -687.4,
+     53126.1,
+     -916.1
+    ],
+    [
+     -687.4,
+     51406.4,
+     -916.1
+    ],
+    [
+     -763.5,
+     51023.7,
+     -916.1
+    ],
+    [
+     -1001.3,
+     50449.7,
+     -916.1
+    ],
+    [
+     -1077.4,
+     50067.0,
+     -916.1
+    ],
+    [
+     -1077.4,
+     46466.4,
+     -916.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -720,
+    -720
+   ],
+   "length_mm": 5942,
+   "bends": 2,
+   "ifc_ids": [
+    3419510,
+    3419532,
+    3419592,
+    3419608,
+    3419668,
+    3419684,
+    3501539,
+    3501541,
+    3501543,
+    3501545,
+    3501547,
+    3501549,
+    3501551,
+    3501553,
+    3501555,
+    3501557,
+    3501559,
+    3501561,
+    3501563,
+    3501565,
+    3501567,
+    3501569,
+    3501571,
+    3501573,
+    3501575,
+    3501577,
+    3501579,
+    3501581,
+    3501583,
+    3501585
+   ]
+  },
+  {
+   "from": {
+    "id": 3424506,
+    "face": "B"
+   },
+   "to": {
+    "id": 3501644,
+    "face": "C"
+   },
+   "perRow": [
+    4
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -5779.7,
+     116050.8,
+     -808.1
+    ],
+    [
+     -1602.4,
+     116050.8,
+     -808.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 4177,
+   "bends": 0,
+   "ifc_ids": [
+    2756880,
+    2957964,
+    2957977,
+    2957987
+   ]
+  },
+  {
+   "from": {
+    "id": 3426499,
+    "face": "B"
+   },
+   "to": {
+    "id": 3427039,
+    "face": "A"
+   },
+   "perRow": [
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -59430.8,
+     145037.4,
+     -1021.0
+    ],
+    [
+     -49409.5,
+     129534.0,
+     -1021.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 209,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 18460,
+   "bends": 0,
+   "ifc_ids": [
+    2756780,
+    2958791,
+    2958861,
+    2958877
+   ]
+  },
+  {
+   "from": {
+    "id": 3427738,
+    "face": "A"
+   },
+   "to": {
+    "id": 3427801,
+    "face": "C"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -11462.1,
+     72298.4,
+     -1167.7
+    ],
+    [
+     -21462.9,
+     87770.2,
+     -1167.7
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 18423,
+   "bends": 0,
+   "ifc_ids": [
+    2756636,
+    2959087,
+    2959093,
+    2959099,
+    2959105,
+    2959111
+   ]
+  },
+  {
+   "from": {
+    "id": 3428913,
+    "face": "A"
+   },
+   "to": {
+    "id": 3501663,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 2,
+   "path_mm": [
+    [
+     -1053.0,
+     147486.5,
+     -1372.1
+    ],
+    [
+     -1053.0,
+     145387.7,
+     -1372.1
+    ],
+    [
+     -1053.0,
+     145005.0,
+     -1296.0
+    ],
+    [
+     -1053.0,
+     144381.8,
+     -1037.9
+    ],
+    [
+     -1053.0,
+     143999.2,
+     -961.8
+    ],
+    [
+     -1053.0,
+     136679.0,
+     -961.8
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -1260,
+    -840
+   ],
+   "length_mm": 10094,
+   "bends": 2,
+   "ifc_ids": [
+    3429074,
+    3429075,
+    3429076,
+    3429077,
+    3429078,
+    3429079,
+    3432839,
+    3433065,
+    3433217,
+    3433365,
+    3433633,
+    3433663,
+    3433883,
+    3433892,
+    3433905,
+    3434093,
+    3434095,
+    3434291,
+    3434293,
+    3434317,
+    3434330,
+    3434339,
+    3434358,
+    3434379,
+    3434386,
+    3434405,
+    3434426,
+    3434433,
+    3434435,
+    3434442
+   ]
+  },
+  {
+   "from": {
+    "id": 3429977,
+    "face": "D"
+   },
+   "to": {
+    "id": 3431417,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     90653.0,
+     148306.3,
+     -1049.3
+    ],
+    [
+     76280.0,
+     148306.3,
+     -1049.3
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -960,
+    -960
+   ],
+   "length_mm": 14373,
+   "bends": 0,
+   "ifc_ids": [
+    3430073,
+    3430101,
+    3430254,
+    3430282,
+    3430426,
+    3430445
+   ]
+  },
+  {
+   "from": {
+    "id": 3501644,
+    "face": "D"
+   },
+   "to": {
+    "id": 3501663,
+    "face": "D"
+   },
+   "perRow": [
+    2,
+    2,
+    2
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -1103.0,
+     116566.4,
+     -962.9
+    ],
+    [
+     -1103.0,
+     135494.0,
+     -962.9
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 210,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 18928,
+   "bends": 0,
+   "ifc_ids": [
+    2947666,
+    2947902,
+    2947908,
+    2947914,
+    2947920,
+    2947926
+   ]
+  },
+  {
+   "from": {
+    "id": 3506282,
+    "face": "B"
+   },
+   "to": {
+    "id": 3534922,
+    "face": "A"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -100376.7,
+     143090.6,
+     -1020.0
+    ],
+    [
+     -98838.0,
+     144089.9,
+     -1020.0
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -900,
+    -900
+   ],
+   "length_mm": 1835,
+   "bends": 0,
+   "ifc_ids": [
+    3506182,
+    3506186,
+    3506190,
+    3506194,
+    3506198,
+    3506202
+   ]
+  },
+  {
+   "from": {
+    "id": 3524777,
+    "face": "A"
+   },
+   "to": {
+    "id": 3524806,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 2,
+   "path_mm": [
+    [
+     103260.6,
+     32026.1,
+     -2482.1
+    ],
+    [
+     103260.6,
+     46860.5,
+     -2482.1
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 180,
+   "top_mm": [
+    -2400,
+    -2400
+   ],
+   "length_mm": 14834,
+   "bends": 0,
+   "ifc_ids": [
+    2946371,
+    2946377,
+    2946383,
+    2946389,
+    3224935,
+    3224936
+   ]
+  },
+  {
+   "from": {
+    "id": 3524777,
+    "face": "C"
+   },
+   "to": {
+    "id": 3526414,
+    "face": "B"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 1,
+   "path_mm": [
+    [
+     103260.6,
+     30841.1,
+     -2462.9
+    ],
+    [
+     103260.6,
+     19634.4,
+     -2462.9
+    ],
+    [
+     103260.6,
+     18927.3,
+     -2170.0
+    ],
+    [
+     103260.6,
+     18138.1,
+     -1380.8
+    ],
+    [
+     103260.6,
+     17431.0,
+     -1087.9
+    ],
+    [
+     103260.6,
+     14283.5,
+     -1087.9
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 250,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -2340,
+    -960
+   ],
+   "length_mm": 15470,
+   "bends": 2,
+   "ifc_ids": [
+    2946342,
+    3224528,
+    3224665,
+    3224675,
+    3224687,
+    3224709,
+    3224731,
+    3224741,
+    3224753,
+    3398500,
+    3398525,
+    3398608,
+    3398682,
+    3398778,
+    3398828,
+    3525198,
+    3525214,
+    3525464,
+    3525505,
+    3525507,
+    3525636,
+    3525665,
+    3525667,
+    3525694,
+    3525721,
+    3525723,
+    3525744,
+    3525754,
+    3525769,
+    3525779
+   ]
+  },
+  {
+   "from": {
+    "id": 3534922,
+    "face": "C"
+   },
+   "to": {
+    "id": 3536529,
+    "face": "C"
+   },
+   "perRow": [
+    3,
+    3
+   ],
+   "align": null,
+   "level": 0,
+   "path_mm": [
+    [
+     -97863.2,
+     144764.6,
+     -912.4
+    ],
+    [
+     -95793.4,
+     146108.8,
+     -912.4
+    ],
+    [
+     -95038.5,
+     146235.2,
+     -912.4
+    ],
+    [
+     -93559.6,
+     145893.9,
+     -912.4
+    ],
+    [
+     -92804.7,
+     146020.3,
+     -912.4
+    ],
+    [
+     -82346.3,
+     152557.2,
+     -912.4
+    ]
+   ],
+   "od_mm": 114,
+   "pitch_mm": 210,
+   "row_pitch_mm": 240,
+   "top_mm": [
+    -780,
+    -780
+   ],
+   "length_mm": 16319,
+   "bends": 2,
+   "ifc_ids": [
+    3515619,
+    3515621,
+    3515896,
+    3515898,
+    3515900,
+    3515902,
+    3535744,
+    3535746,
+    3535748,
+    3535750,
+    3535752,
+    3535754,
+    3535756,
+    3535758,
+    3535760,
+    3535762,
+    3535764,
+    3535766,
+    3535768,
+    3535770,
+    3535772,
+    3535774,
+    3535776,
+    3535778,
+    3535780,
+    3535782,
+    3535784,
+    3535786,
+    3535788,
+    3535790
+   ]
+  }
+ ],
+ "runs_source": "AMS01-EX-GLT-XX-EX-E-XXX-3DM-060001.ifc"
 }
