@@ -688,6 +688,10 @@ const facePitch = (mhUid, face) => {
   const c = byUid(mhUid), runs = faceRuns(mhUid, face);
   return Math.max(c ? c.latSpace : 0, ...runs.map(runSpace));
 };
+/** The across-centres a run is actually laid on: its own spec's, unless a face
+    it meets is held wider by the manhole's own lateral spacing or by another
+    run sharing that face — the faces share one grid. */
+const runPitch = cn => Math.max(facePitch(cn.a.mh, cn.a.face), facePitch(cn.b.mh, cn.b.face));
 const runHalf = (cn, S) => (runCols(cn)-1)/2*S + (specOf(cn) ? specOf(cn).radius : 0);
 
 /** Where a run would like to meet this face: the offset that lines it up
@@ -2571,6 +2575,31 @@ function renderSpecs(){
   document.getElementById('specDel').disabled = state.specs.length < 2;
 }
 
+/** A manhole's lateral spacing is the floor under every face it has, so a spec
+    asking for less would be swallowed by it. Wherever a run on this spec meets a
+    manhole set wider, the floor comes down to the spec: nothing is ever widened,
+    and the pitch typed on the spec is the pitch its runs are laid on. */
+function freeFloor(sp){
+  for (const cn of state.connections){
+    if (cn.specId !== sp.id || cn.fixed) continue;
+    for (const u of [cn.a.mh, cn.b.mh]){ const c = byUid(u); if (c && c.latSpace > sp.spacing) c.latSpace = sp.spacing; }
+  }
+}
+
+/** What the runs on a spec are really laid on: a face never goes below its
+    manhole's own lateral spacing, nor below the widest run it carries, so a
+    spec asking for less than that is told where its number is being held. */
+function specPitchNote(sp){
+  const runs = state.connections.filter(cn => cn.specId === sp.id && !cn.fixed);
+  if (!runs.length) return ' — faces snap to the largest pitch present, and a run\u2019s panel sets it too';
+  const held = runs.map(runPitch).filter(v => v > (sp.spacing || 300) + 1);
+  if (!held.length) return ' — every run on it is laid on these centres';
+  const w = Math.max(...held);
+  const part = held.length === runs.length ? (runs.length === 1 ? 'its run is' : `all ${runs.length} of its runs are`)
+                                           : `${held.length} of its ${runs.length} runs ${held.length === 1 ? 'is' : 'are'}`;
+  return ` — but ${part} laid on up to ${fmt(w)}: a face keeps to the widest run it carries and to its manhole\u2019s own lateral spacing, which this pitch lowers but never raises.`;
+}
+
 function renderSpecEdit(){
   const box = document.getElementById('specEdit');
   const sp = specBy(state.editSpec);
@@ -2600,7 +2629,7 @@ function renderSpecEdit(){
        <div class="derived"><b>Bore</b> ${fmt(sp.radius*2)} mm · <b>bend</b> R${fmt(sp.bendR)}<br>
          <b>Straights</b> ≥${fmt(sp.stub)} off face · ≥${fmt(sp.minLeg)} between bends<br>
          <b>Clearance</b> ${fmt(sp.buffer)} each side — pairs keep the larger clearance<br>
-         <b>Array pitch</b> ${fmt(sp.spacing || 300)} — faces snap to the largest pitch present, and a run's panel sets it too<br>
+         <b>Array pitch</b> ${fmt(sp.spacing || 300)}${specPitchNote(sp)}<br>
          <b>Encasement</b> ${encOf(sp) ? fmt(encOf(sp)) + ' beyond the outer diameter, round the whole array' : 'none'}<br>
          <b>Fittings</b> ${sp.angles.length ? sp.angles.map(a => fmt1(a)+'°').join(' · ') : 'straight only'}</div>`);
 
@@ -2609,7 +2638,9 @@ function renderSpecEdit(){
     el.addEventListener('input', () => {
       const v = cast(el.value);
       if (cast === Number && (!Number.isFinite(v) || v < 0)) return;
-      sp[key] = v; specChanged();
+      sp[key] = v;
+      if (key === 'spacing') freeFloor(sp);                     // the manholes' floors give way to the spec's own pitch
+      specChanged();
     });
   };
   bindS('sName','name',String); bindS('sRad','radius'); bindS('sBend','bendR');
@@ -2865,11 +2896,11 @@ function renderRunProps(box, cn){
      <select id="qSpec"${cn.fixed ? ' disabled title="Static: the spec is as the model has it"' : ''}>${state.specs.map(s =>
        `<option value="${s.id}" ${s.id === cn.specId ? 'selected':''}>${esc(s.name)} — Ø${fmt(s.radius*2)} R${fmt(s.bendR)}</option>`).join('')}</select>
      <div style="height:8px"></div>` +
-    cluster('runArr', 'Array & level', `${arrayText(cn)} · ${fmt(runSpace(cn))}×${fmt(runZSpace(cn))} · L${cn.level|0}`,
+    cluster('runArr', 'Array & level', `${arrayText(cn)} · ${fmt(runPitch(cn))}×${fmt(runZSpace(cn))} · L${cn.level|0}`,
       numRow('qLvl','Level (Z)', cn.level|0, 1, '') +
-      numRow('qSpX','Spacing across', runSpace(cn), 25, 'mm') +
+      numRow('qSpX','Spacing across', runPitch(cn), 25, 'mm') +
       numRow('qSpZ','Spacing down', runZSpace(cn), 25, 'mm') +
-      `<div class="derived" style="margin-top:0"><span>The centres this run is laid on, set here or where they live: across on the spec (${esc(sp.name)}, in the Specs window), down on the manholes (their Z spacing, in the Chambers window). A face is laid on the largest across-spacing of the runs it carries, so they share one grid.</span></div>` +
+      `<div class="derived" style="margin-top:0"><span>The centres this run is laid on, set here or where they live: across on the spec (${esc(sp.name)}, in the Specs window), down on the manholes' Z spacing (in the Chambers window) — setting them here sets them there, and lowers a manhole's lateral spacing where it would hold the run wider. A face is laid on the largest across-spacing of the runs it carries, so they share one grid${runPitch(cn) > runSpace(cn) ? `: this one is held at ${fmt(runPitch(cn))} by a wider run on a face it meets, not by ${esc(sp.name)}'s own ${fmt(runSpace(cn))}` : ''}.</span></div>` +
       `<div class="row" style="margin-bottom:4px"><label>Array — the section of the run, seen along it from ${esc(A ? A.ref : '?')} to ${esc(B ? B.ref : '?')}</label></div>
        <div class="arrayed" id="qArray">${arrayEditorSVG(cn, 262, {readOnly: !!cn.fixed})}</div>
        <div class="derived" style="border-top:none;margin-top:0;padding-top:0"><b>${arrayText(cn)}</b> · ${runCount(cn)} conduit${runCount(cn) === 1 ? '' : 's'} · ${runCols(cn)} wide × ${runRows(cn)} high${new Set(runRowsOf(cn)).size > 1 ? ` · shorter rows on the ${runAlign(cn)}` : ''}<br>
@@ -2920,7 +2951,11 @@ function renderRunProps(box, cn){
     (cn.placed ? '' : `<div class="note">Not placed yet — the dashed guide shows the face pair.</div>`) +
     `<div class="btnrow"><button id="qEditSpec" class="ghost mini">Edit “${esc(sp.name)}” on the left</button></div>`;
 
-  for (const [id, set] of [['qSpX', v => { sp.spacing = v; }],
+  /* Across lives on the spec and is floored by the manholes' own lateral spacing,
+     down on the manholes' Z spacing: each field sets every place its number lives —
+     lowering a manhole's floor where it would otherwise swallow the change — so
+     what is typed is what the faces are laid on. */
+  for (const [id, set] of [['qSpX', v => { sp.spacing = v; freeFloor(sp); }],
                            ['qSpZ', v => { for (const u of [cn.a.mh, cn.b.mh]){ const c = byUid(u); if (c) c.zSpace = v; } }]]){
     const el = document.getElementById(id);
     if (cn.fixed){ el.disabled = true; el.title = 'Static: the spacing is as the model has it'; continue; }
@@ -2930,7 +2965,7 @@ function renderRunProps(box, cn){
       set(Math.round(v));                       // the spec's own spacing, or the two manholes' — the same values their windows hold
       bankCache.clear(); recomputeRoutes();
       const head = box.querySelector('[data-clus="runArr"] em');      // the summary keeps up without rebuilding the fields under the cursor
-      if (head) head.textContent = `${arrayText(cn)} · ${fmt(runSpace(cn))}×${fmt(runZSpace(cn))} · L${cn.level|0}`;
+      if (head) head.textContent = `${arrayText(cn)} · ${fmt(runPitch(cn))}×${fmt(runZSpace(cn))} · L${cn.level|0}`;
       renderSpecs(); draw();
     });
   }
