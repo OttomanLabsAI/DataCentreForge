@@ -575,6 +575,19 @@ function minDogleg(spec){
   const lo = segMins([th, -th], spec, false);
   return {angle:th, step: lo[1]*Math.sin(th*D2R), run: lo[0] + lo[2] + lo[1]*Math.cos(th*D2R)};
 }
+
+/** The other end of the same question: the largest sideways step a dogleg of
+    standard fittings can make over this much run. How far out of line a route
+    that leaves and arrives square can be before the fittings run out. */
+function doglegCap(spec, along){
+  let best = 0;
+  for (const th of [...new Set(spec.angles || [])].filter(a => a > 0 && a < 90)){
+    const lo = segMins([th, -th], spec, true), room = along - lo[0] - lo[2];   // strict: every leg keeps its own straight beyond the fillets
+    if (room <= 0 || room/Math.cos(th*D2R) < lo[1]) continue;           // no room for this bend's own straights
+    best = Math.max(best, room*Math.tan(th*D2R));
+  }
+  return best;
+}
 function solveRoute(P, d0, Q, d2, spec, blockers, opt = {}){
   const V = [Q[0]-P[0], Q[1]-P[1]];
   const raw = signedAngle(d0, d2);
@@ -677,8 +690,11 @@ const runHalf = (cn, S) => (runCols(cn)-1)/2*S + (specOf(cn) ? specOf(cn).radius
 /** Where a run would like to meet this face: the offset that lines it up
     with the far face so it can run straight, split evenly between the two
     ends and held within each face's extent — the shortfall of a clamped end
-    passed to the other. Zero when the two faces are not facing each other. */
-function alignPref(cn, end){
+    passed to the other. Where no offset can make the run straight it keeps
+    only as much as the bends cannot reach and sits central for the rest, and
+    `how.soft` then says the position is a preference the face may move. Zero
+    when the two faces are not facing each other. */
+function alignPref(cn, end, how){
   const here = cn[end], there = cn[end === 'a' ? 'b' : 'a'];
   const A = byUid(here.mh), B = byUid(there.mh);
   if (!A || !B) return 0;
@@ -700,15 +716,33 @@ function alignPref(cn, end){
     if (Math.abs(u2 - u) < 1e-6) u2 = cl(u2 + rem/sA, hwA);
     else if (Math.abs(v2 - v) < 1e-6) v2 = cl(v2 - rem/sB, hwB);
   }
+  const sp0 = specOf(cn) || {}, wide = runHalf(cn, facePitch(here.mh, here.face)) - (sp0.radius || 0);   // as buildBanks widens a bank for its lanes
+  const wsp = {...sp0, bendR:(sp0.bendR||0) + wide, stub:(sp0.stub||0) + wide, minLeg:(sp0.minLeg||0) + wide};
+  const r = m - (u2*sA - v2*sB), md = minDogleg(wsp);
+  const along = (eB.centre[0]-eA.centre[0])*dir[0] + (eB.centre[1]-eA.centre[1])*dir[1];
+  /* Sliding is spent only where it buys something. Where it lines the run up dead
+     straight it is spent in full; where the run must bend whatever it does, only
+     as much is spent as the bends cannot carry themselves, so the entries sit as
+     near the middle of their faces as the fittings allow. */
+  const cap = doglegCap(wsp, along), keep = md ? Math.min(Math.abs(m), cap) : 0;   // the offset the bends are left to carry
+  if (Math.abs(r) > 1e-6 && md && keep >= md.step*1.05 && keep > Math.abs(r) + 1e-6){
+    const k = m - Math.sign(m)*keep;                                  // what the slide must still absorb
+    if (Math.abs(k) < 1e-6){ if (how) how.soft = cap >= Math.abs(m) + hwA + hwB; return 0; }
+    const uu = k/(2*sA), vv = -k/(2*sB);
+    let u4 = cl(uu, hwA), v4 = cl(vv, hwB);
+    const rem4 = k - (u4*sA - v4*sB);
+    if (Math.abs(rem4) > 1e-6){
+      if (Math.abs(u4 - uu) < 1e-6) u4 = cl(u4 + rem4/sA, hwA);
+      else if (Math.abs(v4 - vv) < 1e-6) v4 = cl(v4 - rem4/sB, hwB);
+    }
+    return u4;
+  }
   /* What is left cannot be slid away, so the run must bend — and a dogleg of the
      gentlest bend can only step so little. Rather than tilt, the ends slide the
      other way, apart, until the offset is enough for that dogleg; if their faces
      cannot give that much, or the run is too short for one, they stay as they
      are and the router says why. */
-  const sp0 = specOf(cn) || {}, wide = runHalf(cn, facePitch(here.mh, here.face)) - (sp0.radius || 0);   // as buildBanks widens a bank for its lanes
-  const r = m - (u2*sA - v2*sB), md = minDogleg({...sp0, bendR:(sp0.bendR||0) + wide, stub:(sp0.stub||0) + wide, minLeg:(sp0.minLeg||0) + wide});
   if (Math.abs(r) > 1e-6 && md && Math.abs(r) < md.step){
-    const along = (eB.centre[0]-eA.centre[0])*dir[0] + (eB.centre[1]-eA.centre[1])*dir[1];
     if (along >= md.run){
       const k = m - Math.sign(r)*md.step*1.05;
       const uu = k/(2*sA), vv = -k/(2*sB);
@@ -747,6 +781,25 @@ function packSlots(items, S){
   items.forEach((it, k) => { it.centreOff = x[k]; });
 }
 
+/** A run that must bend whatever it does wants the middle of its face, but never
+    at the cost of a neighbour that lines up and can run dead straight. Before the
+    face is packed, each such preference is squeezed into the room the aligned
+    runs either side of it leave, so the straight ones keep their alignment and
+    the rest come as close to the centre as the pitch allows. */
+function settleSoft(items, S){
+  const n = items.length;
+  if (!items.some(i => i.soft) || !items.some(i => !i.soft)) return;
+  const gap = k => (items[k].cols + items[k+1].cols)/2*S;
+  for (let i = 0; i < n; i++){
+    if (!items[i].soft) continue;
+    let lo = items[i].lo, hi = items[i].hi, d = 0;
+    for (let k = i-1; k >= 0; k--){ d += gap(k); if (!items[k].soft){ lo = Math.max(lo, items[k].pref + d); break; } }
+    d = 0;
+    for (let k = i+1; k < n; k++){ d += gap(k-1); if (!items[k].soft){ hi = Math.min(hi, items[k].pref - d); break; } }
+    if (lo <= hi) items[i].pref = Math.max(lo, Math.min(hi, items[i].pref));
+  }
+}
+
 /** Everything about how a face carries its conduits: one shared grid whose
     pitch is the LARGEST array spacing among the types present (floored by
     the manhole's lateral spacing), arrays laid in canonical order — each
@@ -775,13 +828,15 @@ function faceLayout(mhUid, face){
       const end = (r.a.mh === mhUid && r.a.face === face) ? 'a' : 'b';
       const half = runHalf(r, S);
       const fx = fixedOffset(r, end, g, t);
-      items.push({cn:r, sp:specOf(r), cols:runCols(r), rows:runRows(r), colStart:col, half, fixed: fx != null,
-                  lo: fx != null ? fx : ext.lo + half, hi: fx != null ? fx : ext.hi - half, pref: fx != null ? fx : shift + alignPref(r, end)});
+      const how = {}, pref = fx != null ? fx : shift + alignPref(r, end, how);
+      items.push({cn:r, sp:specOf(r), cols:runCols(r), rows:runRows(r), colStart:col, half, fixed: fx != null, soft: !!how.soft,
+                  lo: fx != null ? fx : ext.lo + half, hi: fx != null ? fx : ext.hi - half, pref});
       col += runCols(r);
     }
     const totalCols = col;
     const rMax = Math.max(...items.map(i => i.sp ? i.sp.radius : 0));
     const rowsMax = Math.max(...items.map(i => i.rows));
+    settleSoft(items, S);
     packSlots(items, S);
     for (const i of items) if (i.centreOff < i.lo - 1 || i.centreOff > i.hi + 1) fits = false;
     groups.push({level:lv, items, totalCols, rMax, rowsMax});

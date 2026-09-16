@@ -277,6 +277,15 @@ goes round it, or under or over it when that run's panel says so. Its panel show
 modelled and offers no fittings, spec or depth to change; the drawing's file
 carries the path, so the run comes back static.
 
+Sliding along a face is spent only where it buys something. Where it lines a
+run up dead straight it is spent in full. Where the run must bend whatever it
+does, the entries sit as near the middle of their faces as the fittings allow:
+the bends are left the offset a dogleg of standard fittings can step over that
+much run, and only what is beyond their reach is slid away. Where a face
+carries several runs, one that must bend gives way to a neighbour that lines
+up, so a straight duct is never traded for a centred one, and the runs keep
+their order and their pitch either way.
+
 A run never tilts. Where two square faces are out of line by more than
 sliding can absorb, the run bends, and where the leftover offset is too small
 for a dogleg of the gentlest allowed bend, the entries slide the other way,
