@@ -326,7 +326,13 @@ its bend list.
 
 Every obstacle has a top, a bottom, and a default way for runs to pass it —
 under unless changed, or over, or around, which makes its footprint a plan
-keep-out — chosen in its panel. Each run's panel lists every obstacle with an around,
+keep-out — chosen in its panel. That way is how the run deviates when it has
+to, not an instruction to deviate: one it already clears, above or below with
+its clearance, is left alone. Where neither over nor under can be made — the
+cover above, the chamber's own base below — the plan is laid again with that
+obstacle as a keep-out and the run steps clear of it instead, saying so on
+itself; only when that cannot be done either does the run refuse, naming what
+stopped it. Each run's panel lists every obstacle with an around,
 over or under choice for that run alone, overriding the default. Runs sharing
 two faces travel as one bank and follow the majority choice; a run asking
 otherwise is told so. Over never rises into the ground cover set in the Drawing
