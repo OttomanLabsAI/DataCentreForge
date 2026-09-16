@@ -61,14 +61,17 @@ function makeChamber(o = {}){
 }
 function makeObstacle(o = {}){
   return Object.assign({uid:uid(), name:nextName(), x:0, y:0, w:2400, d:2400, rot:0, buffer:250,
-                        zTop:0, zBot:-1500, method:'around'}, o);
+                        zTop:0, zBot:-1500, method:'under'}, o);
 }
 /* How a run passes an obstacle is chosen on the drawing: every obstacle
-   carries a default method — around (its footprint is a plan keep-out), over
-   or under — and any run may choose differently for that obstacle alone. */
+   carries a default method — under unless it is changed, or over, or around,
+   which makes its footprint a plan keep-out — and any run may choose
+   differently for that obstacle alone. */
 const METHODS = ['around', 'over', 'under'];
 const obsMethod = o => METHODS.includes(o.method) ? o.method
-  : (o.around !== false ? 'around' : o.under !== false ? 'under' : o.over !== false ? 'over' : 'around');   // older flags
+  : (o.around != null || o.under != null || o.over != null)                                                // older flags, as they were read
+      ? (o.around !== false ? 'around' : o.under !== false ? 'under' : o.over !== false ? 'over' : 'around')
+      : 'under';
 const runMethod = (cn, o) => (cn.cross && METHODS.includes(cn.cross[o.uid])) ? cn.cross[o.uid] : obsMethod(o);
 /** What a bank does at an obstacle: what most of its runs ask for, the first
     run breaking a tie; a run asking otherwise is told so. */
@@ -1012,7 +1015,7 @@ function staticCrossables(){
   for (const c of state.chambers){
     if (layerMode(c) !== 'static') continue;
     const [zb, zl] = chamberZs(c);
-    out.push({uid:'mh-' + c.uid, name:`${c.ref} · static manhole`, src:'static', mh:c.uid, method:'around',
+    out.push({uid:'mh-' + c.uid, name:`${c.ref} · static manhole`, src:'static', mh:c.uid, method:'under',
               x:c.x, y:c.y, rot:c.rot, w:c.intX + 2*c.wall, d:c.intY + 2*c.wall,
               zTop:zl, zBot:zb, buffer:c.buffer || 0});
   }
@@ -1025,7 +1028,7 @@ function staticCrossables(){
     const zs = rt.profile && rt.profile.poly.length ? rt.profile.poly.map(p => p[1]) : [chamberZ0(A) - (cn.level|0)*runZSpace(cn)];
     const hi = Math.max(...zs), lo = Math.min(...zs);
     const S = Math.max(entryFor(cn,'a').S || 0, entryFor(cn,'b').S || 0);
-    out.push({uid:'cn-' + cn.uid, name:`${connLabel(cn)} · static conduits`, src:'static', method:'around',
+    out.push({uid:'cn-' + cn.uid, name:`${connLabel(cn)} · static conduits`, src:'static', method:'under',
               line:rt.poly, ends:[cn.a.mh, cn.b.mh],
               half: E ? E.halfW : (runCols(cn)-1)/2*S + sp.radius,
               zTop: hi + (E ? E.zTop : sp.radius),
