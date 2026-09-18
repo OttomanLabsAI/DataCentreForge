@@ -332,7 +332,11 @@ its clearance, is left alone. Where neither over nor under can be made — the
 cover above, the chamber's own base below — the plan is laid again with that
 obstacle as a keep-out and the run steps clear of it instead, saying so on
 itself; only when that cannot be done either does the run refuse, naming what
-stopped it. Each run's panel lists every obstacle with an around,
+stopped it. The drawing the tool opens with sets its own obstacle to around,
+so the first thing on the screen is a pair of runs skirting it, and a nudging
+ghost of the box says it can be dragged — dragging it, or any other change to
+the drawing, takes the hint away for good. Each run's panel lists every
+obstacle with an around,
 over or under choice for that run alone, overriding the default. Runs sharing
 two faces travel as one bank and follow the majority choice; a run asking
 otherwise is told so. Over never rises into the ground cover set in the Drawing
