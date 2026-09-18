@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Manhole plan — chambers, conduit runs and obstacles</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<link rel="stylesheet" href="/assets/css/site.css?v=2.33">
+<link rel="stylesheet" href="/assets/css/site.css?v=2.34">
 </head>
 <body>
 
@@ -54,6 +54,16 @@
       double-tap a face — connect · hold — menu</span>
     </div>
     <div id="radial" hidden></div>
+    <div class="hud" id="dragHint" hidden aria-hidden="true">
+      <div class="nudge">
+        <div class="ghost"></div>
+        <svg class="grab" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 3v13l3-3 2 5.5 2.6-1.1L11.4 12H16z"/>
+          <path d="M18.5 6.5h3.5M20.5 4.5l2 2-2 2"/>
+        </svg>
+      </div>
+      <div class="cap">drag the obstacle — the runs find their way round</div>
+    </div>
     <div class="hud" id="scalebar"><div class="bar"></div><span></span></div>
     <div class="hud" id="callout"></div>
     <div class="hud" id="status">
@@ -159,6 +169,6 @@
 </main>
 
 
-<script src="/assets/js/app.js?v=2.33"></script>
+<script src="/assets/js/app.js?v=2.34"></script>
 </body>
 </html>

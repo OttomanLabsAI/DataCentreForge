@@ -1698,8 +1698,44 @@ function draw(){
 
   SVG.setAttribute('viewBox', `0 0 ${W} ${H}`);
   SVG.innerHTML = out.join('');
+  drawHint();
   drawScaleBar();
   document.getElementById('rz').textContent = (state.view.s*100).toFixed(1) + ' px/cm';
+}
+
+/* The opening drawing teaches one thing: the obstacle can be dragged, and the
+   runs find a new way round it. A ghost of the box nudges sideways beside the
+   real one until the first drag, a new drawing, or half a minute of reading. */
+function drawHint(){
+  const el = document.getElementById('dragHint');
+  if (!el) return;
+  const o = state.hint && state.obstacles.find(x => x.uid === state.hint);
+  if (!o || !isVisible(o)){ el.hidden = true; return; }
+  const c = W2S([o.x, o.y]), w = Math.max(10, o.w*state.view.s), d = Math.max(10, o.d*state.view.s);
+  el.hidden = false;
+  el.style.left = c[0].toFixed(1) + 'px';
+  el.style.top  = c[1].toFixed(1) + 'px';
+  const g = el.querySelector('.ghost');
+  g.style.width = w.toFixed(1) + 'px'; g.style.height = d.toFixed(1) + 'px';
+  g.style.left = (-w/2).toFixed(1) + 'px'; g.style.top = (-d/2).toFixed(1) + 'px';
+  g.style.transform = `rotate(${(-(o.rot || 0)).toFixed(2)}deg)`;
+  const hand = el.querySelector('.grab');
+  hand.style.left = (w/2 - 4).toFixed(1) + 'px'; hand.style.top = '-8px';
+  const cap = el.querySelector('.cap');
+  cap.style.top = (-d/2 - 32).toFixed(1) + 'px';                                // above the box, clear of the runs it is about
+  cap.style.left = '0px';
+  const st = STAGE.getBoundingClientRect(), cb = cap.getBoundingClientRect();   // and kept inside the stage on a narrow screen
+  const over = Math.max(0, st.left + 8 - cb.left) - Math.max(0, cb.right - (st.right - 8));
+  if (over) cap.style.left = over.toFixed(1) + 'px';
+}
+/** The lesson is over: the first drag, a drawing that replaces this one, or time. */
+function endHint(){
+  if (!state.hint) return;
+  state.hint = null;
+  const el = document.getElementById('dragHint');
+  if (!el) return;
+  el.classList.add('off');
+  setTimeout(() => { el.hidden = true; el.classList.remove('off'); }, 600);
 }
 
 function drawObstacle(o){
@@ -2274,6 +2310,7 @@ STAGE.addEventListener('pointerdown', e => {
     state.pending = null; setPendingStatus();
   }
   const grab = (kind, obj) => {
+    endHint();                                                                   // they have found it for themselves
     if (!inSel(kind, obj.uid)) select(kind, obj.uid); else setPrimary(kind, obj.uid);
     if (kind === 'chamber' && !chamberMovable(obj)){ noteLocked(obj); return; }       // locked or static: selected, never dragged
     const items = movables().map(m => ({obj:m, x0:m.x, y0:m.y}));
@@ -3950,6 +3987,7 @@ function uniqueRef(ref){
   for (let i = 2; ; i++) if (!taken(`${ref} (${i})`)) return `${ref} (${i})`;
 }
 function applyRevitImport(src, opt = {}){
+      endHint();
       const {chambers: made, obstacles: obs} = importRevit(src);
       if (!made.length && !obs.length) throw new Error('no manhole family (a1/a7 and b1/b7 planes) found');
       const lay = ensureLayer(opt.layer || docLayerName(src), opt.fixed ? 'static' : 'dynamic');   // one layer per model, static or dynamic
@@ -4071,7 +4109,7 @@ const EXAMPLES = [
   {id:'dcbuild', name:'DCBuild test model', count:'3 manholes', file:'/examples/dcbuild-manholes.json',
    blurb:'The three manholes of the DCBuild test project, read from a family that names the full set of side and depth planes.'},
   {id:'demo', name:'Demo drawing', count:'3 chambers · 1 obstacle · 3 runs', file:null,
-   blurb:'The drawing the tool opens with: two chambers joined by a pair of placed runs passing under an obstacle, and a third chamber turned 45°.'}
+   blurb:'The drawing the tool opens with: two chambers joined by a pair of placed runs skirting an obstacle set to be gone round, and a third chamber turned 45°.'}
 ];
 let DEMO_DOC = null;
 const exRuns = {};                                                  // the conduit checkboxes, by site:model — on unless unticked
@@ -4132,6 +4170,7 @@ renderExamples();
 
 /** Remove every chamber, obstacle and conduit run — one step Undo takes back. */
 function wipeDrawing(){
+  endHint();
   state.chambers = []; state.obstacles = []; state.connections = [];
   state.layers = [makeLayer({id:DEFAULT_LAYER, name:'Drawing'})]; state.activeLayer = DEFAULT_LAYER;
   state.sel = null; state.selSet = []; state.pending = null;
@@ -4264,7 +4303,9 @@ state.chambers = [
   makeChamber({ref:'MH02', x:12000, y:0,    intX:1500, intY:1500, wall:200}),
   makeChamber({ref:'MH03', x:22000, y:4500, intX:1200, intY:1200, wall:150, rot:45})
 ];
-state.obstacles = [ makeObstacle({name:'OBS01', x:6000, y:0, w:2400, d:3600, rot:0, buffer:250}) ];
+state.obstacles = [ makeObstacle({name:'OBS01', x:6000, y:0, w:2400, d:3600, rot:0, buffer:250, method:'around'}) ];
+state.hint = state.obstacles[0].uid;                         // the opening drawing shows what dragging it does
+setTimeout(endHint, 30000);
 state.connections = [
   {uid:uid(), a:{mh:state.chambers[0].uid, face:'B'}, b:{mh:state.chambers[1].uid, face:'D'},
    placed:true,  level:0, specId:state.specs[1].id, route:null},
