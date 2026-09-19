@@ -1,0 +1,5 @@
+can you make a skill that will take the prompt in and out population in each version? i want to be able to do it on multiple projects
+
+call it git-build-prompt-injection
+
+actually, git-ai-instruct-injection

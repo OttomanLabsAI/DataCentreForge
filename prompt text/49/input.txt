@@ -1,3 +1,0 @@
-for this initial example, make the default obstacle thing go around, not under, leave the rest as under
-
-also, add an animation to instruct the user they can click and drag the box to showcase the obstacle routing

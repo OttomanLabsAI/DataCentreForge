@@ -22,7 +22,7 @@ public/            everything served
 prompt text/       provenance for the version in service, replaced each release
 tools/revit/       Revit-side exporter script (not served)
 tools/ifc/         IFC readers that build the MV and LV examples (not served)
-.claude/skills/    the prompt-archive skill: how the provenance archive is kept
+.claude/skills/    the git-ai-instruct-injection skill: how the provenance archive is kept
 wrangler.jsonc     assets-only config, no Worker script
 package.json       wrangler devDependency + dev/deploy scripts
 ```
@@ -163,3 +163,4 @@ files themselves are owner-supplied records — never edit, reformat, trim, or
 | v2.32 | The LV model brings its conduits too | The LV model now arrives with the 87 conduit banks its own IFC holds, each with the conduits in every row and the depth its chambers carry it at, and both models ask before placing whether their conduits should come with them. A run now passes whatever it meets underneath by default rather than detouring round it, and the array spacing typed on a run is the spacing the conduits are drawn on — it used to be quietly overruled by the manholes' own. |
 | v2.33 | A run only deviates for what is in its way | Passing under is how a run gets past something, not something it must do: anything it already clears, above or below, no longer sends it diving. Where there is no room to cross at all — the ground above, the chamber's own base below — the run is laid clear of it in plan instead of refusing, and says so on itself. |
 | v2.34 | The opening drawing shows what dragging does | The drawing the tool opens with now sends its runs around the obstacle rather than under it, so the first thing on the screen is the routing at work. A ghost of the box nudges sideways beside it, with a line saying it can be dragged, and the moment it is — or the drawing is replaced — the hint is gone for good. Every other obstacle still passes runs underneath unless it is told otherwise. |
+| v2.35 | The archive habit goes wherever the work goes | The way each version's prompt, reply, model attribution and supplied files are kept with its release is now a skill of its own, named git-ai-instruct-injection, that can be saved to the owner's profile and used on any project — with scripts that start a version, record the prompt and the reply exactly as written, copy the owner's files under their own names, and check the archive is whole before it ships. This repository carries the same skill in place of the old one. |
